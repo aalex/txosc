@@ -39,6 +39,7 @@ class Bundle(object):
         self.messages = messages
         self.time_tag = time_tag
         if self.time_tag is None:
+            pass
             #TODO create time tag
             pass
 
