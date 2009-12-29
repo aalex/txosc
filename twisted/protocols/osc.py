@@ -14,6 +14,15 @@ from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 from twisted.internet import defer
 
+def _ceilToMultipleOfFour(num):
+    """
+    Rounds a number to the closest higher number that is a mulitple of four.
+    That is for data that need to be padded with zeros so that the length of their data
+    must be a multiple of 32 bits.
+    """
+    #return math.ceil((num + 1) / 4.0) * 4
+    return num + (4 - (num % 4)) 
+
 class OscError(Exception):
     """
     Any error raised by this module.
@@ -96,7 +105,8 @@ class BlobArgument(Argument):
 
     def toBinary(self):
         sz = len(self.value)
-        length = math.ceil((sz+1) / 4.0) * 4
+        #length = math.ceil((sz+1) / 4.0) * 4
+        length = _ceilToMultipleOfFour(sz)
         return struct.pack(">i%ds" % (length), sz, str(self.value))
 
 
@@ -123,7 +133,7 @@ class StringArgument(Argument):
         null_pos = string.find(data, "\0") # find the first null char
         s = data[0:null_pos] # get the first string out of data
         i = null_pos # find the position of the beginning of the next data
-        i = i + (4 - (i % 4)) # considering that all data must have a size of a multiple of 4 chars.
+        i = _ceilToMultipleOfFour(i)
         leftover = data[i:]
         return StringArgument(s), leftover
 
@@ -141,6 +151,7 @@ class IntArgument(Argument):
             leftover = data[4:]
         except IndexError, e:
             raise OscError("Too few bytes left to get an int from %s." % (data))
+            #FIXME: do not raise error and return leftover anyways ?
         return IntArgument(i), leftover
 
 
@@ -157,6 +168,7 @@ class FloatArgument(Argument):
             leftover = data[4:]
         except IndexError, e:
             raise OscError("Too few bytes left to get a float from %s." % (data))
+            #FIXME: do not raise error and return leftover anyways ?
         return FloatArgument(f), leftover
 
 class TimeTagArgument(Argument):
