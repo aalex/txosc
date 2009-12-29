@@ -11,7 +11,8 @@ import math
 import struct
 
 from twisted.internet.protocol import DatagramProtocol
-from twisted.internet import defer, reactor
+from twisted.internet import reactor
+from twisted.internet import defer
 
 class OscError(Exception):
     """
