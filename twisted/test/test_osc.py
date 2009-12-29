@@ -19,6 +19,21 @@ class TestStringArgument(unittest.TestCase):
         self.assertEqual(osc.StringArgument("OSC").toBinary(), "OSC\0")
         self.assertEqual(osc.StringArgument("Hello").toBinary(), "Hello\0\0\0")
 
+    def testFromBinary(self):
+        data = "aaa\0bb\0\0c\0\0\0dddd"
+        first, leftover = osc.StringArgument.fromBinary(data) 
+        #padding with 0 to make strings length multiples of 4 chars
+        self.assertEqual(first.value, "aaa")
+        self.assertEqual(leftover, "bb\0\0c\0\0\0dddd")
+
+        second, leftover = osc.StringArgument.fromBinary(leftover)
+        self.assertEqual(second.value, "bb")
+        self.assertEqual(leftover, "c\0\0\0dddd")
+
+        third, leftover = osc.StringArgument.fromBinary(leftover)
+        self.assertEqual(third.value, "c")
+        self.assertEqual(leftover, "dddd")
+
 
 class TestMessage(unittest.TestCase):
     def testGetTypeTag(self):
@@ -28,7 +43,7 @@ class TestMessage(unittest.TestCase):
         self.assertEqual(m.getTypeTags(), "s")
         m.arguments.append(osc.StringArgument("spam"))
         self.assertEqual(m.getTypeTags(), "ss")
-        
+
 
 class TestServer(unittest.TestCase):
     """
@@ -36,18 +51,3 @@ class TestServer(unittest.TestCase):
     """
     pass
 
-class TestParsing(unittest.TestCase):
-    def testStringParsing(self):
-        first_string, leftover = osc._readString("aaa\0bb\0\0c\0\0\0dddd") 
-        #padding with 0 to make strings length multiples of 4 chars
-        self.assertEqual(first_string, "aaa")
-        self.assertEqual(leftover, "bb\0\0c\0\0\0dddd")
-        
-        second_string, leftover = osc._readString(leftover)
-        self.assertEqual(second_string, "bb")
-        self.assertEqual(leftover, "c\0\0\0dddd")
-        
-        third_string, leftover = osc._readString(leftover)
-        #print("\n 3rd %s leftover: %s" % (third_string, leftover))
-        self.assertEqual(third_string, "c")
-        self.assertEqual(leftover, "dddd")

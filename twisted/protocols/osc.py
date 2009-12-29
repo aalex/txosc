@@ -94,6 +94,25 @@ class StringArgument(Argument):
         length = math.ceil((len(self.value)+1) / 4.0) * 4
         return struct.pack(">%ds" % (length), str(self.value))
 
+    @classmethod
+    def fromBinary(self, data):
+        """
+        Parses binary data to get the first string in it.
+
+        Returns a tuple with string, leftover.
+        The leftover should be parsed next.
+        :rettype: tuple
+
+        OSC-string A sequence of non-null ASCII characters followed by a null, 
+            followed by 0-3 additional null characters to make the total number of bits a multiple of 32.
+            """
+        null_pos = string.find(data, "\0") # find the first null char
+        s = data[0:null_pos] # get the first string out of data
+        i = null_pos # find the position of the beginning of the next data
+        i = i + (4 - (i % 4)) # considering that all data must have a size of a multiple of 4 chars.
+        leftover = data[i:]
+        return StringArgument(s), leftover
+
 
 class IntArgument(Argument):
     typeTag = "i"
@@ -191,23 +210,6 @@ def createArgument(data, type_tag=None):
     except ValueError, e:
         raise OscError("Could not cast %s to %s. %s" % (data, type_tag, e.message))
 
-def _readString(data):
-    """
-    Parses binary data to get the first string in it.
-    
-    Returns a tuple with string, leftover.
-    The leftover should be parsed next.
-    :rettype: tuple
-
-    OSC-string A sequence of non-null ASCII characters followed by a null, 
-    followed by 0-3 additional null characters to make the total number of bits a multiple of 32.
-    """
-    null_pos = string.find(data, "\0") # find the first null char
-    s = data[0:null_pos] # get the first string out of data
-    i = null_pos # find the position of the beginning of the next data
-    i = i + (4 - (i % 4)) # considering that all data must have a size of a multiple of 4 chars.
-    leftover = data[i:]
-    return (s, leftover)
 
 class OscProtocol(DatagramProtocol):
     """
@@ -217,8 +219,8 @@ class OscProtocol(DatagramProtocol):
         #The contents of an OSC packet must be either an OSC Message or an OSC Bundle. The first byte of the packet's contents unambiguously distinguishes between these two alternatives.
         packet_type = data[0] # TODO
         print "received %r from %s:%d" % (data, host, port)
-        osc_address, leftover = _readString(data)
-        print("Got OSC address: %s" % (osc_address))
+        osc_address, leftover = StringArgument.fromBinary(data)
+        print("Got OSC address: %s" % (osc_address.value))
         #self.transport.write(data, (host, port))
 
 
