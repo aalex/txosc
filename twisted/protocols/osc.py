@@ -79,12 +79,26 @@ class Argument(object):
         raise NotImplemented('Override this method')
 
 
+    @classmethod
+    def fromBinary(self, data):
+        """
+        Decode the value from binary form. Result is a tuple of (Instance, leftover).
+        """
+        raise NotImplemented('Override this method')
+
+
 #
 # OSC 1.1 required arguments
 #
 
 class BlobArgument(Argument):
     typeTag = "b"
+
+    def toBinary(self):
+        sz = len(self.value)
+        length = math.ceil((sz+1) / 4.0) * 4
+        return struct.pack(">i%ds" % (length), sz, str(self.value))
+
 
 
 class StringArgument(Argument):

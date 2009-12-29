@@ -10,6 +10,28 @@ Maintainer: Arjan Scherpenisse
 from twisted.trial import unittest
 from twisted.protocols import osc
 
+
+class TestBlobArgument(unittest.TestCase):
+    """
+    Encoding and decoding of a string argument.
+    """
+    def testToBinary(self):
+        self.assertEqual(osc.BlobArgument("").toBinary(), "\0\0\0\0\0\0\0\0")
+        self.assertEqual(osc.BlobArgument("a").toBinary(), "\0\0\0\1a\0\0\0")
+        self.assertEqual(osc.BlobArgument("hi").toBinary(), "\0\0\0\2hi\0\0")
+        self.assertEqual(osc.BlobArgument("hello").toBinary(), "\0\0\0\5hello\0\0\0")
+
+    def testFromBinary(self):
+        data = "\0\0\0\2hi\0\0\0\0\0\5hello\0\0\0"
+        first, leftover = osc.BlobArgument.fromBinary(data)
+        self.assertEqual(first.value, "hi")
+        self.assertEqual(leftover, "\0\0\0\5hello\0\0\0")
+
+        second, leftover = osc.BlobArgument.fromBinary(data)
+        self.assertEqual(second.value, "hello")
+        self.assertEqual(leftover, "")
+
+
 class TestStringArgument(unittest.TestCase):
     """
     Encoding and decoding of a string argument.
