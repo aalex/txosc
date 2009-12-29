@@ -11,7 +11,7 @@ import math
 import struct
 
 from twisted.internet.protocol import DatagramProtocol
-
+from twisted.internet import defer, reactor
 
 class OscError(Exception):
     """
@@ -25,10 +25,13 @@ class Message(object):
     OSC Message
     """
 
-    def __init__(self, address, type_tags=None, arguments=None):
+    def __init__(self, address, type_tags="", arguments=[]):
         self.address = address
         self.type_tags = type_tags
         self.arguments = arguments
+
+    def toBinary(self):
+        return StringArgument(self.address).toBinary() + "," + self.type_tags + "".join([a.toBinary() for a in self.arguments])
 
 
 class Bundle(object):
@@ -51,7 +54,7 @@ class Argument(object):
     def __init__(self, value):
         self.value = value
 
-    def encode(self):
+    def toBinary(self):
         """
         Encode the value to binary form, ready to send over the wire.
         """
@@ -64,26 +67,26 @@ class BlobArgument(Argument):
 
 class StringArgument(Argument):
 
-    def encode(self):
+    def toBinary(self):
         length = math.ceil((len(self.value)+1) / 4.0) * 4
-        return struct.pack(">%ds" % (length), str(next))
+        return struct.pack(">%ds" % (length), str(self.value))
 
 
 class IntArgument(Argument):
 
-   def encode(self):
+   def toBinary(self):
         return struct.pack(">i", int(self.value))
 
 
 class LongArgument(Argument):
 
-    def encode(self):
+    def toBinary(self):
         return struct.pack('>l', long(self.value))
 
 
 class FloatArgument(Argument):
 
-    def encode(self):
+    def toBinary(self):
         return struct.pack(">f", float(self.value))
 
 
@@ -96,7 +99,7 @@ class TimeTagArgument(Argument):
 
 class DoubleArgument(Argument):
 
-   def encode(self):
+   def toBinary(self):
         fr, sec = math.modf(self.value)
         return struct.pack('>ll', long(sec), long(fr * 1e9))
 
@@ -170,8 +173,37 @@ class OscProtocol(DatagramProtocol):
         print("Got OSC address: %s" % (osc_address))
         #self.transport.write(data, (host, port))
 
+
+class OscClientProtocol(DatagramProtocol):
+     def __init__(self, onStart):
+         self.onStart = onStart
+
+     def startProtocol(self):
+         self.onStart.callback(self)
+
+
+class OscSender(object):
+     def __init__(self):
+         d = defer.Deferred()
+         def listening(proto):
+             self.proto = proto
+         d.addCallback(listening)
+         self._port = reactor.listenUDP(0, OscClientProtocol(d))
+
+     def send(self, msg, (host, port)):
+         data = msg.toBinary()
+         self.proto.transport.write(data, (host, port))
+
+     def stop(self):
+         self._call.stop()
+         self._port.stopListening()
+
+
 # TODO: move to doc/core/examples/oscserver.py
 if __name__ == "__main__":
-    from twisted.internet import reactor
     reactor.listenUDP(17777, OscProtocol())
+
+    ds = OscSender()
+    ds.send(Message("/foo"), ("127.0.0.1", 17777))
+
     reactor.run()
