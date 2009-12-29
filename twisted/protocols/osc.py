@@ -3,6 +3,10 @@
 OSC 1.1 Protocol over UDP for Twisted.
 http://opensoundcontrol.org/spec-1_1 
 """
+from twisted.internet.protocol import DatagramProtocol
+from twisted.internet import reactor
+
+
 class OscError(Exception):
     """
     Any error raised by this module.
@@ -37,18 +41,25 @@ class Argument(object):
 
 class BlobArgument(Argument):
     pass
+
 class StringArgument(Argument):
     pass
+
 class IntArgument(Argument):
     pass
+
 class LongArgument(Argument):
     pass
+
 class FloatArgument(Argument):
     pass
+
 class TimeTagArgument(Argument):
     pass
+
 class DoubleArgument(Argument):
     pass
+
 class SymbolArgument(Argument): 
     pass
     #FIXME: what is that?
@@ -61,6 +72,7 @@ _types = {
     unicode: StringArgument, 
     #TODO : more types
     }
+
 _tags = {
     "f": FloatArgument, 
     "s": StringArgument, 
@@ -88,4 +100,14 @@ def createArgument(data, type_tag=None):
             raise OscError("Data %s")
     except ValueError, e:
         raise OscError("Could not cast %s to %s. %s" % (data, type_tag, e.message))
+
+class OscProtocol(DatagramProtocol):
+    """
+    The OSC server protocol
+    """
+    def datagramReceived(self, data, (host, port)):
+        pass
+        #print "received %r from %s:%d" % (data, host, port)
+        #self.transport.write(data, (host, port))
+
 
