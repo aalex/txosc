@@ -38,6 +38,6 @@ class TestParsing(unittest.TestCase):
         self.assertEqual(leftover, "c\0\0\0dddd")
         
         third_string, leftover = osc._readString(leftover)
-        print("\n 3rd %s leftover: %s" % (third_string, leftover))
+        #print("\n 3rd %s leftover: %s" % (third_string, leftover))
         self.assertEqual(third_string, "c")
         self.assertEqual(leftover, "dddd")

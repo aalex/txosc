@@ -62,10 +62,11 @@ class Argument(object):
 
 
 class BlobArgument(Argument):
-    pass
+    typeTag = "b"
 
 
 class StringArgument(Argument):
+    typeTag = "s"
 
     def toBinary(self):
         length = math.ceil((len(self.value)+1) / 4.0) * 4
@@ -73,30 +74,34 @@ class StringArgument(Argument):
 
 
 class IntArgument(Argument):
+    typeTag = "i"
 
-   def toBinary(self):
+    def toBinary(self):
         return struct.pack(">i", int(self.value))
 
 
 class LongArgument(Argument):
+    typeTag = None # FIXME
 
     def toBinary(self):
         return struct.pack('>l', long(self.value))
 
 
 class FloatArgument(Argument):
+    typeTag = "f"
 
     def toBinary(self):
         return struct.pack(">f", float(self.value))
 
 
 class DoubleArgument(FloatArgument):
-    pass
+    typeTag = None # FIXME
 
 
 class TimeTagArgument(Argument):
+    typeTag = "t"
 
-   def toBinary(self):
+    def toBinary(self):
         fr, sec = math.modf(self.value)
         return struct.pack('>ll', long(sec), long(fr * 1e9))
 
@@ -160,7 +165,7 @@ def _readString(data):
     null_pos = string.find(data, "\0") # find the first null char
     s = data[0:null_pos] # get the first string out of data
     i = null_pos # find the position of the beginning of the next data
-    i = i + (i % 4) # considering that all data must have a size of a multiple of 4 chars.
+    i = i + (4 - (i % 4)) # considering that all data must have a size of a multiple of 4 chars.
     leftover = data[i:]
     return (s, leftover)
 
