@@ -28,13 +28,16 @@ class TestServer(unittest.TestCase):
 
 class TestParsing(unittest.TestCase):
     def testStringParsing(self):
-        pass
-        first_string, leftover = osc._readString("/hello\0s\0spam")
-        self.assertEqual(first_string, "/hello")
-        self.assertEqual(leftover, "s\0spam")
+        first_string, leftover = osc._readString("aaa\0bb\0\0c\0\0\0dddd") 
+        #padding with 0 to make strings length multiples of 4 chars
+        self.assertEqual(first_string, "aaa")
+        self.assertEqual(leftover, "bb\0\0c\0\0\0dddd")
+        
         second_string, leftover = osc._readString(leftover)
-        self.assertEqual(second_string, "s")
-        self.assertEqual(leftover, "spam")
+        self.assertEqual(second_string, "bb")
+        self.assertEqual(leftover, "c\0\0\0dddd")
+        
         third_string, leftover = osc._readString(leftover)
-        self.assertEqual(third_string, "spam")
-        self.assertEqual(leftover, "")
+        print("\n 3rd %s leftover: %s" % (third_string, leftover))
+        self.assertEqual(third_string, "c")
+        self.assertEqual(leftover, "dddd")

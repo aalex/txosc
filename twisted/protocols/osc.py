@@ -153,11 +153,15 @@ def _readString(data):
     Returns a tuple with string, leftover.
     The leftover should be parsed next.
     :rettype: tuple
+
+    OSC-string A sequence of non-null ASCII characters followed by a null, 
+    followed by 0-3 additional null characters to make the total number of bits a multiple of 32.
     """
-    length = string.find(data, "\0") # find the first null char
-    left_over_index = int(math.ceil((length + 1) / 4.0) * 4) # Finding where to split the blob
-    s = data[0:length]
-    leftover = data[left_over_index:]
+    null_pos = string.find(data, "\0") # find the first null char
+    s = data[0:null_pos] # get the first string out of data
+    i = null_pos # find the position of the beginning of the next data
+    i = i + (i % 4) # considering that all data must have a size of a multiple of 4 chars.
+    leftover = data[i:]
     return (s, leftover)
 
 class OscProtocol(DatagramProtocol):
@@ -165,6 +169,8 @@ class OscProtocol(DatagramProtocol):
     The OSC server protocol
     """
     def datagramReceived(self, data, (host, port)):
+        #The contents of an OSC packet must be either an OSC Message or an OSC Bundle. The first byte of the packet's contents unambiguously distinguishes between these two alternatives.
+        packet_type = data[0] # TODO
         print "received %r from %s:%d" % (data, host, port)
         osc_address, leftover = _readString(data)
         print("Got OSC address: %s" % (osc_address))
