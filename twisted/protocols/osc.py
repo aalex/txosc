@@ -50,7 +50,6 @@ class Bundle(object):
         if self.time_tag is None:
             pass
             #TODO create time tag
-            pass
 
     def toBinary(self):
         data = "#bundle"
@@ -127,6 +126,14 @@ class FloatArgument(Argument):
     def toBinary(self):
         return struct.pack(">f", float(self.value))
 
+    @staticmethod
+    def fromBinary(self, data):
+        try:
+            f = struct.unpack(">f", data[:4])[0]
+            leftover = data[4:]
+        except IndexError, e:
+            raise OscError("Too few bytes left to get a float from %s." % (data))
+        return FloatArgument(f), leftover
 
 class TimeTagArgument(Argument):
     typeTag = "t"
@@ -219,9 +226,11 @@ class OscProtocol(DatagramProtocol):
         #The contents of an OSC packet must be either an OSC Message or an OSC Bundle. The first byte of the packet's contents unambiguously distinguishes between these two alternatives.
         packet_type = data[0] # TODO
         print "received %r from %s:%d" % (data, host, port)
-        osc_address, leftover = StringArgument.fromBinary(data)
-        print("Got OSC address: %s" % (osc_address.value))
+        osc_address_arg, leftover = StringArgument.fromBinary(data)
+        osc_address = osc_address_arg.value
+        print("Got OSC address: %s" % (osc_address))
         #self.transport.write(data, (host, port))
+        
 
 
 class OscClientProtocol(DatagramProtocol):
