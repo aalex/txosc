@@ -1,29 +1,22 @@
-# -*- test-case-name: twisted.test.test_osc -*-
-# Copyright (c) 2009 Alexandre Quessy, Arjan Scherpenisse
-# See LICENSE for details.
-
+#!/usr/bin/env python
 """
 OSC 1.1 Protocol over UDP for Twisted.
-http://opensoundcontrol.org/spec-1_1
+http://opensoundcontrol.org/spec-1_1 
 """
-
 class OscError(Exception):
     """
     Any error raised by this module.
     """
     pass
 
-
 class Message(object):
     """
     OSC Message
     """
-
     def __init__(self, address, type_tags=None, arguments=None):
         self.address = address
         self.type_tags = type_tags
         self.arguments = arguments
-
 
 class Bundle(object):
     """
@@ -34,8 +27,6 @@ class Bundle(object):
         self.time_tag = time_tag
         if self.time_tag is None:
             #TODO create time tag
-            pass
-
 
 class Argument(object):
     """
@@ -44,58 +35,43 @@ class Argument(object):
     def __init__(self, value):
         self.value = value
 
-
 class BlobArgument(Argument):
     pass
-
-
 class StringArgument(Argument):
     pass
-
-
 class IntArgument(Argument):
     pass
-
-
 class LongArgument(Argument):
     pass
-
-
 class FloatArgument(Argument):
     pass
-
-
 class TimeTagArgument(Argument):
     pass
-
-
 class DoubleArgument(Argument):
     pass
-
-
-class SymbolArgument(Argument):
+class SymbolArgument(Argument): 
     pass
     #FIXME: what is that?
 
+#global dicts
 _types = {
-    float: FloatArgument,
-    str: StringArgument,
+    float: FloatArgument, 
+    str: StringArgument, 
     int: IntArgument, # FIXME: or long?
-    unicode: StringArgument,
+    unicode: StringArgument, 
     #TODO : more types
     }
 _tags = {
-    "f": FloatArgument,
-    "s": StringArgument,
-    "i": IntArgument,
+    "f": FloatArgument, 
+    "s": StringArgument, 
+    "i": IntArgument, 
     #TODO : more types
     }
-
 
 def createArgument(data, type_tag=None):
     """
     Creates an OSC argument, trying to guess its type if no type is given.
-
+    
     Factory of *Attribute object.
     :param data: Any Python base type.
     :param type_tag: One-letter string. Either "i", "f", etc.
