@@ -39,6 +39,7 @@ class Message(object):
         """
         return "".join([a.typeTag for a in self.arguments])
 
+
 class Bundle(object):
     """
     OSC Bundle
@@ -69,10 +70,6 @@ class Argument(object):
 
     def __init__(self, value):
         self.value = value
-
-
-    def getTypeTag(self):
-        return self.typeTag
 
 
     def toBinary(self):
@@ -121,16 +118,16 @@ class TimeTagArgument(Argument):
 
 
 class BooleanArgument(Argument):
-    def __init__(self):
-        self.value = None
+    def __init__(self, value):
+        Argument.__init__(self, value)
+        if self.value:
+            self.typeTag = "T"
+        else:
+            self.typeTag = "F"
 
     def toBinary(self):
         return ""
 
-    def getTypeTag(self):
-        if self.value:
-            return "T"
-        return "F"
 
 class NullArgument(Argument):
     typeTag = "N"
