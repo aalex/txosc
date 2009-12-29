@@ -79,8 +79,8 @@ class Argument(object):
         raise NotImplemented('Override this method')
 
 
-    @classmethod
-    def fromBinary(self, data):
+    @staticmethod
+    def fromBinary(data):
         """
         Decode the value from binary form. Result is a tuple of (Instance, leftover).
         """
@@ -108,8 +108,8 @@ class StringArgument(Argument):
         length = math.ceil((len(self.value)+1) / 4.0) * 4
         return struct.pack(">%ds" % (length), str(self.value))
 
-    @classmethod
-    def fromBinary(self, data):
+    @staticmethod
+    def fromBinary(data):
         """
         Parses binary data to get the first string in it.
 
