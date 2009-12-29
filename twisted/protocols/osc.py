@@ -7,6 +7,10 @@ OSC 1.1 Protocol over UDP for Twisted.
 http://opensoundcontrol.org/spec-1_1
 """
 
+import math
+import struct
+
+
 class OscError(Exception):
     """
     Any error raised by this module.
@@ -56,32 +60,45 @@ class BlobArgument(Argument):
 
 
 class StringArgument(Argument):
-    pass
+
+    def encode(self):
+        length = math.ceil((len(self.value)+1) / 4.0) * 4
+        return struct.pack(">%ds" % (length), str(next))
 
 
 class IntArgument(Argument):
-    pass
+
+    def encode(self):
+        return struct.pack(">i", int(self.value))
 
 
 class LongArgument(Argument):
-    pass
+
+    def encode(self):
+        return struct.pack('>l', long(self.value))
 
 
 class FloatArgument(Argument):
+
+    def encode(self):
+        return struct.pack(">f", float(self.value))
+
+
+class DoubleArgument(FloatArgument):
     pass
 
 
 class TimeTagArgument(Argument):
-    pass
 
-
-class DoubleArgument(Argument):
-    pass
+    def encode(self):
+        fr, sec = math.modf(self.value)
+        return struct.pack('>ll', long(sec), long(fr * 1e9))
 
 
 class SymbolArgument(Argument):
     pass
     #FIXME: what is that?
+
 
 _types = {
     float: FloatArgument,
@@ -91,6 +108,7 @@ _types = {
     unicode: StringArgument,
     #TODO : more types
     }
+
 
 _tags = {
     "b": BlobArgument,
