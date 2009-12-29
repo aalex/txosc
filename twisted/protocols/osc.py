@@ -3,8 +3,9 @@
 OSC 1.1 Protocol over UDP for Twisted.
 http://opensoundcontrol.org/spec-1_1 
 """
+import string
+import math
 from twisted.internet.protocol import DatagramProtocol
-from twisted.internet import reactor
 
 
 class OscError(Exception):
@@ -101,13 +102,32 @@ def createArgument(data, type_tag=None):
     except ValueError, e:
         raise OscError("Could not cast %s to %s. %s" % (data, type_tag, e.message))
 
+def _readString(data):
+    """
+    Parses binary data to get the first string in it.
+    
+    Returns a tuple with string, leftover.
+    The leftover should be parsed next.
+    :rettype: tuple
+    """
+    length = string.find(data, "\0") # find the first null char
+    left_over_index = int(math.ceil((length + 1) / 4.0) * 4) # Finding where to split the blob
+    s = data[0:length]
+    leftover = data[left_over_index:]
+    return (s, leftover)
+
 class OscProtocol(DatagramProtocol):
     """
     The OSC server protocol
     """
     def datagramReceived(self, data, (host, port)):
-        pass
-        #print "received %r from %s:%d" % (data, host, port)
+        print "received %r from %s:%d" % (data, host, port)
+        osc_address, leftover = _readString(data)
+        print("Got OSC address: %s" % (osc_address))
         #self.transport.write(data, (host, port))
 
-
+# TODO: move to doc/core/examples/oscserver.py
+if __name__ == "__main__":
+    from twisted.internet import reactor
+    reactor.listenUDP(17777, OscProtocol())
+    reactor.run()
