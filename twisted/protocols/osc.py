@@ -25,9 +25,8 @@ class Message(object):
     OSC Message
     """
 
-    def __init__(self, address, type_tags="", arguments=[]):
+    def __init__(self, address, arguments=[]):
         self.address = address
-        self.type_tags = type_tags
         self.arguments = arguments
 
     def toBinary(self):
