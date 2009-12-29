@@ -27,7 +27,7 @@ class TestBlobArgument(unittest.TestCase):
         self.assertEqual(first.value, "hi")
         self.assertEqual(leftover, "\0\0\0\5hello\0\0\0")
 
-        second, leftover = osc.BlobArgument.fromBinary(data)
+        second, leftover = osc.BlobArgument.fromBinary(leftover)
         self.assertEqual(second.value, "hello")
         self.assertEqual(leftover, "")
 
