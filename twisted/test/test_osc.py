@@ -45,6 +45,13 @@ class TestFloatArgument(unittest.TestCase):
         if float_arg.value > 3.1416:
             self.fail("value is too big")
 
+class TestIntArgument(unittest.TestCase):
+    
+    def testToAndFromBinary(self):
+        binary = osc.IntArgument(12345).toBinary()
+        int_arg = osc.IntArgument.fromBinary(binary)[0] 
+        self.assertEqual(int_arg.value, 12345)
+
 class TestMessage(unittest.TestCase):
     def testGetTypeTag(self):
         m = osc.Message("/example")

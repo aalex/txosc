@@ -119,6 +119,15 @@ class IntArgument(Argument):
     def toBinary(self):
         return struct.pack(">i", int(self.value))
 
+    @staticmethod
+    def fromBinary(data):
+        try:
+            i = struct.unpack(">i", data[:4])[0]
+            leftover = data[4:]
+        except IndexError, e:
+            raise OscError("Too few bytes left to get an int from %s." % (data))
+        return IntArgument(i), leftover
+
 
 class FloatArgument(Argument):
     typeTag = "f"
