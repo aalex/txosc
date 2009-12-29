@@ -50,7 +50,6 @@ class Bundle(object):
         if self.time_tag is None:
             pass
             #TODO create time tag
-            pass
 
     def toBinary(self):
         data = "#bundle"
@@ -119,7 +118,7 @@ class StringArgument(Argument):
 
         OSC-string A sequence of non-null ASCII characters followed by a null, 
             followed by 0-3 additional null characters to make the total number of bits a multiple of 32.
-            """
+        """
         null_pos = string.find(data, "\0") # find the first null char
         s = data[0:null_pos] # get the first string out of data
         i = null_pos # find the position of the beginning of the next data
@@ -134,6 +133,15 @@ class IntArgument(Argument):
     def toBinary(self):
         return struct.pack(">i", int(self.value))
 
+    @staticmethod
+    def fromBinary(data):
+        try:
+            i = struct.unpack(">i", data[:4])[0]
+            leftover = data[4:]
+        except IndexError, e:
+            raise OscError("Too few bytes left to get an int from %s." % (data))
+        return IntArgument(i), leftover
+
 
 class FloatArgument(Argument):
     typeTag = "f"
@@ -141,6 +149,14 @@ class FloatArgument(Argument):
     def toBinary(self):
         return struct.pack(">f", float(self.value))
 
+    @staticmethod
+    def fromBinary(data):
+        try:
+            f = struct.unpack(">f", data[:4])[0]
+            leftover = data[4:]
+        except IndexError, e:
+            raise OscError("Too few bytes left to get a float from %s." % (data))
+        return FloatArgument(f), leftover
 
 class TimeTagArgument(Argument):
     typeTag = "t"
@@ -190,7 +206,7 @@ _types = {
     float: FloatArgument,
     str: StringArgument,
     int: IntArgument,
-    unicode: StringArgument,
+    #TODO: unicode: StringArgument,
     #TODO : more types
     }
 
@@ -233,9 +249,11 @@ class OscProtocol(DatagramProtocol):
         #The contents of an OSC packet must be either an OSC Message or an OSC Bundle. The first byte of the packet's contents unambiguously distinguishes between these two alternatives.
         packet_type = data[0] # TODO
         print "received %r from %s:%d" % (data, host, port)
-        osc_address, leftover = StringArgument.fromBinary(data)
-        print("Got OSC address: %s" % (osc_address.value))
+        osc_address_arg, leftover = StringArgument.fromBinary(data)
+        osc_address = osc_address_arg.value
+        print("Got OSC address: %s" % (osc_address))
         #self.transport.write(data, (host, port))
+        
 
 
 class OscClientProtocol(DatagramProtocol):
