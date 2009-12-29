@@ -108,7 +108,21 @@ class BlobArgument(Argument):
         #length = math.ceil((sz+1) / 4.0) * 4
         length = _ceilToMultipleOfFour(sz)
         return struct.pack(">i%ds" % (length), sz, str(self.value))
-
+    
+    @staticmethod
+    def fromBinary(data):
+        try:
+            length = struct.unpack(">i", data[0:4])[0]
+            index_of_leftover = _ceilToMultipleOfFour(length) + 4
+            try:
+                blob_data = data[4:length + 4]
+            except IndexError, e:
+                raise OscError("Not enough bytes to find size of a blob of size %s in %s." % (length, data))
+        except IndexError, e:
+            raise OscError("Not enough bytes to find size of a blob argument in %s." % (data))
+        leftover = data[index_of_leftover:]
+        return BlobArgument(blob_data), leftover
+        
 
 
 class StringArgument(Argument):
