@@ -1,5 +1,7 @@
 syntax: glob
 
 *.pyc
+# vim files... ;)
+.*.swp
 _trial_temp/*
 twisted/plugins/dropin.cache
