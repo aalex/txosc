@@ -80,7 +80,8 @@ class SymbolArgument(Argument):
 _types = {
     float: FloatArgument,
     str: StringArgument,
-    int: IntArgument, # FIXME: or long?
+    int: IntArgument,
+    long: LongArgument,
     unicode: StringArgument,
     #TODO : more types
     }
