@@ -3,7 +3,12 @@
 OSC 1.1 Protocol over UDP for Twisted.
 http://opensoundcontrol.org/spec-1_1 
 """
-# classes:
+class OscError(Exception):
+    """
+    Any error raised by this module.
+    """
+    pass
+
 class Message(object):
     """
     OSC Message
@@ -32,7 +37,6 @@ class Argument(object):
 
 class BlobArgument(Argument):
     pass
-
 class StringArgument(Argument):
     pass
 class IntArgument(Argument):
@@ -41,11 +45,47 @@ class LongArgument(Argument):
     pass
 class FloatArgument(Argument):
     pass
-class TimetagArgument(Argument):
+class TimeTagArgument(Argument):
     pass
 class DoubleArgument(Argument):
     pass
 class SymbolArgument(Argument): 
     pass
     #FIXME: what is that?
+
+_types = {
+    float: FloatArgument, 
+    str: StringArgument, 
+    int: IntArgument, # FIXME: or long?
+    unicode: StringArgument, 
+    #TODO : more types
+    }
+_tags = {
+    "f": FloatArgument, 
+    "s": StringArgument, 
+    "i": IntArgument, 
+    #TODO : more types
+    }
+    
+
+def createArgument(data, type_tag=None):
+    """
+    Creates an OSC argument, trying to guess its type if no type is given.
+    
+    Factory of *Attribute object.
+    :param data: Any Python base type.
+    :param type_tag: One-letter string. Either "i", "f", etc.
+    """
+    global _types
+    global _tags
+    kind = type(data)
+    try:
+        if type_tag in _tags.keys():
+            return _tags[type_tag](data)
+        if kind in _types.keys():
+            return _types[kind](data)
+        else:
+            raise OscError("Data %s")
+    except ValueError, e:
+        raise OscError("Could not cast %s to %s. %s" % (data, type_tag, e.message))
 
