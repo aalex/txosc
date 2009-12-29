@@ -4,7 +4,7 @@
 
 """
 OSC 1.1 Protocol over UDP for Twisted.
-http://opensoundcontrol.org/spec-1_1 
+http://opensoundcontrol.org/spec-1_1
 """
 import string
 import math
@@ -38,7 +38,7 @@ class Bundle(object):
     """
     OSC Bundle
     """
-    def __init__(self, messages=[],  time_tag=None):
+    def __init__(self, messages=[],  time_tag=0):
         self.messages = messages
         self.time_tag = time_tag
         if self.time_tag is None:
@@ -46,13 +46,29 @@ class Bundle(object):
             #TODO create time tag
             pass
 
+    def toBinary(self):
+        data = "#bundle"
+        data += TimeTagArgument(self.time_tag).toBinary()
+        for msg in self.messages:
+            binary = msg.toBinary()
+            data += IntArgument(len(binary)).toBinary()
+            data += binary
+        return data
+
 
 class Argument(object):
     """
     Base OSC argument
     """
+    typeTag = None
+
     def __init__(self, value):
         self.value = value
+
+
+    def getTypeTag(self):
+        return self.typeTag
+
 
     def toBinary(self):
         """
@@ -60,6 +76,10 @@ class Argument(object):
         """
         raise NotImplemented('Override this method')
 
+
+#
+# OSC 1.1 required arguments
+#
 
 class BlobArgument(Argument):
     typeTag = "b"
@@ -80,22 +100,11 @@ class IntArgument(Argument):
         return struct.pack(">i", int(self.value))
 
 
-class LongArgument(Argument):
-    typeTag = None # FIXME
-
-    def toBinary(self):
-        return struct.pack('>l', long(self.value))
-
-
 class FloatArgument(Argument):
     typeTag = "f"
 
     def toBinary(self):
         return struct.pack(">f", float(self.value))
-
-
-class DoubleArgument(FloatArgument):
-    typeTag = None # FIXME
 
 
 class TimeTagArgument(Argument):
@@ -106,17 +115,46 @@ class TimeTagArgument(Argument):
         return struct.pack('>ll', long(sec), long(fr * 1e9))
 
 
+class BooleanArgument(Argument):
+    def __init__(self):
+        self.value = None
 
-class SymbolArgument(Argument):
-    pass
-    #FIXME: what is that?
+    def toBinary(self):
+        return ""
+
+    def getTypeTag(self):
+        if self.value:
+            return "T"
+        return "F"
+
+class NullArgument(Argument):
+    typeTag = "N"
+
+    def __init__(self):
+        self.value = None
+
+
+class ImpulseArgument(Argument):
+    typeTag = "I"
+
+    def __init__(self):
+        self.value = None
+
+#
+# Optional arguments
+#
+# Should we implement all types that are listed "optional" in
+# http://opensoundcontrol.org/spec-1_0 ?
+
+#class SymbolArgument(StringArgument):
+#    typeTag = "S"
+
 
 #global dicts
 _types = {
     float: FloatArgument,
     str: StringArgument,
     int: IntArgument,
-    long: LongArgument,
     unicode: StringArgument,
     #TODO : more types
     }
