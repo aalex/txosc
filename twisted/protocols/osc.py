@@ -105,7 +105,7 @@ class StringArgument(Argument):
 
         OSC-string A sequence of non-null ASCII characters followed by a null, 
             followed by 0-3 additional null characters to make the total number of bits a multiple of 32.
-            """
+        """
         null_pos = string.find(data, "\0") # find the first null char
         s = data[0:null_pos] # get the first string out of data
         i = null_pos # find the position of the beginning of the next data
