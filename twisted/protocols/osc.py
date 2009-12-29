@@ -9,6 +9,7 @@ http://opensoundcontrol.org/spec-1_1
 import string
 import math
 import struct
+import time
 
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
@@ -186,7 +187,19 @@ class FloatArgument(Argument):
         return FloatArgument(f), leftover
 
 class TimeTagArgument(Argument):
+    """
+    Time tags are represented by a 64 bit fixed point number. The first 32 bits specify the number of seconds since midnight on January 1, 1900, and the last 32 bits specify fractional parts of a second to a precision of about 200 picoseconds. This is the representation used by Internet NTP timestamps. 
+
+    The time tag value consisting of 63 zero bits followed by a one in the least signifigant bit is a special case meaning "immediately."
+    """
     typeTag = "t"
+    SECONDS_UTC_TO_UNIX_EPOCH = 2208988800
+
+    def __init__(self, value=None):
+        if value is None:
+            #FIXME: is that the correct NTP timestamp ?
+            value = self.SECONDS_UTC_TO_UNIX_EPOCH + time.time()
+        self.value = value
 
     def toBinary(self):
         fr, sec = math.modf(self.value)
