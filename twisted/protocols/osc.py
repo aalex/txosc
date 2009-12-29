@@ -44,6 +44,12 @@ class Argument(object):
     def __init__(self, value):
         self.value = value
 
+    def encode(self):
+        """
+        Encode the value to binary form, ready to send over the wire.
+        """
+        raise NotImplemented('Override this method')
+
 
 class BlobArgument(Argument):
     pass
@@ -85,10 +91,12 @@ _types = {
     unicode: StringArgument,
     #TODO : more types
     }
+
 _tags = {
+    "b": BlobArgument,
     "f": FloatArgument,
-    "s": StringArgument,
     "i": IntArgument,
+    "s": StringArgument,
     #TODO : more types
     }
 
