@@ -196,6 +196,7 @@ class TimeTagArgument(Argument):
     SECONDS_UTC_TO_UNIX_EPOCH = 2208988800
 
     def __init__(self, value=None):
+        # TODO: call parent's constructor ?
         if value is None:
             #FIXME: is that the correct NTP timestamp ?
             value = self.SECONDS_UTC_TO_UNIX_EPOCH + time.time()
@@ -215,13 +216,14 @@ class BooleanArgument(Argument):
             self.typeTag = "F"
 
     def toBinary(self):
-        return ""
+        return "" # bool args do not have data, just a type tag
 
 
 class NullArgument(Argument):
     typeTag = "N"
 
     def __init__(self):
+        # TODO: call parent's constructor ?
         self.value = None
 
 
@@ -229,6 +231,7 @@ class ImpulseArgument(Argument):
     typeTag = "I"
 
     def __init__(self):
+        # TODO: call parent's constructor ?
         self.value = None
 
 #

@@ -76,10 +76,15 @@ class TestIntArgument(unittest.TestCase):
 
 class TestTimeTagArgument(unittest.TestCase):
     def testToBinary(self):
-        arg = osc.TimeTagArgument(1) # 1 second since Jan 1, 1900
+        # 1 second since Jan 1, 1900
+        arg = osc.TimeTagArgument(1) 
         binary = arg.toBinary()
         self.assertEqual(binary, "\0\0\0\1\0\0\0\0")
         
+    def testFromBinary(self): 
+        # 1 second since Jan 1, 1900
+        val = osc.TimeTagArgument.fromBinary("\0\0\0\1\0\0\0\0")[0].value
+        self.assertEqual(val, 1.0)
 
 class TestMessage(unittest.TestCase):
     def testGetTypeTag(self):
