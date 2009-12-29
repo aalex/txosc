@@ -127,7 +127,7 @@ class FloatArgument(Argument):
         return struct.pack(">f", float(self.value))
 
     @staticmethod
-    def fromBinary(self, data):
+    def fromBinary(data):
         try:
             f = struct.unpack(">f", data[:4])[0]
             leftover = data[4:]
