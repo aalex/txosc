@@ -95,9 +95,6 @@ class DoubleArgument(FloatArgument):
 
 
 class TimeTagArgument(Argument):
-    pass
-
-class DoubleArgument(Argument):
 
    def toBinary(self):
         fr, sec = math.modf(self.value)
