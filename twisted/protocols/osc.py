@@ -1,4 +1,7 @@
-#!/usr/bin/env python
+# -*- test-case-name: twisted.test.test_osc -*-
+# Copyright (c) 2009 Alexandre Quessy, Arjan Scherpenisse
+# See LICENSE for details.
+
 """
 OSC 1.1 Protocol over UDP for Twisted.
 http://opensoundcontrol.org/spec-1_1
