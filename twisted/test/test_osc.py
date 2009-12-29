@@ -86,6 +86,9 @@ class TestTimeTagArgument(unittest.TestCase):
         val = osc.TimeTagArgument.fromBinary("\0\0\0\1\0\0\0\0")[0].value
         self.assertEqual(val, 1.0)
 
+    testFromBinary.skip = "TimeTagArgument.fromBinary is not yet implemented"
+
+
 class TestMessage(unittest.TestCase):
     def testGetTypeTag(self):
         m = osc.Message("/example")
