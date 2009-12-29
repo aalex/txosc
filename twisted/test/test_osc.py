@@ -20,6 +20,16 @@ class TestStringArgument(unittest.TestCase):
         self.assertEqual(osc.StringArgument("Hello").toBinary(), "Hello\0\0\0")
 
 
+class TestMessage(unittest.TestCase):
+    def testGetTypeTag(self):
+        m = osc.Message("/example")
+        self.assertEqual(m.getTypeTags(), "")
+        m.arguments.append(osc.StringArgument("egg"))
+        self.assertEqual(m.getTypeTags(), "s")
+        m.arguments.append(osc.StringArgument("spam"))
+        self.assertEqual(m.getTypeTags(), "ss")
+        
+
 class TestServer(unittest.TestCase):
     """
     This test needs python-liblo.
