@@ -176,7 +176,7 @@ _types = {
     float: FloatArgument,
     str: StringArgument,
     int: IntArgument,
-    unicode: StringArgument,
+    #TODO: unicode: StringArgument,
     #TODO : more types
     }
 
