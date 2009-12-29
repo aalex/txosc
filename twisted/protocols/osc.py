@@ -31,13 +31,19 @@ class Message(object):
         self.arguments = arguments
 
     def toBinary(self):
-        return StringArgument(self.address).toBinary() + "," + self.type_tags + "".join([a.toBinary() for a in self.arguments])
+        return StringArgument(self.address).toBinary() + "," + self.getTypeTags() + "".join([a.toBinary() for a in self.arguments])
 
+    def getTypeTags(self):
+        """
+        :rettype: string
+        """
+        return "".join([a.typeTag for a in self.arguments])
 
 class Bundle(object):
     """
     OSC Bundle
     """
+    #TODO: type_tag ?
     def __init__(self, messages=[],  time_tag=None):
         self.messages = messages
         self.time_tag = time_tag
@@ -51,6 +57,7 @@ class Argument(object):
     """
     Base OSC argument
     """
+    typeTag = None # Must be implemented in children classes
     def __init__(self, value):
         self.value = value
 
