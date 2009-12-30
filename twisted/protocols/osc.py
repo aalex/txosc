@@ -66,12 +66,10 @@ class Message(object):
 
     @staticmethod
     def fromBinary(data):
-        osc_address_arg, leftover = StringArgument.fromBinary(data)
-        osc_address = osc_address_arg.value
+        osc_address, leftover = stringFromBinary(data)
         #print("Got OSC address: %s" % (osc_address))
         message = Message(osc_address)
-        s_arg, leftover = StringArgument.fromBinary(leftover)
-        type_tags = s_arg.value
+        type_tags, leftover = stringFromBinary(leftover)
 
         if type_tags[0] != ",":
             # invalid type tag string
@@ -190,12 +188,8 @@ class StringArgument(Argument):
         OSC-string A sequence of non-null ASCII characters followed by a null, 
             followed by 0-3 additional null characters to make the total number of bits a multiple of 32.
         """
-        null_pos = string.find(data, "\0") # find the first null char
-        s = data[0:null_pos] # get the first string out of data
-        i = null_pos # find the position of the beginning of the next data
-        i = _ceilToMultipleOfFour(i)
-        leftover = data[i:]
-        return StringArgument(s), leftover
+        value, leftover = stringFromBinary(data)
+        return StringArgument(value), leftover
 
 
 class IntArgument(Argument):
@@ -380,6 +374,14 @@ def createArgumentFromBinary(type_tag, data):
     return _tags[type_tag].fromBinary(data)
 
 
+def stringFromBinary(data):
+    null_pos = string.find(data, "\0") # find the first null char
+    value = data[0:null_pos] # get the first string out of data
+    # find the position of the beginning of the next data
+    leftover = data[_ceilToMultipleOfFour(null_pos):]
+    return value, leftover
+
+
 class OscProtocol(DatagramProtocol):
     """
     The OSC server protocol
@@ -389,8 +391,11 @@ class OscProtocol(DatagramProtocol):
         #packet_type = data[0] # TODO
         print("received %r from %s:%d" % (data, host, port))
         #TODO : check if it is a #bundle
-        message = Message.fromBinary(data)
-        #self.transport.write(data, (host, port))
+        message, leftover = Message.fromBinary(data)
+        self.messageReceived(message)
+
+    def messageReceived(self, message):
+        print "Message received: [%s]" % message
 
 
 
@@ -425,5 +430,6 @@ if __name__ == "__main__":
 
     ds = OscSender()
     ds.send(Message("/foo"), ("127.0.0.1", 17777))
+    ds.send(Message("/foo", StringArgument("bar")), ("127.0.0.1", 17777))
 
     reactor.run()
