@@ -4,7 +4,8 @@
 
 """
 OSC 1.1 Protocol over UDP for Twisted.
-http://opensoundcontrol.org/spec-1_1
+Specification : http://opensoundcontrol.org/spec-1_1
+Examples : http://opensoundcontrol.org/spec-1_0-examples
 """
 import string
 import math
@@ -36,20 +37,39 @@ class Message(object):
     OSC Message
     """
 
-    def __init__(self, address, type_tags="", arguments=[]):
+    def __init__(self, address, arguments=[]):
         self.address = address
-        self.type_tags = type_tags
         self.arguments = arguments
 
     def toBinary(self):
         return StringArgument(self.address).toBinary() + "," + self.getTypeTags() + "".join([a.toBinary() for a in self.arguments])
 
-    def getTypeTags(self):
+    def getTypeTags(self, padWithZeros=True):
         """
         :rettype: string
         """
-        return "".join([a.typeTag for a in self.arguments])
+        s = "".join([a.typeTag for a in self.arguments])
+        if padWithZeros:
+            length = len(s)
+            pad = _ceilToMultipleOfFour(length) - length
+            s += "\0" * pad
+        return s    
 
+
+    @staticmethod
+    def fromBinary(data):
+        osc_address_arg, leftover = StringArgument.fromBinary(data)
+        osc_address = osc_address_arg.value
+        print("Got OSC address: %s" % (osc_address))
+        message = Message(osc_address)
+        type_tags_arg, leftover = StringArgument.fromBinary(leftover)
+        type_tags = type_tags_args.value
+        if type_tags != ",": # no arg
+            for type_tag in type_tags[1:]:
+                arg, leftover = createArgument(leftover, type_tag)
+                message.arguments.append(arg)
+        return message
+                
 
 class Bundle(object):
     """
@@ -290,11 +310,10 @@ class OscProtocol(DatagramProtocol):
     """
     def datagramReceived(self, data, (host, port)):
         #The contents of an OSC packet must be either an OSC Message or an OSC Bundle. The first byte of the packet's contents unambiguously distinguishes between these two alternatives.
-        packet_type = data[0] # TODO
-        print "received %r from %s:%d" % (data, host, port)
-        osc_address_arg, leftover = StringArgument.fromBinary(data)
-        osc_address = osc_address_arg.value
-        print("Got OSC address: %s" % (osc_address))
+        #packet_type = data[0] # TODO
+        print("received %r from %s:%d" % (data, host, port))
+        #TODO : check if it is a #bundle
+        message = Message.fromBinary(data)
         #self.transport.write(data, (host, port))
         
 

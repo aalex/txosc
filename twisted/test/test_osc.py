@@ -92,11 +92,11 @@ class TestTimeTagArgument(unittest.TestCase):
 class TestMessage(unittest.TestCase):
     def testGetTypeTag(self):
         m = osc.Message("/example")
-        self.assertEqual(m.getTypeTags(), "")
+        self.assertEqual(m.getTypeTags(), "\0\0\0\0")
         m.arguments.append(osc.StringArgument("egg"))
-        self.assertEqual(m.getTypeTags(), "s")
+        self.assertEqual(m.getTypeTags(), "s\0\0\0")
         m.arguments.append(osc.StringArgument("spam"))
-        self.assertEqual(m.getTypeTags(), "ss")
+        self.assertEqual(m.getTypeTags(), "ss\0\0")
 
 
 class TestServer(unittest.TestCase):
