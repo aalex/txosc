@@ -37,9 +37,9 @@ class Message(object):
     OSC Message
     """
 
-    def __init__(self, address, arguments=[]):
+    def __init__(self, address, *arguments):
         self.address = address
-        self.arguments = arguments
+        self.arguments = list(arguments)
 
     def toBinary(self):
         return StringArgument(self.address).toBinary() + "," + self.getTypeTags() + "".join([a.toBinary() for a in self.arguments])
@@ -58,15 +58,16 @@ class Message(object):
 
     @staticmethod
     def fromBinary(data):
+        global _tags
         osc_address_arg, leftover = StringArgument.fromBinary(data)
         osc_address = osc_address_arg.value
-        print("Got OSC address: %s" % (osc_address))
+        #print("Got OSC address: %s" % (osc_address))
         message = Message(osc_address)
-        type_tags_arg, leftover = StringArgument.fromBinary(leftover)
-        type_tags = type_tags_args.value
+        s_arg, leftover = StringArgument.fromBinary(leftover)
+        type_tags = s_arg.value
         if type_tags != ",": # no arg
             for type_tag in type_tags[1:]:
-                arg, leftover = createArgument(leftover, type_tag)
+                arg, leftover = _tags[type_tag].fromBinary(leftover) 
                 message.arguments.append(arg)
         return message
                 
