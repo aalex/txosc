@@ -182,13 +182,17 @@ class TestAddressSpace(unittest.TestCase):
 
     def testMatchMessageWithWildcards(self):
 
-        def callback(m):
+        def fooCallback(m):
+            pass
+        def barCallback(m):
             pass
         space = osc.AddressSpace()
-        space.addCallback("/foo", callback)
+        space.addCallback("/foo", fooCallback)
+        space.addCallback("/bar", barCallback)
 
-        self.assertEqual(space.matchCallbacks(osc.Message("/*")), set(callback))
-        self.assertEqual(space.matchCallbacks(osc.Message("/bar")), set())
+        self.assertEqual(space.matchCallbacks(osc.Message("/*")), set(fooCallback))
+        self.assertEqual(space.matchCallbacks(osc.Message("/baz")), set())
+        self.assertEqual(space.matchCallbacks(osc.Message("/b*r")), set(barCallback))
 
     
     testRemoveNonExistingCallback.skip = "AddressSpace needs to be implemented"
