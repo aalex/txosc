@@ -400,21 +400,31 @@ class AddressSpace(object):
         """
         raise NotImplementedError("AddressSpace is in progress.")
 
-    def removeAllCallbacks(self, pattern) -> None
+    def removeAllCallbacks(self, pattern):
+        """
+        :rettype: -> None
+        """
         raise NotImplementedError("AddressSpace is in progress.")
 
-    def getCallbacks(self, pattern) -> set of callables.
+    def getCallbacks(self, pattern):
+        """
+        Returns: set of callables.
+        """
         raise NotImplementedError("AddressSpace is in progress.")
 
-    def dispatch(self, Message, clientAddress) -> None
+    def dispatch(self, Message, clientAddress):
         """
         Executes every callback matching the message address with Message as argument. 
         (and not only its arguments) 
         The order in which the callbacks are called in undefined.
+        -> None
         """
         raise NotImplementedError("AddressSpace is in progress.")
 
-    def matchCallbacks(self, Message) -> list of callables
+    def matchCallbacks(self, Message):
+        """
+        -> list of callables
+        """
         raise NotImplementedError("AddressSpace is in progress.")
 
 
