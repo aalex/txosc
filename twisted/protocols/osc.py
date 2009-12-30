@@ -11,6 +11,7 @@ import string
 import math
 import struct
 import time
+import weakref
 
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
@@ -382,7 +383,42 @@ def stringFromBinary(data):
     return value, leftover
 
 
-class OscProtocol(DatagramProtocol):
+class AddressSpace(object):
+    """
+    Adding/removing OSC handlers callbacks utility
+    """
+    def __init__(self):
+        # TODO: implement as a tree of sets or a big dict?
+        self.callbacks = weakref.WeakValueDictionary()
+        
+    def addCallback(self, pattern, callable, typeTags=None):
+        raise NotImplementedError("AddressSpace is in progress.")
+        
+    def removeCallback(self, pattern, callable):
+        """
+        :rettype: -> None
+        """
+        raise NotImplementedError("AddressSpace is in progress.")
+
+    def removeAllCallbacks(self, pattern) -> None
+        raise NotImplementedError("AddressSpace is in progress.")
+
+    def getCallbacks(self, pattern) -> set of callables.
+        raise NotImplementedError("AddressSpace is in progress.")
+
+    def dispatch(self, Message, clientAddress) -> None
+        """
+        Executes every callback matching the message address with Message as argument. 
+        (and not only its arguments) 
+        The order in which the callbacks are called in undefined.
+        """
+        raise NotImplementedError("AddressSpace is in progress.")
+
+    def matchCallbacks(self, Message) -> list of callables
+        raise NotImplementedError("AddressSpace is in progress.")
+
+
+class OscServerProtocol(DatagramProtocol):
     """
     The OSC server protocol
     """
@@ -426,7 +462,7 @@ class OscSender(object):
 
 # TODO: move to doc/core/examples/oscserver.py
 if __name__ == "__main__":
-    reactor.listenUDP(17777, OscProtocol())
+    reactor.listenUDP(17777, OscServerProtocol())
 
     ds = OscSender()
     ds.send(Message("/foo"), ("127.0.0.1", 17777))
