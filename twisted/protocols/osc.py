@@ -89,6 +89,10 @@ class Message(object):
         invalid_chars = set(" #*,/?[]{}")
         return len(set(part).intersection(invalid_chars)) == 0
 
+    def __str__(self):
+        args = " ".join([str(a) for a in self.arguments])
+        return "%s ,%s %s" % (self.address, self.getTypeTags(), args)
+
 
 class Bundle(object):
     """
@@ -135,6 +139,8 @@ class Argument(object):
         """
         raise NotImplemented('Override this method')
 
+    def __str__(self):
+        return "%s:%s " % (self.typeTag, self.value)
 
 #
 # OSC 1.1 required arguments

@@ -70,20 +70,9 @@ class TestFloatArgument(unittest.TestCase):
 class TestIntArgument(unittest.TestCase):
     
     def testToAndFromBinary(self):
-        def test(value):
-            int_arg = osc.IntArgument.fromBinary(osc.IntArgument(value).toBinary())[0] 
-            self.assertEqual(int_arg.value, value)
-        test(0)
-        test(1)
-        test(-1)
-        test(1<<31-1)
-        test(-1<<31)
-
-    def testIntOverflow(self):
-        self.assertRaises(OverflowError, osc.IntArgument(1<<31).toBinary)
-        self.assertRaises(OverflowError, osc.IntArgument((-1<<31) - 1).toBinary)
-
-
+        binary = osc.IntArgument(12345).toBinary()
+        int_arg = osc.IntArgument.fromBinary(binary)[0] 
+        self.assertEqual(int_arg.value, 12345)
 
 class TestTimeTagArgument(unittest.TestCase):
     def testToBinary(self):
@@ -112,6 +101,7 @@ class TestMessage(unittest.TestCase):
     def testToAndFromBinary(self):
 
         def test(m):
+            print(str(m))
             binary = m.toBinary()
             m2, leftover = osc.Message.fromBinary(binary)
             self.assertEqual(leftover, "")
