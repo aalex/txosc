@@ -92,19 +92,29 @@ class TestTimeTagArgument(unittest.TestCase):
 class TestMessage(unittest.TestCase):
     def testGetTypeTag(self):
         m = osc.Message("/example")
-        self.assertEqual(m.getTypeTags(), "\0\0\0\0")
+        self.assertEqual(m.getTypeTags(), "")
         m.arguments.append(osc.StringArgument("egg"))
-        self.assertEqual(m.getTypeTags(), "s\0\0\0")
+        self.assertEqual(m.getTypeTags(), "s")
         m.arguments.append(osc.StringArgument("spam"))
-        self.assertEqual(m.getTypeTags(), "ss\0\0")
+        self.assertEqual(m.getTypeTags(), "ss")
 
     def testToAndFromBinary(self):
-        m = osc.Message("/example", osc.StringArgument("hello"))
-        binary = m.toBinary()
-        m2, leftover = osc.Message.fromBinary(binary)
-        self.assertEqual(leftover, "")
-        self.assertEqual(m.args[0].value, m2.args[0].value)
-    testToAndFromBinary.skip = "Still need to fix Message.fromBinary"
+
+        def test(m):
+            print m.getTypeTags()
+            binary = m.toBinary()
+            m2, leftover = osc.Message.fromBinary(binary)
+            self.assertEqual(leftover, "")
+            self.assertEqual(len(m.arguments), len(m2.arguments))
+            for i in range(len(m.arguments)):
+                self.assertEqual(m.arguments[i].value, m2.arguments[i].value)
+
+        test(osc.Message("/example"))
+        test(osc.Message("/example", osc.StringArgument("hello")))
+        test(osc.Message("/example", osc.IntArgument(1), osc.IntArgument(2), osc.IntArgument(-1)))
+        test(osc.Message("/example", osc.BooleanArgument(True)))
+        test(osc.Message("/example", osc.BooleanArgument(False), osc.NullArgument(), osc.StringArgument(" hello")))
+
 
 class TestServer(unittest.TestCase):
     """

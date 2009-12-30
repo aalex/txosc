@@ -31,6 +31,8 @@ class OscError(Exception):
     """
     pass
 
+def binary_print(s):
+    print " ".join(["%02x" % ord(c) for c in s])
 
 class Message(object):
     """
@@ -45,19 +47,14 @@ class Message(object):
 
 
     def toBinary(self):
-        return StringArgument(self.address).toBinary() + "," + self.getTypeTags() + "".join([a.toBinary() for a in self.arguments])
+        return StringArgument(self.address).toBinary() + StringArgument("," + self.getTypeTags()).toBinary() + "".join([a.toBinary() for a in self.arguments])
 
 
-    def getTypeTags(self, padWithZeros=True):
+    def getTypeTags(self):
         """
         :rettype: string
         """
-        s = "".join([a.typeTag for a in self.arguments])
-        if padWithZeros:
-            length = len(s)
-            pad = _ceilToMultipleOfFour(length) - length
-            s += "\0" * pad
-        return s
+        return "".join([a.typeTag for a in self.arguments])
 
 
     def add(self, value):
@@ -69,18 +66,28 @@ class Message(object):
 
     @staticmethod
     def fromBinary(data):
-        global _tags
         osc_address_arg, leftover = StringArgument.fromBinary(data)
         osc_address = osc_address_arg.value
         #print("Got OSC address: %s" % (osc_address))
         message = Message(osc_address)
         s_arg, leftover = StringArgument.fromBinary(leftover)
         type_tags = s_arg.value
-        if type_tags != ",": # no arg
-            for type_tag in type_tags[1:]:
-                arg, leftover = _tags[type_tag].fromBinary(leftover) 
-                message.arguments.append(arg)
-        return message
+
+        if type_tags[0] != ",":
+            # invalid type tag string
+            raise OscError("Invalid typetag string: %s" % type_tags)
+
+        for type_tag in type_tags[1:]:
+            arg, leftover = createArgumentFromBinary(type_tag, leftover)
+            message.arguments.append(arg)
+
+        return message, leftover
+
+
+    @staticmethod
+    def validAddressPart(part):
+        invalid_chars = set(" #*,/?[]{}")
+        return len(set(part).intersection(invalid_chars)) == 0
 
 
 class Bundle(object):
@@ -218,6 +225,7 @@ class FloatArgument(Argument):
             #FIXME: do not raise error and return leftover anyways ?
         return FloatArgument(f), leftover
 
+
 class TimeTagArgument(Argument):
     """
     Time tags are represented by a 64 bit fixed point number. The first 32 bits specify the number of seconds since midnight on January 1, 1900, and the last 32 bits specify fractional parts of a second to a precision of about 200 picoseconds. This is the representation used by Internet NTP timestamps. 
@@ -338,6 +346,23 @@ def createArgument(value, type_tag=None):
         raise OscError("No OSC argument type for %s (value = %s)" % (kind, value))
 
 
+def createArgumentFromBinary(type_tag, data):
+    if type_tag == "T":
+        return BooleanArgument(True), data
+    if type_tag == "F":
+        return BooleanArgument(False), data
+    if type_tag == "N":
+        return NullArgument(), data
+    if type_tag == "I":
+        return ImpulseArgument(), data
+
+    global _tags
+    if type_tag not in _tags:
+        raise OscError("Invalid typetag: %s" % type_tag)
+
+    return _tags[type_tag].fromBinary(data)
+
+
 class OscProtocol(DatagramProtocol):
     """
     The OSC server protocol
@@ -349,7 +374,7 @@ class OscProtocol(DatagramProtocol):
         #TODO : check if it is a #bundle
         message = Message.fromBinary(data)
         #self.transport.write(data, (host, port))
-        
+
 
 
 class OscClientProtocol(DatagramProtocol):
