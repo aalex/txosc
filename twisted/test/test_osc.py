@@ -99,12 +99,15 @@ class TestMessage(unittest.TestCase):
         self.assertEqual(m.getTypeTags(), "ss\0\0")
 
     def testToAndFromBinary(self):
-        m = osc.Message("/example", osc.StringArgument("hello"))
+        m = osc.Message("/example", osc.StringArgument("hello"), osc.IntArgument(99))
         binary = m.toBinary()
         m2, leftover = osc.Message.fromBinary(binary)
+        print("\nmsg 1: " + str(m))
+        print("msg 2: " + str(m2))
+        self.assertEqual(m.arguments[0].value, m2.arguments[0].value) # hello
+        self.assertEqual(m.arguments[1].value, m2.arguments[1].value) # 99
         self.assertEqual(leftover, "")
-        self.assertEqual(m.args[0].value, m2.args[0].value)
-    testToAndFromBinary.skip = "Still need to fix Message.fromBinary"
+    #testToAndFromBinary.skip = "Still need to fix Message.fromBinary"
 
 class TestServer(unittest.TestCase):
     """

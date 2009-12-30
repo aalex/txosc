@@ -59,18 +59,22 @@ class Message(object):
     @staticmethod
     def fromBinary(data):
         global _tags
-        osc_address_arg, leftover = StringArgument.fromBinary(data)
-        osc_address = osc_address_arg.value
+        osc_address, leftover = StringArgument.strFromBinary(data)
         #print("Got OSC address: %s" % (osc_address))
         message = Message(osc_address)
-        s_arg, leftover = StringArgument.fromBinary(leftover)
-        type_tags = s_arg.value
+        type_tags, leftover = StringArgument.strFromBinary(leftover)
         if type_tags != ",": # no arg
             for type_tag in type_tags[1:]:
                 arg, leftover = _tags[type_tag].fromBinary(leftover) 
                 message.arguments.append(arg)
-        return message
+        return message, leftover
                 
+    def __str__(self):
+        """
+        For debugging purposes
+        """
+        args = " ".join([str(a) for a in self.arguments])
+        return "%s ,%s %s" % (self.address, self.getTypeTags(False), args)
 
 class Bundle(object):
     """
@@ -118,6 +122,12 @@ class Argument(object):
         raise NotImplemented('Override this method')
 
 
+    def __str__(self):
+        """
+        For debugging purposes
+        """
+        return "%s:%s" % (self.typeTag, self.value)
+
 #
 # OSC 1.1 required arguments
 #
@@ -159,20 +169,37 @@ class StringArgument(Argument):
         """
         Parses binary data to get the first string in it.
 
+        Returns a tuple with StringArgument instance, leftover.
+        The leftover should be parsed next.
+        :rettype: tuple
+        """
+        s, leftover = StringArgument.strFromBinary(data)
+        return StringArgument(s), leftover
+
+    @staticmethod
+    def strFromBinary(data):
+        """
+        Parses binary data to get the first string in it.
+
         Returns a tuple with string, leftover.
         The leftover should be parsed next.
         :rettype: tuple
 
         OSC-string A sequence of non-null ASCII characters followed by a null, 
             followed by 0-3 additional null characters to make the total number of bits a multiple of 32.
+        
+        Strings are used so often in OSC, that there's a need for a 
+        class method that does only this, and not return a 
+        StringArgument, just a str. the fromBinary class method calls this
+        one and wraps the first element of the tuple in a StringArgument.
         """
         null_pos = string.find(data, "\0") # find the first null char
         s = data[0:null_pos] # get the first string out of data
         i = null_pos # find the position of the beginning of the next data
         i = _ceilToMultipleOfFour(i)
         leftover = data[i:]
-        return StringArgument(s), leftover
-
+        return s, leftover
+    
 
 class IntArgument(Argument):
     typeTag = "i"
