@@ -138,6 +138,42 @@ class TestMessage(unittest.TestCase):
         test(osc.Message("/example", osc.BooleanArgument(False), osc.NullArgument(), osc.StringArgument("hello")))
 
 
+class TestAddressSpace(unittest.TestCase):
+
+    def testAddRemoveCallback(self):
+
+        def callback(m):
+            pass
+        space = osc.AddressSpace()
+        space.addCallback("/foo", callback)
+        self.assertEqual(space.getCallbacks("/foo"), set(callback))
+        space.removeCallback("/foo", callback)
+        self.assertEqual(space.getCallbacks("/foo"), set())
+
+    def testRemoveNonExistingCallback(self):
+
+        def callback(m):
+            pass
+        space = osc.AddressSpace()
+        self.assertRaises(ValueError, space.removeCallback("/foo", callback))
+
+    def testMatchAddress(self):
+
+        def callback(m):
+            pass
+        space = osc.AddressSpace()
+        space.addCallback("/foo", callback)
+
+        self.assertEqual(space.matchCallbacks(osc.Message("/foo")), set(callback))
+        self.assertEqual(space.matchCallbacks(osc.Message("/*")), set(callback))
+        self.assertEqual(space.matchCallbacks(osc.Message("/bar")), set())
+
+    
+    testRemoveNonExistingCallback.skip = "AddressSpace needs to be implemented"
+    testAddRemoveCallback.skip = "AddressSpace needs to be implemented"
+    testMatchAddress.skip = "AddressSpace needs to be implemented"
+
+
 class TestServer(unittest.TestCase):
     """
     This test needs python-liblo.
