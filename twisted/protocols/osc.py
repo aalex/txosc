@@ -196,6 +196,10 @@ class IntArgument(Argument):
     typeTag = "i"
 
     def toBinary(self):
+        if self.value >= 1<<31:
+            raise OverflowError("Integer too large: %d" % self.value)
+        if self.value < -1<<31:
+            raise OverflowError("Integer too small: %d" % self.value)
         return struct.pack(">i", int(self.value))
 
     @staticmethod
