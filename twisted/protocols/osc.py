@@ -34,15 +34,19 @@ class OscError(Exception):
 
 class Message(object):
     """
-    OSC Message
+    An OSC Message.
     """
+    address = None
+    arguments = None
 
     def __init__(self, address, *arguments):
         self.address = address
         self.arguments = list(arguments)
 
+
     def toBinary(self):
         return StringArgument(self.address).toBinary() + "," + self.getTypeTags() + "".join([a.toBinary() for a in self.arguments])
+
 
     def getTypeTags(self, padWithZeros=True):
         """
@@ -53,7 +57,14 @@ class Message(object):
             length = len(s)
             pad = _ceilToMultipleOfFour(length) - length
             s += "\0" * pad
-        return s    
+        return s
+
+
+    def add(self, value):
+        """
+        Add an argument with given value, using L{createArgument}.
+        """
+        self.arguments.append(createArgument(value))
 
 
     @staticmethod
@@ -70,7 +81,7 @@ class Message(object):
                 arg, leftover = _tags[type_tag].fromBinary(leftover) 
                 message.arguments.append(arg)
         return message
-                
+
 
 class Bundle(object):
     """
@@ -240,20 +251,27 @@ class BooleanArgument(Argument):
         return "" # bool args do not have data, just a type tag
 
 
-class NullArgument(Argument):
+
+class DatalessArgument(Argument):
+    """
+    An argument whose value is defined just by its type tag.
+    """
+    typeTag = None # override in subclass
+    value = None # override in subclass
+
+    def __init__(self):
+        Argument.__init__(self, self.value)
+
+    def toBinary(self):
+        return ""
+
+class NullArgument(DatalessArgument):
     typeTag = "N"
+    value = None
 
-    def __init__(self):
-        # TODO: call parent's constructor ?
-        self.value = None
-
-
-class ImpulseArgument(Argument):
+class ImpulseArgument(DatalessArgument):
     typeTag = "I"
-
-    def __init__(self):
-        # TODO: call parent's constructor ?
-        self.value = None
+    value = True
 
 #
 # Optional arguments
@@ -270,10 +288,10 @@ _types = {
     float: FloatArgument,
     str: StringArgument,
     int: IntArgument,
-    #TODO: unicode: StringArgument,
+    bool: BooleanArgument
+    #TODO: unicode?: StringArgument,
     #TODO : more types
     }
-
 
 _tags = {
     "b": BlobArgument,
@@ -283,7 +301,8 @@ _tags = {
     #TODO : more types
     }
 
-def createArgument(data, type_tag=None):
+
+def createArgument(value, type_tag=None):
     """
     Creates an OSC argument, trying to guess its type if no type is given.
 
@@ -293,16 +312,30 @@ def createArgument(data, type_tag=None):
     """
     global _types
     global _tags
-    kind = type(data)
-    try:
+    kind = type(value)
+
+    if type_tag:
+        # Get the argument type based on given type tag
+        if type_tag == "T":
+            return BooleanArgument(True)
+        if type_tag == "F":
+            return BooleanArgument(False)
+        if type_tag == "N":
+            return NullArgument()
+        if type_tag == "I":
+            return ImpulseArgument()
+
         if type_tag in _tags.keys():
-            return _tags[type_tag](data)
+            return _tags[type_tag](value)
+
+        raise OscError("Unknown type tag: %s" % type)
+
+    else:
+        # Guess the argument type based on the type of the value
         if kind in _types.keys():
-            return _types[kind](data)
-        else:
-            raise OscError("Data %s")
-    except ValueError, e:
-        raise OscError("Could not cast %s to %s. %s" % (data, type_tag, e.message))
+            return _types[kind](value)
+
+        raise OscError("No OSC argument type for %s (value = %s)" % (kind, value))
 
 
 class OscProtocol(DatagramProtocol):
