@@ -256,6 +256,13 @@ class TimeTagArgument(Argument):
         fr, sec = math.modf(self.value)
         return struct.pack('>ll', long(sec), long(fr * 1e9))
 
+    @staticmethod
+    def fromBinary(data):
+        high, low = struct.unpack(">ll", data[0:8])
+        leftover = data[8:]
+        time = float(int(high) + low / float(1e9))
+        return TimeTagArgument(time), leftover
+
 
 class BooleanArgument(Argument):
     def __init__(self, value):

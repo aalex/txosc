@@ -86,7 +86,20 @@ class TestTimeTagArgument(unittest.TestCase):
         val = osc.TimeTagArgument.fromBinary("\0\0\0\1\0\0\0\0")[0].value
         self.assertEqual(val, 1.0)
 
-    testFromBinary.skip = "TimeTagArgument.fromBinary is not yet implemented"
+    def testToAndFromBinary(self): 
+        # 1 second since Jan 1, 1900
+        def test(value):
+            timetag_arg, leftover = osc.TimeTagArgument.fromBinary(osc.TimeTagArgument(value).toBinary())
+            self.assertEqual(leftover, "")
+            #self.assertEqual(value, timetag_arg.value)
+            # time tags should not differ more than 200 picoseconds
+            delta = 200 * (10 ** -12)
+            self.assertTrue(abs(value - timetag_arg.value) <= delta, "Timetag precision")
+        
+        test(1.0)
+        #test(1.101)
+
+    #testFromBinary.skip = "TimeTagArgument.fromBinary is not yet implemented"
 
 
 class TestMessage(unittest.TestCase):
