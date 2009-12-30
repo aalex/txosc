@@ -31,50 +31,64 @@ class OscError(Exception):
     """
     pass
 
+def binary_print(s):
+    print " ".join(["%02x" % ord(c) for c in s])
 
 class Message(object):
     """
-    OSC Message
+    An OSC Message.
     """
+    address = None
+    arguments = None
 
     def __init__(self, address, *arguments):
         self.address = address
         self.arguments = list(arguments)
 
-    def toBinary(self):
-        return StringArgument(self.address).toBinary() + "," + self.getTypeTags() + "".join([a.toBinary() for a in self.arguments])
 
-    def getTypeTags(self, padWithZeros=True):
+    def toBinary(self):
+        return StringArgument(self.address).toBinary() + StringArgument("," + self.getTypeTags()).toBinary() + "".join([a.toBinary() for a in self.arguments])
+
+
+    def getTypeTags(self):
         """
         :rettype: string
         """
-        s = "".join([a.typeTag for a in self.arguments])
-        if padWithZeros:
-            length = len(s)
-            pad = _ceilToMultipleOfFour(length) - length
-            s += "\0" * pad
-        return s    
+        return "".join([a.typeTag for a in self.arguments])
+
+
+    def add(self, value):
+        """
+        Add an argument with given value, using L{createArgument}.
+        """
+        self.arguments.append(createArgument(value))
 
 
     @staticmethod
     def fromBinary(data):
-        global _tags
-        osc_address, leftover = StringArgument.strFromBinary(data)
+        osc_address_arg, leftover = StringArgument.fromBinary(data)
+        osc_address = osc_address_arg.value
         #print("Got OSC address: %s" % (osc_address))
         message = Message(osc_address)
-        type_tags, leftover = StringArgument.strFromBinary(leftover)
-        if type_tags != ",": # no arg
-            for type_tag in type_tags[1:]:
-                arg, leftover = _tags[type_tag].fromBinary(leftover) 
-                message.arguments.append(arg)
+        s_arg, leftover = StringArgument.fromBinary(leftover)
+        type_tags = s_arg.value
+
+        if type_tags[0] != ",":
+            # invalid type tag string
+            raise OscError("Invalid typetag string: %s" % type_tags)
+
+        for type_tag in type_tags[1:]:
+            arg, leftover = createArgumentFromBinary(type_tag, leftover)
+            message.arguments.append(arg)
+
         return message, leftover
-                
-    def __str__(self):
-        """
-        For debugging purposes
-        """
-        args = " ".join([str(a) for a in self.arguments])
-        return "%s ,%s %s" % (self.address, self.getTypeTags(False), args)
+
+
+    @staticmethod
+    def validAddressPart(part):
+        invalid_chars = set(" #*,/?[]{}")
+        return len(set(part).intersection(invalid_chars)) == 0
+
 
 class Bundle(object):
     """
@@ -122,12 +136,6 @@ class Argument(object):
         raise NotImplemented('Override this method')
 
 
-    def __str__(self):
-        """
-        For debugging purposes
-        """
-        return "%s:%s" % (self.typeTag, self.value)
-
 #
 # OSC 1.1 required arguments
 #
@@ -169,37 +177,20 @@ class StringArgument(Argument):
         """
         Parses binary data to get the first string in it.
 
-        Returns a tuple with StringArgument instance, leftover.
-        The leftover should be parsed next.
-        :rettype: tuple
-        """
-        s, leftover = StringArgument.strFromBinary(data)
-        return StringArgument(s), leftover
-
-    @staticmethod
-    def strFromBinary(data):
-        """
-        Parses binary data to get the first string in it.
-
         Returns a tuple with string, leftover.
         The leftover should be parsed next.
         :rettype: tuple
 
         OSC-string A sequence of non-null ASCII characters followed by a null, 
             followed by 0-3 additional null characters to make the total number of bits a multiple of 32.
-        
-        Strings are used so often in OSC, that there's a need for a 
-        class method that does only this, and not return a 
-        StringArgument, just a str. the fromBinary class method calls this
-        one and wraps the first element of the tuple in a StringArgument.
         """
         null_pos = string.find(data, "\0") # find the first null char
         s = data[0:null_pos] # get the first string out of data
         i = null_pos # find the position of the beginning of the next data
         i = _ceilToMultipleOfFour(i)
         leftover = data[i:]
-        return s, leftover
-    
+        return StringArgument(s), leftover
+
 
 class IntArgument(Argument):
     typeTag = "i"
@@ -234,6 +225,7 @@ class FloatArgument(Argument):
             #FIXME: do not raise error and return leftover anyways ?
         return FloatArgument(f), leftover
 
+
 class TimeTagArgument(Argument):
     """
     Time tags are represented by a 64 bit fixed point number. The first 32 bits specify the number of seconds since midnight on January 1, 1900, and the last 32 bits specify fractional parts of a second to a precision of about 200 picoseconds. This is the representation used by Internet NTP timestamps. 
@@ -267,20 +259,27 @@ class BooleanArgument(Argument):
         return "" # bool args do not have data, just a type tag
 
 
-class NullArgument(Argument):
+
+class DatalessArgument(Argument):
+    """
+    An argument whose value is defined just by its type tag.
+    """
+    typeTag = None # override in subclass
+    value = None # override in subclass
+
+    def __init__(self):
+        Argument.__init__(self, self.value)
+
+    def toBinary(self):
+        return ""
+
+class NullArgument(DatalessArgument):
     typeTag = "N"
+    value = None
 
-    def __init__(self):
-        # TODO: call parent's constructor ?
-        self.value = None
-
-
-class ImpulseArgument(Argument):
+class ImpulseArgument(DatalessArgument):
     typeTag = "I"
-
-    def __init__(self):
-        # TODO: call parent's constructor ?
-        self.value = None
+    value = True
 
 #
 # Optional arguments
@@ -297,10 +296,10 @@ _types = {
     float: FloatArgument,
     str: StringArgument,
     int: IntArgument,
-    #TODO: unicode: StringArgument,
+    bool: BooleanArgument
+    #TODO: unicode?: StringArgument,
     #TODO : more types
     }
-
 
 _tags = {
     "b": BlobArgument,
@@ -310,7 +309,8 @@ _tags = {
     #TODO : more types
     }
 
-def createArgument(data, type_tag=None):
+
+def createArgument(value, type_tag=None):
     """
     Creates an OSC argument, trying to guess its type if no type is given.
 
@@ -320,16 +320,47 @@ def createArgument(data, type_tag=None):
     """
     global _types
     global _tags
-    kind = type(data)
-    try:
+    kind = type(value)
+
+    if type_tag:
+        # Get the argument type based on given type tag
+        if type_tag == "T":
+            return BooleanArgument(True)
+        if type_tag == "F":
+            return BooleanArgument(False)
+        if type_tag == "N":
+            return NullArgument()
+        if type_tag == "I":
+            return ImpulseArgument()
+
         if type_tag in _tags.keys():
-            return _tags[type_tag](data)
+            return _tags[type_tag](value)
+
+        raise OscError("Unknown type tag: %s" % type)
+
+    else:
+        # Guess the argument type based on the type of the value
         if kind in _types.keys():
-            return _types[kind](data)
-        else:
-            raise OscError("Data %s")
-    except ValueError, e:
-        raise OscError("Could not cast %s to %s. %s" % (data, type_tag, e.message))
+            return _types[kind](value)
+
+        raise OscError("No OSC argument type for %s (value = %s)" % (kind, value))
+
+
+def createArgumentFromBinary(type_tag, data):
+    if type_tag == "T":
+        return BooleanArgument(True), data
+    if type_tag == "F":
+        return BooleanArgument(False), data
+    if type_tag == "N":
+        return NullArgument(), data
+    if type_tag == "I":
+        return ImpulseArgument(), data
+
+    global _tags
+    if type_tag not in _tags:
+        raise OscError("Invalid typetag: %s" % type_tag)
+
+    return _tags[type_tag].fromBinary(data)
 
 
 class OscProtocol(DatagramProtocol):
@@ -343,7 +374,7 @@ class OscProtocol(DatagramProtocol):
         #TODO : check if it is a #bundle
         message = Message.fromBinary(data)
         #self.transport.write(data, (host, port))
-        
+
 
 
 class OscClientProtocol(DatagramProtocol):
