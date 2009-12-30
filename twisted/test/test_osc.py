@@ -101,7 +101,7 @@ class TestMessage(unittest.TestCase):
     def testToAndFromBinary(self):
 
         def test(m):
-            print m.getTypeTags()
+            print(str(m))
             binary = m.toBinary()
             m2, leftover = osc.Message.fromBinary(binary)
             self.assertEqual(leftover, "")
