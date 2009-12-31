@@ -226,7 +226,8 @@ class TestAddressSpace(unittest.TestCase):
         self.assertTrue(osc.AddressNode.matchesWildcard("foo", "f*"))
         self.assertTrue(osc.AddressNode.matchesWildcard("foo", "f?o"))
         self.assertTrue(osc.AddressNode.matchesWildcard("foo", "fo?"))
-        #self.assertTrue(osc.AddressNode.matchesWildcard("foo", "f*o"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("fo", "f*o"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("foo", "f*o"))
         #self.assertTrue(osc.AddressNode.matchesWildcard("bar1", "bar[1-3]"))
         #self.assertFalse(osc.AddressNode.matchesWildcard("bar4", "bar[1-3]"))
 

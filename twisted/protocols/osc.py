@@ -11,7 +11,7 @@ import string
 import math
 import struct
 import time
-import weakref
+import fnmatch
 
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
@@ -536,31 +536,12 @@ class AddressNode(object):
 
     @staticmethod
     def matchesWildcard(value, wildcard):
-        if value == wildcard:
+        if value == wildcard and not AddressNode.isWildcard(wildcard):
             return True
-
         if wildcard == "*":
             return True
 
-        wi = 0
-        vi = 0
-        while vi < len(value):
-            w = wildcard[wi]
-            v = value[vi]
-            if w == v or w == "?":
-                wi += 1
-                vi += 1
-                continue
-            elif w == "*":
-                if wi == len(wildcard)-1:
-                    return True
-            else:
-                return False
-
-        if vi == len(value) and wi == len(wildcard):
-            return True
-        return False
-
+        return fnmatch.fnmatchcase(value, wildcard)
 
 
 class OscServerProtocol(DatagramProtocol):
