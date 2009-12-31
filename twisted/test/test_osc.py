@@ -219,6 +219,53 @@ class TestAddressSpace(unittest.TestCase):
     testMatchMessageWithWildcards.skip = "AddressSpace needs to be implemented"
     testMatchMessageWithRange.skip = "AddressSpace needs to be implemented"
 
+class TestCallbacksDict(unittest.TestCase):
+    def testAddRemoveFunctions(self):
+        def foo():
+            pass
+        def bar():
+            pass
+        
+        # adding
+        d = osc.CallbacksDict()
+        d.add(foo)
+        try:
+            d.add(foo)
+        except osc.CallbackError, e:
+            pass
+        else:
+            self.fail("Adding twice foo should have raised an error.")
+        bar_key = d.add(bar)
+        # removing
+        #print(str(d.callbacks.items()))
+        d.remove(foo)
+        #del bar
+        d.get(bar_key)
+        #d.remove(bar)
+
+    def testAddRemoveMethods(self):
+        class X(object):
+            def x(self):
+                pass
+        
+        d = osc.CallbacksDict()
+        xobj = X()
+        x_id = d.add(xobj.x)
+        try:
+            d.add(xobj.x)
+        except osc.CallbackError, e:
+            pass
+        else:
+            self.fail("Adding twice xobj.x should have raised an error.")
+        d.remove(xobj)
+        try:
+            d.get(x_id)
+        except osc.CallbackError, e:
+            pass
+        else:
+            self.fail("xobj.x should not be in dict anymore.")
+    testAddRemoveMethods.skip = "For some reason, we can still add methods twice..."
+
 
 class TestServer(unittest.TestCase):
     """

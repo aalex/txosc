@@ -12,6 +12,7 @@ import math
 import struct
 import time
 import weakref
+import types
 
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
@@ -468,6 +469,79 @@ class OscSender(object):
      def stop(self):
          self._call.stop()
          self._port.stopListening()
+
+# callbacks management
+
+class CallbackError(Exception):
+    """
+    Any error raised by the CallbacksDict class.
+    """
+    pass
+
+class CallbacksDict(object):
+    """
+    Wraps a dict of callbacks whose keys are unique identifiers. 
+    Identifiers are string made using their address in memory.
+    """
+    def __init__(self):
+        self.callbacks = weakref.WeakValueDictionary()
+    
+    def _get_id(self, cb):
+        """
+        Returns the identifier key or a callable.
+        Its address in memory.
+        :rettype: str
+        """
+        if type(cb) is types.FunctionType:
+            i = str(id(cb))
+            #print("id of %s is %s" % (cb.__name__, i))
+        elif type(cb) is types.MethodType:
+            # we cannot use the id of the cb directly
+            # since it constantly changes
+            id_of_obj = id(cb.im_self)
+            id_of_func = id(cb.im_func)
+            i = "%s.%s" % (id_of_obj, id_of_func)
+            print("id of method is %s" % (i))
+        else:
+            raise CallbackError("Type %s in not supported for %s." % (type(cb), cb))
+        return i
+        
+    def add(self, cb):
+        """
+        Adds a callable to the dict.
+        :param db: callbable
+        :rettype: str key id
+        """
+        i = self._get_id(cb)
+        if self.callbacks.has_key(i):
+            c = self.callbacks[i]
+            if c is cb:
+                raise CallbackError("Callback already in dict.")
+            else:
+                raise CallbackError("There is already a callback with that key in the dict.")
+        else:
+            self.callbacks[i] = cb
+            #print("adding %s with key %s" % (cb, i))
+            return i
+
+    def remove(self, cb):
+        i = self._get_id(cb)
+        if self.callbacks.has_key(i):
+            c = self.callbacks[i]
+            if c is not cb:
+                raise CallbackError("There is a callback with that key in the dict but it's not ours.")
+            else:
+                del self.callbacks[i]
+                return i
+        else:
+            raise CallbackError("%s not in dict. No need to remove it." % (i))
+   
+
+    def get(self, i):
+        if self.callbacks.has_key(i):
+            return self.callbacks[i]
+        else:
+            raise CallbackError("%s not in dict." % (i)) 
 
 
 # TODO: move to doc/core/examples/oscserver.py
