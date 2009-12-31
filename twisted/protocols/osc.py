@@ -83,11 +83,6 @@ class Message(object):
         return message, leftover
 
 
-    @staticmethod
-    def validAddressPart(part):
-        invalid_chars = set(" #*,/?[]{}")
-        return len(set(part).intersection(invalid_chars)) == 0
-
     def __str__(self):
         args = " ".join([str(a) for a in self.arguments])
         return "%s ,%s %s" % (self.address, self.getTypeTags(), args)
@@ -417,12 +412,21 @@ class AddressSpace(object):
         raise NotImplementedError("AddressSpace is in progress.")
 
 
+    def matchCallbacks(self, message):
+        """
+        Get all callbacks for a given message
+        """
+        pattern = message.address
+        return self.getCallbacks(pattern)
+
+
     def getCallbacks(self, pattern):
         """
-        Returns: set of callables.
+        Retrieve all callbacks which are bound to given
+        pattern. Returns a set() of callables.
         """
         path = self._patternPath(pattern)
-        nodes = self.root.lookup(path)
+        nodes = self.root.match(path)
         if not nodes:
             return nodes
         return reduce(lambda a, b: a.union(b), [n.callbacks for n in nodes])
@@ -434,13 +438,6 @@ class AddressSpace(object):
         (and not only its arguments) 
         The order in which the callbacks are called in undefined.
         -> None
-        """
-        raise NotImplementedError("AddressSpace is in progress.")
-
-
-    def matchCallbacks(self, Message):
-        """
-        -> list of callables
         """
         raise NotImplementedError("AddressSpace is in progress.")
 
@@ -467,15 +464,33 @@ class AddressNode(object):
         self.childNodes = {}
         self.callbacks = set()
         self.parent = None
+        self.wildcardChilds = set()
 
-    def lookup(self, path):
+
+    def match(self, path):
         if not len(path):
             return set([self])
 
+        matchedNodes = set()
+
         part = path[0]
+        if AddressNode.isWildcard(part):
+            for c in self.childNodes:
+                if AddressNode.matchesWildcard(c, part):
+                    matchedNodes.add(self.childNodes[c])
+            # FIXME - what if both the part and some of my childs have wildcards?
+        elif self.wildcardChilds:
+            matches = set()
+            for c in self.wildcardChilds:
+                if AddressNode.matchesWildcard(part, c):
+                    matchedNodes.add(self.childNodes[c])
+                    break
         if part in self.childNodes:
-            return self.childNodes[part].lookup(path[1:])
-        return set()
+            matchedNodes.add(self.childNodes[part])
+
+        if not matchedNodes:
+            return matchedNodes
+        return reduce(lambda a, b: a.union(b), [n.match(path[1:]) for n in matchedNodes])
 
 
     def addCallback(self, path, cb):
@@ -484,7 +499,11 @@ class AddressNode(object):
         else:
             part = path[0]
             if part not in self.childNodes:
+                if not AddressNode.isValidAddressPart(part):
+                    raise ValueError("Invalid address part: '%s'" % part)
                 self.childNodes[part] = AddressNode()
+                if AddressNode.isWildcard(part):
+                    self.wildcardChilds.add(part)
             self.childNodes[part].addCallback(path[1:], cb)
 
 
@@ -498,7 +517,50 @@ class AddressNode(object):
             self.childNodes[part].removeCallback(path[1:], cb)
             if not self.childNodes[part].callbacks and not self.childNodes[part].childNodes:
                 # remove child
+                if part in self.wildcardChilds:
+                    self.wildcardChilds.remove(part)
                 del self.childNodes[part]
+
+
+    @staticmethod
+    def isWildcard(part):
+        wildcardChars = set("*?[]{}")
+        return len(set(part).intersection(wildcardChars)) > 0
+
+
+    @staticmethod
+    def isValidAddressPart(part):
+        invalidChars = set(" #,/")
+        return len(set(part).intersection(invalidChars)) == 0
+
+
+    @staticmethod
+    def matchesWildcard(value, wildcard):
+        if value == wildcard:
+            return True
+
+        if wildcard == "*":
+            return True
+
+        wi = 0
+        vi = 0
+        while vi < len(value):
+            w = wildcard[wi]
+            v = value[vi]
+            if w == v or w == "?":
+                wi += 1
+                vi += 1
+                continue
+            elif w == "*":
+                if wi == len(wildcard)-1:
+                    return True
+            else:
+                return False
+
+        if vi == len(value) and wi == len(wildcard):
+            return True
+        return False
+
 
 
 class OscServerProtocol(DatagramProtocol):
