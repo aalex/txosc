@@ -383,22 +383,32 @@ def stringFromBinary(data):
     return value, leftover
 
 
+
 class AddressSpace(object):
     """
-    Adding/removing OSC handlers callbacks utility
+    Adding/removing OSC handlers callbacks utility.
+
+    Callbacks are stored in a tree-like structure.
     """
+
     def __init__(self):
         # TODO: implement as a tree of sets or a big dict?
-        self.callbacks = weakref.WeakValueDictionary()
-        
+        self.root = AddressNode()
+
+
     def addCallback(self, pattern, callable, typeTags=None):
-        raise NotImplementedError("AddressSpace is in progress.")
+        
+        path = self._patternPath(pattern)
+        return self.root.addCallback(path, callable)
+
         
     def removeCallback(self, pattern, callable):
         """
         :rettype: -> None
         """
-        raise NotImplementedError("AddressSpace is in progress.")
+        path = self._patternPath(pattern)
+        return self.root.removeCallback(path, callable)
+
 
     def removeAllCallbacks(self, pattern):
         """
@@ -406,11 +416,17 @@ class AddressSpace(object):
         """
         raise NotImplementedError("AddressSpace is in progress.")
 
+
     def getCallbacks(self, pattern):
         """
         Returns: set of callables.
         """
-        raise NotImplementedError("AddressSpace is in progress.")
+        path = self._patternPath(pattern)
+        nodes = self.root.lookup(path)
+        if not nodes:
+            return nodes
+        return reduce(lambda a, b: a.union(b), [n.callbacks for n in nodes])
+
 
     def dispatch(self, Message, clientAddress):
         """
@@ -421,11 +437,68 @@ class AddressSpace(object):
         """
         raise NotImplementedError("AddressSpace is in progress.")
 
+
     def matchCallbacks(self, Message):
         """
         -> list of callables
         """
         raise NotImplementedError("AddressSpace is in progress.")
+
+
+    def _messagePath(self, message):
+        """
+        Given an L{osc.Message}, return the path split up in components.
+        """
+        return self._patternPath(message.address)
+
+
+    def _patternPath(self, pattern):
+        """
+        Given a OSC address path like /foo/bar, return a list of
+        ['foo', 'bar']. Note that an OSC address always starts with a
+        slash.
+        """
+        return pattern.split("/")[1:]
+
+
+
+class AddressNode(object):
+    def __init__(self):
+        self.childNodes = {}
+        self.callbacks = set()
+        self.parent = None
+
+    def lookup(self, path):
+        if not len(path):
+            return set([self])
+
+        part = path[0]
+        if part in self.childNodes:
+            return self.childNodes[part].lookup(path[1:])
+        return set()
+
+
+    def addCallback(self, path, cb):
+        if not len(path):
+            self.callbacks.add(cb)
+        else:
+            part = path[0]
+            if part not in self.childNodes:
+                self.childNodes[part] = AddressNode()
+            self.childNodes[part].addCallback(path[1:], cb)
+
+
+    def removeCallback(self, path, cb):
+        if not len(path):
+            self.callbacks.remove(cb)
+        else:
+            part = path[0]
+            if part not in self.childNodes:
+                raise KeyError("No such address part: " + part)
+            self.childNodes[part].removeCallback(path[1:], cb)
+            if not self.childNodes[part].callbacks and not self.childNodes[part].childNodes:
+                # remove child
+                del self.childNodes[part]
 
 
 class OscServerProtocol(DatagramProtocol):

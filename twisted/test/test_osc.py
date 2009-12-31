@@ -146,7 +146,7 @@ class TestAddressSpace(unittest.TestCase):
             pass
         space = osc.AddressSpace()
         space.addCallback("/foo", callback)
-        self.assertEqual(space.getCallbacks("/foo"), set(callback))
+        self.assertEqual(space.getCallbacks("/foo"), set([callback]))
         space.removeCallback("/foo", callback)
         self.assertEqual(space.getCallbacks("/foo"), set())
 
@@ -155,7 +155,7 @@ class TestAddressSpace(unittest.TestCase):
         def callback(m):
             pass
         space = osc.AddressSpace()
-        self.assertRaises(ValueError, space.removeCallback("/foo", callback))
+        self.assertRaises(KeyError, space.removeCallback("/foo", callback))
 
     def testMatchExact(self):
 
@@ -164,7 +164,7 @@ class TestAddressSpace(unittest.TestCase):
         space = osc.AddressSpace()
         space.addCallback("/foo", callback)
 
-        self.assertEqual(space.matchCallbacks(osc.Message("/foo")), set(callback))
+        self.assertEqual(space.matchCallbacks(osc.Message("/foo")), set([callback]))
         self.assertEqual(space.matchCallbacks(osc.Message("/bar")), set())
 
     def testMatchCallbackWildcards(self):
@@ -175,8 +175,8 @@ class TestAddressSpace(unittest.TestCase):
         space.addCallback("/foo/*", callback)
 
         self.assertEqual(space.matchCallbacks(osc.Message("/foo")), set())
-        self.assertEqual(space.matchCallbacks(osc.Message("/foo/bar")), set(callback))
-        self.assertEqual(space.matchCallbacks(osc.Message("/foo/bar/baz")), set(callback))
+        self.assertEqual(space.matchCallbacks(osc.Message("/foo/bar")), set([callback]))
+        self.assertEqual(space.matchCallbacks(osc.Message("/foo/bar/baz")), set([callback]))
         self.assertEqual(space.matchCallbacks(osc.Message("/bar")), set())
 
 
@@ -193,10 +193,10 @@ class TestAddressSpace(unittest.TestCase):
         space.addCallback("/bar", barCallback)
         space.addCallback("/baz", bazCallback)
 
-        self.assertEqual(space.matchCallbacks(osc.Message("/*")), set(fooCallback))
+        self.assertEqual(space.matchCallbacks(osc.Message("/*")), set([fooCallback]))
         self.assertEqual(space.matchCallbacks(osc.Message("/spam")), set())
-        self.assertEqual(space.matchCallbacks(osc.Message("/b*r")), set(barCallback))
-        self.assertEqual(space.matchCallbacks(osc.Message("/ba?")), set(barCallback, bazCallback))
+        self.assertEqual(space.matchCallbacks(osc.Message("/b*r")), set([barCallback]))
+        self.assertEqual(space.matchCallbacks(osc.Message("/ba?")), set([barCallback, bazCallback]))
 
     
     def testMatchMessageWithRange(self):
@@ -210,10 +210,10 @@ class TestAddressSpace(unittest.TestCase):
         space.addCallback("/foo/2", secondCallback)
 
         self.assertEqual(space.matchCallbacks(osc.Message("/baz")), set())
-        self.assertEqual(space.matchCallbacks(osc.Message("/foo/[1-2]")), set(firstCallback, secondCallback))
+        self.assertEqual(space.matchCallbacks(osc.Message("/foo/[1-2]")), set([firstCallback, secondCallback]))
     
     testRemoveNonExistingCallback.skip = "AddressSpace needs to be implemented"
-    testAddRemoveCallback.skip = "AddressSpace needs to be implemented"
+    #testAddRemoveCallback.skip = "AddressSpace needs to be implemented"
     testMatchExact.skip = "AddressSpace needs to be implemented"
     testMatchCallbackWildcards.skip = "AddressSpace needs to be implemented"
     testMatchMessageWithWildcards.skip = "AddressSpace needs to be implemented"
