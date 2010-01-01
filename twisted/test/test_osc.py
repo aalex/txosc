@@ -188,6 +188,17 @@ class TestAddressSpace(unittest.TestCase):
         space.removeCallback("/foo", callback)
         self.assertEqual(space.getCallbacks("/foo"), set())
 
+    def testRemoveAllCallbacks(self):
+
+        def callback(m):
+            pass
+        space = osc.AddressSpace()
+        space.addCallback("/foo", callback)
+        self.assertEqual(space.getCallbacks("/foo"), set([callback]))
+        space.removeAllCallbacks("/*")
+        self.assertEqual(space.getCallbacks("/foo"), set())
+    testRemoveAllCallbacks.skip = "removeAllCallbacks needs to be implemented"
+
     def testAddInvalidCallback(self):
         space = osc.AddressSpace()
         self.assertRaises(ValueError, space.addCallback, "/foo bar/baz", lambda m: m)
@@ -230,6 +241,18 @@ class TestAddressSpace(unittest.TestCase):
         self.assertEqual(space.matchCallbacks(osc.Message("/foo/bar")), set())
         self.assertEqual(space.matchCallbacks(osc.Message("/foo/baz")), set([callback]))
 
+    def testMatchCallbackRangeWildcards(self):
+
+        def callback1(m): pass
+        def callback2(m): pass
+        space = osc.AddressSpace()
+        space.addCallback("/foo1", callback1)
+        space.addCallback("/foo2", callback2)
+
+        self.assertEqual(space.matchCallbacks(osc.Message("/foo[1]")), set([callback1]))
+        self.assertEqual(space.matchCallbacks(osc.Message("/foo[1-10]")), set([callback1, callback2]))
+        self.assertEqual(space.matchCallbacks(osc.Message("/foo[4-6]")), set([]))
+    testMatchCallbackRangeWildcards.skip = "Range matching"
 
     def testMatchMessageWithWildcards(self):
 
@@ -266,6 +289,7 @@ class TestAddressSpace(unittest.TestCase):
 
         self.assertEqual(space.matchCallbacks(osc.Message("/baz")), set())
         self.assertEqual(space.matchCallbacks(osc.Message("/foo/[1-2]")), set([firstCallback, secondCallback]))
+    testMatchMessageWithRange.skip = "Range matching"
 
 
     def testWildcardMatching(self):
@@ -277,13 +301,13 @@ class TestAddressSpace(unittest.TestCase):
         self.assertTrue(osc.AddressNode.matchesWildcard("foo", "fo?"))
         self.assertTrue(osc.AddressNode.matchesWildcard("fo", "f*o"))
         self.assertTrue(osc.AddressNode.matchesWildcard("foo", "f*o"))
-        #self.assertTrue(osc.AddressNode.matchesWildcard("bar1", "bar[1-3]"))
-        #self.assertFalse(osc.AddressNode.matchesWildcard("bar4", "bar[1-3]"))
 
+    def testWildcardRangeMatching(self):
+        self.assertTrue(osc.AddressNode.matchesWildcard("bar1", "bar[1-3]"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("bar23", "bar[20-30]"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("bar4", "bar[1-3]"))
+    testWildcardRangeMatching.skip = "Range matching"
 
-    #testMatchCallbackWildcards.skip = "AddressNode matching needs to be implemented"
-    #testMatchMessageWithWildcards.skip = "AddressNode matching needs to be implemented"
-    testMatchMessageWithRange.skip = "AddressNode range matching needs to be implemented"
 
 
 class TestServer(unittest.TestCase):
