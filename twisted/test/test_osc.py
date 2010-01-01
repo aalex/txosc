@@ -336,9 +336,17 @@ class TestAddressSpace(unittest.TestCase):
 
     def testDispatching(self):
 
-        def cb(message, addr):
+        hello = osc.Message("/hello")
+        there = osc.Message("/there")
+        addr = "0.0.0.0"
+        
+        def cb(message, a):
+            self.assertEqual(message, hello)
+            self.assertEqual(addr, a)
             state['cb'] = True
-        def cb2(message, addr):
+        def cb2(message, a):
+            self.assertEqual(message, there)
+            self.assertEqual(addr, a)
             state['cb2'] = True
 
         space = osc.AddressSpace()
@@ -346,11 +354,11 @@ class TestAddressSpace(unittest.TestCase):
         space.addCallback("/there", cb2)
 
         state = {}
-        space.dispatch(osc.Message("/hello"), "0.0.0.0")
+        space.dispatch(hello, addr)
         self.assertEqual(state, {'cb': True})
 
         state = {}
-        space.dispatch(osc.Bundle([osc.Message("/hello"), osc.Message("/there")]), "0.0.0.0")
+        space.dispatch(osc.Bundle([hello, there]), addr)
         self.assertEqual(state, {'cb': True, 'cb2': True})
 
 
