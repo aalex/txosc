@@ -113,6 +113,20 @@ class TestTimeTagArgument(unittest.TestCase):
 
 
 class TestMessage(unittest.TestCase):
+
+    def testEquality(self):
+        m = osc.Message("/example")
+
+        m2 = osc.Message("/example")
+        self.assertEqual(m, m2)
+        m2 = osc.Message("/example2")
+        self.assertNotEqual(m, m2)
+        m2 = osc.Message("/example", osc.IntArgument(1))
+        self.assertNotEqual(m, m2)
+        m = osc.Message("/example", osc.IntArgument(1))
+        self.assertEqual(m, m2)
+
+
     def testGetTypeTag(self):
         m = osc.Message("/example")
         self.assertEqual(m.getTypeTags(), "")
@@ -137,6 +151,24 @@ class TestMessage(unittest.TestCase):
         test(osc.Message("/example", osc.BooleanArgument(True)))
         test(osc.Message("/example", osc.BooleanArgument(False), osc.NullArgument(), osc.StringArgument("hello")))
 
+
+class TestBundle(unittest.TestCase):
+
+    def testEquality(self):
+        b = osc.Bundle()
+        b2 = osc.Bundle()
+        self.assertEqual(b, b2)
+        b2.messages.append(osc.Message("/hello"))
+        self.assertNotEqual(b, b2)
+        b.messages.append(osc.Message("/hello"))
+        self.assertEqual(b, b2)
+
+    def testToAndFromBinary(self):
+        def test(b):
+            binary = b.toBinary()
+            b2, leftover = osc.Bundle.fromBinary(binary)
+        b = osc.Bundle()
+        
 
 class TestAddressSpace(unittest.TestCase):
 
@@ -179,9 +211,18 @@ class TestAddressSpace(unittest.TestCase):
 
         self.assertEqual(space.matchCallbacks(osc.Message("/foo")), set())
         self.assertEqual(space.matchCallbacks(osc.Message("/foo/bar")), set([callback]))
-        # FIXME
-        #self.assertEqual(space.matchCallbacks(osc.Message("/foo/bar/baz")), set([callback]))
         self.assertEqual(space.matchCallbacks(osc.Message("/bar")), set())
+        self.assertEqual(space.matchCallbacks(osc.Message("/foo/bar/baz")), set([callback]))
+
+        space = osc.AddressSpace()
+        space.addCallback("/*", callback)
+        self.assertEqual(space.matchCallbacks(osc.Message("/")), set([callback]))
+        self.assertEqual(space.matchCallbacks(osc.Message("/foo/bar")), set([callback]))
+
+        space = osc.AddressSpace()
+        space.addCallback("/*/baz", callback)
+        self.assertEqual(space.matchCallbacks(osc.Message("/foo/bar")), set())
+        self.assertEqual(space.matchCallbacks(osc.Message("/foo/baz")), set([callback]))
 
 
     def testMatchMessageWithWildcards(self):
@@ -192,17 +233,19 @@ class TestAddressSpace(unittest.TestCase):
             pass
         def bazCallback(m):
             pass
+        def foobarCallback(m):
+            pass
         space = osc.AddressSpace()
         space.addCallback("/foo", fooCallback)
         space.addCallback("/bar", barCallback)
         space.addCallback("/baz", bazCallback)
+        space.addCallback("/foo/bar", foobarCallback)
 
-        self.assertEqual(space.matchCallbacks(osc.Message("/*")), set([fooCallback, barCallback, bazCallback]))
+        self.assertEqual(space.matchCallbacks(osc.Message("/*")), set([fooCallback, barCallback, bazCallback, foobarCallback]))
         self.assertEqual(space.matchCallbacks(osc.Message("/spam")), set())
         self.assertEqual(space.matchCallbacks(osc.Message("/ba*")), set([barCallback, bazCallback]))
-        # FIXME - wildcard matching
-        #self.assertEqual(space.matchCallbacks(osc.Message("/b*r")), set([barCallback]))
-        #self.assertEqual(space.matchCallbacks(osc.Message("/ba?")), set([barCallback, bazCallback]))
+        self.assertEqual(space.matchCallbacks(osc.Message("/b*r")), set([barCallback]))
+        self.assertEqual(space.matchCallbacks(osc.Message("/ba?")), set([barCallback, bazCallback]))
 
 
     def testMatchMessageWithRange(self):

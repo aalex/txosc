@@ -88,12 +88,28 @@ class Message(object):
         return "%s ,%s %s" % (self.address, self.getTypeTags(), args)
 
 
+    def __eq__(self, other):
+        if self.address != other.address:
+            return False
+        if self.getTypeTags() != other.getTypeTags():
+            return False
+        if len(self.arguments) != len(other.arguments):
+            return False
+        for i in range(len(self.arguments)):
+            if self.arguments[i].value != other.arguments[i].value:
+                return False
+        return True
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
 class Bundle(object):
     """
     OSC Bundle
     """
     def __init__(self, messages=[],  time_tag=0):
-        self.messages = messages
+        self.messages = messages[:]
         self.time_tag = time_tag
         if self.time_tag is None:
             pass
@@ -107,6 +123,18 @@ class Bundle(object):
             data += IntArgument(len(binary)).toBinary()
             data += binary
         return data
+
+
+    def __eq__(self, other):
+        if len(self.messages) != len(other.messages):
+            return False
+        for i in range(len(self.messages)):
+            if self.messages[i] != other.messages[i]:
+                return False
+        return True
+
+    def __ne__(self, other):
+        return not (self == other)
 
 
 class Argument(object):
@@ -464,12 +492,14 @@ class AddressNode(object):
         self.childNodes = {}
         self.callbacks = set()
         self.parent = None
-        self.wildcardChilds = set()
+        self.wildcardNodes = set()
 
-
-    def match(self, path):
-        if not len(path):
-            return set([self])
+    def match(self, path, matchAllChilds = False):
+        if not len(path) or matchAllChilds:
+            c = set([self])
+            if matchAllChilds and self.childNodes:
+                c = c.union(reduce(lambda a, b: a.union(b), [n.match(path, True) for n in self.childNodes.values()]))
+            return c
 
         matchedNodes = set()
 
@@ -477,21 +507,21 @@ class AddressNode(object):
         if AddressNode.isWildcard(part):
             for c in self.childNodes:
                 if AddressNode.matchesWildcard(c, part):
-                    matchedNodes.add(self.childNodes[c])
+                    matchedNodes.add( (self.childNodes[c], part[-1] == "*") )
             # FIXME - what if both the part and some of my childs have wildcards?
-        elif self.wildcardChilds:
+        elif self.wildcardNodes:
             matches = set()
-            for c in self.wildcardChilds:
+            for c in self.wildcardNodes:
                 if AddressNode.matchesWildcard(part, c):
-                    matchedNodes.add(self.childNodes[c])
+                    all = c[-1] == "*" and not self.childNodes[c].childNodes
+                    matchedNodes.add( (self.childNodes[c], all) )
                     break
         if part in self.childNodes:
-            matchedNodes.add(self.childNodes[part])
+            matchedNodes.add( (self.childNodes[part], False) )
 
         if not matchedNodes:
             return matchedNodes
-        return reduce(lambda a, b: a.union(b), [n.match(path[1:]) for n in matchedNodes])
-
+        return reduce(lambda a, b: a.union(b), [n.match(path[1:], all) for n, all in matchedNodes])
 
     def addCallback(self, path, cb):
         if not len(path):
@@ -503,9 +533,8 @@ class AddressNode(object):
                     raise ValueError("Invalid address part: '%s'" % part)
                 self.childNodes[part] = AddressNode()
                 if AddressNode.isWildcard(part):
-                    self.wildcardChilds.add(part)
+                    self.wildcardNodes.add(part)
             self.childNodes[part].addCallback(path[1:], cb)
-
 
     def removeCallback(self, path, cb):
         if not len(path):
@@ -517,22 +546,19 @@ class AddressNode(object):
             self.childNodes[part].removeCallback(path[1:], cb)
             if not self.childNodes[part].callbacks and not self.childNodes[part].childNodes:
                 # remove child
-                if part in self.wildcardChilds:
-                    self.wildcardChilds.remove(part)
+                if part in self.wildcardNodes:
+                    self.wildcardNodes.remove(part)
                 del self.childNodes[part]
-
 
     @staticmethod
     def isWildcard(part):
         wildcardChars = set("*?[]{}")
         return len(set(part).intersection(wildcardChars)) > 0
 
-
     @staticmethod
     def isValidAddressPart(part):
         invalidChars = set(" #,/")
         return len(set(part).intersection(invalidChars)) == 0
-
 
     @staticmethod
     def matchesWildcard(value, wildcard):
