@@ -13,9 +13,7 @@ import struct
 import time
 import fnmatch
 
-from twisted.internet.protocol import DatagramProtocol
-from twisted.internet import reactor
-from twisted.internet import defer
+from twisted.internet import reactor, defer, protocol
 
 def _ceilToMultipleOfFour(num):
     """
@@ -596,7 +594,7 @@ class AddressNode(object):
         return fnmatch.fnmatchcase(value, wildcard)
 
 
-class OscServerProtocol(DatagramProtocol):
+class OscServerProtocol(protocol.DatagramProtocol):
     """
     The OSC server protocol
     """
@@ -614,7 +612,7 @@ class OscServerProtocol(DatagramProtocol):
 
 
 
-class OscClientProtocol(DatagramProtocol):
+class OscClientProtocol(protocol.DatagramProtocol):
      def __init__(self, onStart):
          self.onStart = onStart
 
@@ -637,15 +635,3 @@ class OscSender(object):
      def stop(self):
          self._call.stop()
          self._port.stopListening()
-
-
-# TODO: move to doc/core/examples/oscserver.py
-if __name__ == "__main__":
-    reactor.listenUDP(17777, OscServerProtocol())
-
-    ds = OscSender()
-    ds.send(Message("/foo"), ("127.0.0.1", 17777))
-    ds.send(Message("/foo", StringArgument("bar")), ("127.0.0.1", 17777))
-    ds.send(Bundle([Message("/foo", StringArgument("bar"))]), ("127.0.0.1", 17777))
-
-    reactor.run()
