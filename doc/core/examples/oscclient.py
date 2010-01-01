@@ -1,7 +1,7 @@
 # Copyright (c) 2001-2006 Twisted Matrix Laboratories.
 # See LICENSE for details.
 
-""" Simple OSC server """
+""" Simple OSC client """
 
 import sys
 # FIXME - remove this dirty hack

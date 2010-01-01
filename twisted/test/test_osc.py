@@ -1,4 +1,4 @@
-# Copyright (c) 2001-2009 Twisted Matrix Laboratories.
+# Copyright (c) 2009 Alexandre Quessy, Arjan Scherpenisse
 # See LICENSE for details.
 
 """
