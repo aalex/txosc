@@ -151,6 +151,19 @@ class Bundle(object):
         return bundle, ""
 
 
+    def getMessages(self):
+        """
+        Retrieve all Message objects from this bundle, recursively.
+        """
+        r = set()
+        for m in self.messages:
+            if isinstance(m, Bundle):
+                r = r.union(m.getMessages())
+            else:
+                r.add(m)
+        return r
+
+
 class Argument(object):
     """
     Base OSC argument
@@ -484,14 +497,20 @@ class AddressSpace(object):
         return reduce(lambda a, b: a.union(b), [n.callbacks for n in nodes])
 
 
-    def dispatch(self, Message, clientAddress):
+    def dispatch(self, element, clientAddress):
         """
         Executes every callback matching the message address with Message as argument. 
         (and not only its arguments) 
         The order in which the callbacks are called in undefined.
         -> None
         """
-        raise NotImplementedError("AddressSpace is in progress.")
+        if isinstance(element, Bundle):
+            messages = element.getMessages()
+        else:
+            messages = [element]
+        for m in messages:
+            for c in self.getCallbacks(m.address):
+                c(m, clientAddress)
 
 
     def _messagePath(self, message):

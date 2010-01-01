@@ -175,8 +175,33 @@ class TestBundle(unittest.TestCase):
 
         nested = osc.Bundle([osc.Message("/hello")])
         test(osc.Bundle([nested, osc.Message("/foo")]))
+
+    def testGetMessages(self):
+
+        m1 = osc.Message("/foo")
+        m2 = osc.Message("/bar")
+        m3 = osc.Message("/foo/baz")
+
+        b = osc.Bundle()
+        b.messages.append(m1)
+        self.assertEqual(b.getMessages(), set([m1]))
+
+        b = osc.Bundle()
+        b.messages.append(m1)
+        b.messages.append(m2)
+        self.assertEqual(b.getMessages(), set([m1, m2]))
+
+        b = osc.Bundle()
+        b.messages.append(m1)
+        b.messages.append(osc.Bundle([m2]))
+        b.messages.append(osc.Bundle([m3]))
+        self.assertEqual(b.getMessages(), set([m1, m2, m3]))
         
+
 class TestAddressSpace(unittest.TestCase):
+    """
+    Test address space; adding/removing/dispatching callbacks, wildcard matching.
+    """
 
     def testAddRemoveCallback(self):
 
@@ -308,6 +333,25 @@ class TestAddressSpace(unittest.TestCase):
         self.assertFalse(osc.AddressNode.matchesWildcard("bar4", "bar[1-3]"))
     testWildcardRangeMatching.skip = "Range matching"
 
+
+    def testDispatching(self):
+
+        def cb(message, addr):
+            state['cb'] = True
+        def cb2(message, addr):
+            state['cb2'] = True
+
+        space = osc.AddressSpace()
+        space.addCallback("/hello", cb)
+        space.addCallback("/there", cb2)
+
+        state = {}
+        space.dispatch(osc.Message("/hello"), "0.0.0.0")
+        self.assertEqual(state, {'cb': True})
+
+        state = {}
+        space.dispatch(osc.Bundle([osc.Message("/hello"), osc.Message("/there")]), "0.0.0.0")
+        self.assertEqual(state, {'cb': True, 'cb2': True})
 
 
 class TestServer(unittest.TestCase):
