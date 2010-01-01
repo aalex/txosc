@@ -173,7 +173,9 @@ class TestBundle(unittest.TestCase):
         test(osc.Bundle([osc.Message("/foo"), osc.Message("/bar")]))
         test(osc.Bundle([osc.Message("/foo"), osc.Message("/bar", osc.StringArgument("hello"))]))
 
-
+        nested = osc.Bundle([osc.Message("/hello")])
+        test(osc.Bundle([nested, osc.Message("/foo")]))
+        
 class TestAddressSpace(unittest.TestCase):
 
     def testAddRemoveCallback(self):
