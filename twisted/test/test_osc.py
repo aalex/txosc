@@ -141,9 +141,7 @@ class TestMessage(unittest.TestCase):
             binary = m.toBinary()
             m2, leftover = osc.Message.fromBinary(binary)
             self.assertEqual(leftover, "")
-            self.assertEqual(len(m.arguments), len(m2.arguments))
-            for i in range(len(m.arguments)):
-                self.assertEqual(m.arguments[i].value, m2.arguments[i].value)
+            self.assertEqual(m, m2)
 
         test(osc.Message("/example"))
         test(osc.Message("/example", osc.StringArgument("hello")))
@@ -167,8 +165,14 @@ class TestBundle(unittest.TestCase):
         def test(b):
             binary = b.toBinary()
             b2, leftover = osc.Bundle.fromBinary(binary)
-        b = osc.Bundle()
-        
+            self.assertEqual(leftover, "")
+            self.assertEqual(b, b2)
+
+        test(osc.Bundle())
+        test(osc.Bundle([osc.Message("/foo")]))
+        test(osc.Bundle([osc.Message("/foo"), osc.Message("/bar")]))
+        test(osc.Bundle([osc.Message("/foo"), osc.Message("/bar", osc.StringArgument("hello"))]))
+
 
 class TestAddressSpace(unittest.TestCase):
 

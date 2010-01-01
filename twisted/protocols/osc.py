@@ -23,7 +23,6 @@ def _ceilToMultipleOfFour(num):
     That is for data that need to be padded with zeros so that the length of their data
     must be a multiple of 32 bits.
     """
-    #return math.ceil((num + 1) / 4.0) * 4
     return num + (4 - (num % 4)) 
 
 class OscError(Exception):
@@ -32,12 +31,10 @@ class OscError(Exception):
     """
     pass
 
-def binary_print(s):
-    print " ".join(["%02x" % ord(c) for c in s])
 
 class Message(object):
     """
-    An OSC Message.
+    An OSC Message element.
     """
     address = None
     arguments = None
@@ -106,8 +103,11 @@ class Message(object):
 
 class Bundle(object):
     """
-    OSC Bundle
+    An OSC Bundle element.
     """
+    time_tag = None
+    messages = None
+
     def __init__(self, messages=[],  time_tag=0):
         self.messages = messages[:]
         self.time_tag = time_tag
@@ -116,14 +116,13 @@ class Bundle(object):
             #TODO create time tag
 
     def toBinary(self):
-        data = "#bundle"
+        data = StringArgument("#bundle").toBinary()
         data += TimeTagArgument(self.time_tag).toBinary()
         for msg in self.messages:
             binary = msg.toBinary()
             data += IntArgument(len(binary)).toBinary()
             data += binary
         return data
-
 
     def __eq__(self, other):
         if len(self.messages) != len(other.messages):
@@ -135,6 +134,23 @@ class Bundle(object):
 
     def __ne__(self, other):
         return not (self == other)
+
+    @staticmethod
+    def fromBinary(data):
+        bundleStart, data = stringFromBinary(data)
+        if bundleStart != "#bundle":
+            raise OscError("Error parsing bundle string")
+        bundle = Bundle()
+        bundle.time_tag, data = TimeTagArgument.fromBinary(data)
+        while data:
+            size, data = IntArgument.fromBinary(data)
+            size = size.value
+            if len(data) < size:
+                raise OscError("Unexpected end of bundle: need %d bytes of data" % size)
+            payload = data[:size]
+            bundle.messages.append(elementFromBinary(payload))
+            data = data[size:]
+        return bundle, ""
 
 
 class Argument(object):
@@ -163,6 +179,7 @@ class Argument(object):
 
     def __str__(self):
         return "%s:%s " % (self.typeTag, self.value)
+
 
 #
 # OSC 1.1 required arguments
@@ -406,6 +423,15 @@ def stringFromBinary(data):
     return value, leftover
 
 
+def elementFromBinary(data):
+    if data[0] == "/":
+        element, data = Message.fromBinary(data)
+    elif data[0] == "#":
+        element, data = Bundle.fromBinary(data)
+    else:
+        raise OscError("Error parsing OSC data: " + data)
+    return element
+
 
 class AddressSpace(object):
     """
@@ -579,8 +605,9 @@ class OscServerProtocol(DatagramProtocol):
         #packet_type = data[0] # TODO
         print("received %r from %s:%d" % (data, host, port))
         #TODO : check if it is a #bundle
-        message, leftover = Message.fromBinary(data)
-        self.messageReceived(message)
+        element = elementFromBinary(data)
+        print element
+        #self.messageReceived(message)
 
     def messageReceived(self, message):
         print "Message received: [%s]" % message
@@ -619,5 +646,6 @@ if __name__ == "__main__":
     ds = OscSender()
     ds.send(Message("/foo"), ("127.0.0.1", 17777))
     ds.send(Message("/foo", StringArgument("bar")), ("127.0.0.1", 17777))
+    ds.send(Bundle([Message("/foo", StringArgument("bar"))]), ("127.0.0.1", 17777))
 
     reactor.run()
