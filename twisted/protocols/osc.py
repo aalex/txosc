@@ -15,13 +15,6 @@ import fnmatch
 
 from twisted.internet import reactor, defer, protocol
 
-def _ceilToMultipleOfFour(num):
-    """
-    Rounds a number to the closest higher number that is a mulitple of four.
-    That is for data that need to be padded with zeros so that the length of their data
-    must be a multiple of 32 bits.
-    """
-    return num + (4 - (num % 4)) 
 
 class OscError(Exception):
     """
@@ -33,46 +26,56 @@ class OscError(Exception):
 class Message(object):
     """
     An OSC Message element.
+
+    @ivar address: The OSC address string, e.g. "/foo/bar".
+    @ivar arguments: List of L{Argument} instances for the message.
     """
     address = None
     arguments = None
 
-    def __init__(self, address, *arguments):
+    def __init__(self, address, *args):
         self.address = address
-        self.arguments = list(arguments)
+        self.arguments = []
+        for arg in args:
+            self.add(arg)
 
 
     def toBinary(self):
+        """
+        @return: A string with the binary presentation of this message.
+        """
         return StringArgument(self.address).toBinary() + StringArgument("," + self.getTypeTags()).toBinary() + "".join([a.toBinary() for a in self.arguments])
 
 
     def getTypeTags(self):
         """
-        :rettype: string
+        @return: A string  with this message's OSC type tag, e.g. "ii" when there are 2 int arguments.
         """
         return "".join([a.typeTag for a in self.arguments])
 
 
     def add(self, value):
         """
-        Add an argument with given value, using L{createArgument}.
+        Adds an argument to this message with given value, using L{createArgument}.
         """
-        self.arguments.append(createArgument(value))
+        if not isinstance(value, Argument):
+            value = createArgument(value)
+        self.arguments.append(value)
 
 
     @staticmethod
     def fromBinary(data):
-        osc_address, leftover = stringFromBinary(data)
+        osc_address, leftover = _stringFromBinary(data)
         #print("Got OSC address: %s" % (osc_address))
         message = Message(osc_address)
-        type_tags, leftover = stringFromBinary(leftover)
+        type_tags, leftover = _stringFromBinary(leftover)
 
         if type_tags[0] != ",":
             # invalid type tag string
             raise OscError("Invalid typetag string: %s" % type_tags)
 
         for type_tag in type_tags[1:]:
-            arg, leftover = createArgumentFromBinary(type_tag, leftover)
+            arg, leftover = _argumentFromBinary(type_tag, leftover)
             message.arguments.append(arg)
 
         return message, leftover
@@ -106,8 +109,12 @@ class Bundle(object):
     time_tag = None
     messages = None
 
-    def __init__(self, messages=[],  time_tag=0):
-        self.messages = messages[:]
+    def __init__(self, messages=None,  time_tag=0):
+        if messages:
+            self.messages = messages
+        else:
+            self.messages = []
+
         self.time_tag = time_tag
         if self.time_tag is None:
             pass
@@ -135,7 +142,7 @@ class Bundle(object):
 
     @staticmethod
     def fromBinary(data):
-        bundleStart, data = stringFromBinary(data)
+        bundleStart, data = _stringFromBinary(data)
         if bundleStart != "#bundle":
             raise OscError("Error parsing bundle string")
         bundle = Bundle()
@@ -146,7 +153,7 @@ class Bundle(object):
             if len(data) < size:
                 raise OscError("Unexpected end of bundle: need %d bytes of data" % size)
             payload = data[:size]
-            bundle.messages.append(elementFromBinary(payload))
+            bundle.messages.append(_elementFromBinary(payload))
             data = data[size:]
         return bundle, ""
 
@@ -240,7 +247,7 @@ class StringArgument(Argument):
         OSC-string A sequence of non-null ASCII characters followed by a null, 
             followed by 0-3 additional null characters to make the total number of bits a multiple of 32.
         """
-        value, leftover = stringFromBinary(data)
+        value, leftover = _stringFromBinary(data)
         return StringArgument(value), leftover
 
 
@@ -377,9 +384,10 @@ def createArgument(value, type_tag=None):
     """
     Creates an OSC argument, trying to guess its type if no type is given.
 
-    Factory of *Attribute object.
-    :param data: Any Python base type.
-    :param type_tag: One-letter string. Either "i", "f", etc.
+    Factory of *Attribute objects.
+    @param data: Any Python base type.
+    @param type_tag: One-letter string. Either "i", "f", etc.
+    @return: an Argument instance.
     """
     global _types
     global _tags
@@ -409,70 +417,53 @@ def createArgument(value, type_tag=None):
         raise OscError("No OSC argument type for %s (value = %s)" % (kind, value))
 
 
-def createArgumentFromBinary(type_tag, data):
-    if type_tag == "T":
-        return BooleanArgument(True), data
-    if type_tag == "F":
-        return BooleanArgument(False), data
-    if type_tag == "N":
-        return NullArgument(), data
-    if type_tag == "I":
-        return ImpulseArgument(), data
 
-    global _tags
-    if type_tag not in _tags:
-        raise OscError("Invalid typetag: %s" % type_tag)
-
-    return _tags[type_tag].fromBinary(data)
-
-
-def stringFromBinary(data):
-    null_pos = string.find(data, "\0") # find the first null char
-    value = data[0:null_pos] # get the first string out of data
-    # find the position of the beginning of the next data
-    leftover = data[_ceilToMultipleOfFour(null_pos):]
-    return value, leftover
-
-
-def elementFromBinary(data):
-    if data[0] == "/":
-        element, data = Message.fromBinary(data)
-    elif data[0] == "#":
-        element, data = Bundle.fromBinary(data)
-    else:
-        raise OscError("Error parsing OSC data: " + data)
-    return element
-
-
-class AddressSpace(object):
+class Receiver(object):
     """
-    Adding/removing OSC handlers callbacks utility.
+    Receive OSC elements (L{Bundle}s and L{Message}s) from the server
+    protocol and handles the matching and dispatching of these to
+    registered callbacks.
 
-    Callbacks are stored in a tree-like structure.
+    Callbacks are stored in a tree-like structure, using L{AddressNode} objects.
+
+    @ivar root: L{AddressNode} instance representing the root of the callback tree.
     """
+
+    root = None
 
     def __init__(self):
-        # TODO: implement as a tree of sets or a big dict?
         self.root = AddressNode()
 
 
-    def addCallback(self, pattern, callable, typeTags=None):
-        
-        path = self._patternPath(pattern)
-        return self.root.addCallback(path, callable)
+    def getProtocol(self):
+        return OscServerProtocol(self)
 
-        
+
+    def addCallback(self, pattern, callable, typeTags=None):
+        """
+        Register a callback.
+
+        @param pattern: The pattern to register this callback for.
+        @param callable: The callable that will be registered.
+        """
+        path = self._patternPath(pattern)
+        self.root.addCallback(path, callable)
+
+
     def removeCallback(self, pattern, callable):
         """
-        :rettype: -> None
+        Remove a single callback.
+
+        @param pattern: The pattern this callback was registered for.
+        @param callable: The callable that was registered.
         """
         path = self._patternPath(pattern)
-        return self.root.removeCallback(path, callable)
+        self.root.removeCallback(path, callable)
 
 
     def removeAllCallbacks(self, pattern):
         """
-        :rettype: -> None
+        Remove all callbacks which match with the given pattern.
         """
         raise NotImplementedError("AddressSpace is in progress.")
 
@@ -615,28 +606,31 @@ class AddressNode(object):
 
 class OscServerProtocol(protocol.DatagramProtocol):
     """
-    The OSC server protocol
-    """
-    def datagramReceived(self, data, (host, port)):
-        #The contents of an OSC packet must be either an OSC Message or an OSC Bundle. The first byte of the packet's contents unambiguously distinguishes between these two alternatives.
-        #packet_type = data[0] # TODO
-        print("received %r from %s:%d" % (data, host, port))
-        #TODO : check if it is a #bundle
-        element = elementFromBinary(data)
-        print element
-        #self.messageReceived(message)
+    The OSC server protocol.
 
-    def messageReceived(self, message):
-        print "Message received: [%s]" % message
+    @ivar dispatcher: The dispatcher to dispatch received elements to.
+    """
+    dispatcher = None
+
+    def __init__(self, dispatcher):
+        self.dispatcher = dispatcher
+
+
+    def datagramReceived(self, data, (host, port)):
+        element = _elementFromBinary(data)
+        self.dispatcher.dispatch(element, (host, port))
 
 
 
 class OscClientProtocol(protocol.DatagramProtocol):
-     def __init__(self, onStart):
-         self.onStart = onStart
+    """
+    The OSC client protocol.
+    """
+    def __init__(self, onStart):
+        self.onStart = onStart
 
-     def startProtocol(self):
-         self.onStart.callback(self)
+    def startProtocol(self):
+        self.onStart.callback(self)
 
 
 class OscSender(object):
@@ -654,3 +648,47 @@ class OscSender(object):
      def stop(self):
          self._call.stop()
          self._port.stopListening()
+
+
+def _ceilToMultipleOfFour(num):
+    """
+    Rounds a number to the closest higher number that is a mulitple of four.
+    That is for data that need to be padded with zeros so that the length of their data
+    must be a multiple of 32 bits.
+    """
+    return num + (4 - (num % 4)) 
+
+
+def _argumentFromBinary(type_tag, data):
+    if type_tag == "T":
+        return BooleanArgument(True), data
+    if type_tag == "F":
+        return BooleanArgument(False), data
+    if type_tag == "N":
+        return NullArgument(), data
+    if type_tag == "I":
+        return ImpulseArgument(), data
+
+    global _tags
+    if type_tag not in _tags:
+        raise OscError("Invalid typetag: %s" % type_tag)
+
+    return _tags[type_tag].fromBinary(data)
+
+
+def _stringFromBinary(data):
+    null_pos = string.find(data, "\0") # find the first null char
+    value = data[0:null_pos] # get the first string out of data
+    # find the position of the beginning of the next data
+    leftover = data[_ceilToMultipleOfFour(null_pos):]
+    return value, leftover
+
+
+def _elementFromBinary(data):
+    if data[0] == "/":
+        element, data = Message.fromBinary(data)
+    elif data[0] == "#":
+        element, data = Bundle.fromBinary(data)
+    else:
+        raise OscError("Error parsing OSC data: " + data)
+    return element

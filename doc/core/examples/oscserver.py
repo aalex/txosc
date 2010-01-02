@@ -11,6 +11,13 @@ from twisted.internet import reactor
 from twisted.protocols import osc
 
 if __name__ == "__main__":
-    reactor.listenUDP(17777, osc.OscServerProtocol())
+    receiver = osc.Receiver()
+
+    def ping(msg, addr):
+        print "PING!"
+        print msg, addr
+    receiver.addCallback("/ping", ping)
+
+    reactor.listenUDP(17777, receiver.getProtocol())
 
     reactor.run()

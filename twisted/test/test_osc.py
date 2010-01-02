@@ -198,16 +198,16 @@ class TestBundle(unittest.TestCase):
         self.assertEqual(b.getMessages(), set([m1, m2, m3]))
         
 
-class TestAddressSpace(unittest.TestCase):
+class TestReceiver(unittest.TestCase):
     """
-    Test address space; adding/removing/dispatching callbacks, wildcard matching.
+    Test the OSC element dispatcher; adding/removing/dispatching callbacks, wildcard matching.
     """
 
     def testAddRemoveCallback(self):
 
         def callback(m):
             pass
-        space = osc.AddressSpace()
+        space = osc.Receiver()
         space.addCallback("/foo", callback)
         self.assertEqual(space.getCallbacks("/foo"), set([callback]))
         space.removeCallback("/foo", callback)
@@ -217,7 +217,7 @@ class TestAddressSpace(unittest.TestCase):
 
         def callback(m):
             pass
-        space = osc.AddressSpace()
+        space = osc.Receiver()
         space.addCallback("/foo", callback)
         self.assertEqual(space.getCallbacks("/foo"), set([callback]))
         space.removeAllCallbacks("/*")
@@ -225,20 +225,20 @@ class TestAddressSpace(unittest.TestCase):
     testRemoveAllCallbacks.skip = "removeAllCallbacks needs to be implemented"
 
     def testAddInvalidCallback(self):
-        space = osc.AddressSpace()
+        space = osc.Receiver()
         self.assertRaises(ValueError, space.addCallback, "/foo bar/baz", lambda m: m)
         self.assertEqual(space.addCallback("/foo/*/baz", lambda m: m), None)
 
 
     def testRemoveNonExistingCallback(self):
-        space = osc.AddressSpace()
+        space = osc.Receiver()
         self.assertRaises(KeyError, space.removeCallback, "/foo", lambda m: m)
 
     def testMatchExact(self):
 
         def callback(m):
             pass
-        space = osc.AddressSpace()
+        space = osc.Receiver()
         space.addCallback("/foo", callback)
 
         self.assertEqual(space.matchCallbacks(osc.Message("/foo")), set([callback]))
@@ -248,7 +248,7 @@ class TestAddressSpace(unittest.TestCase):
 
         def callback(m):
             pass
-        space = osc.AddressSpace()
+        space = osc.Receiver()
         space.addCallback("/foo/*", callback)
 
         self.assertEqual(space.matchCallbacks(osc.Message("/foo")), set())
@@ -256,12 +256,12 @@ class TestAddressSpace(unittest.TestCase):
         self.assertEqual(space.matchCallbacks(osc.Message("/bar")), set())
         self.assertEqual(space.matchCallbacks(osc.Message("/foo/bar/baz")), set([callback]))
 
-        space = osc.AddressSpace()
+        space = osc.Receiver()
         space.addCallback("/*", callback)
         self.assertEqual(space.matchCallbacks(osc.Message("/")), set([callback]))
         self.assertEqual(space.matchCallbacks(osc.Message("/foo/bar")), set([callback]))
 
-        space = osc.AddressSpace()
+        space = osc.Receiver()
         space.addCallback("/*/baz", callback)
         self.assertEqual(space.matchCallbacks(osc.Message("/foo/bar")), set())
         self.assertEqual(space.matchCallbacks(osc.Message("/foo/baz")), set([callback]))
@@ -270,7 +270,7 @@ class TestAddressSpace(unittest.TestCase):
 
         def callback1(m): pass
         def callback2(m): pass
-        space = osc.AddressSpace()
+        space = osc.Receiver()
         space.addCallback("/foo1", callback1)
         space.addCallback("/foo2", callback2)
 
@@ -289,7 +289,7 @@ class TestAddressSpace(unittest.TestCase):
             pass
         def foobarCallback(m):
             pass
-        space = osc.AddressSpace()
+        space = osc.Receiver()
         space.addCallback("/foo", fooCallback)
         space.addCallback("/bar", barCallback)
         space.addCallback("/baz", bazCallback)
@@ -308,7 +308,7 @@ class TestAddressSpace(unittest.TestCase):
             pass
         def secondCallback(m):
             pass
-        space = osc.AddressSpace()
+        space = osc.Receiver()
         space.addCallback("/foo/1", firstCallback)
         space.addCallback("/foo/2", secondCallback)
 
@@ -349,7 +349,7 @@ class TestAddressSpace(unittest.TestCase):
             self.assertEqual(addr, a)
             state['cb2'] = True
 
-        space = osc.AddressSpace()
+        space = osc.Receiver()
         space.addCallback("/hello", cb)
         space.addCallback("/there", cb2)
 
