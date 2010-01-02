@@ -42,7 +42,8 @@ class Message(object):
 
     def toBinary(self):
         """
-        @return: A string with the binary presentation of this message.
+        Encodes the L{Message} to binary form, ready to send over the wire.
+        @return A string with the binary presentation of this L{Message}.
         """
         return StringArgument(self.address).toBinary() + StringArgument("," + self.getTypeTags()).toBinary() + "".join([a.toBinary() for a in self.arguments])
 
@@ -57,6 +58,8 @@ class Message(object):
     def add(self, value):
         """
         Adds an argument to this message with given value, using L{createArgument}.
+
+        @param value Argument to add to this message.
         """
         if not isinstance(value, Argument):
             value = createArgument(value)
@@ -65,6 +68,17 @@ class Message(object):
 
     @staticmethod
     def fromBinary(data):
+        """
+        Creates a L{Message} object from binary data that is passed to it.
+
+        This static method is a factory for L{Message} objects. 
+        It checks the type tags of the message, and parses each of its 
+        arguments, calling each of the proper factory.
+        
+        @param data String of bytes/characters formatted following the OSC protocol.
+        @return Two-item tuple with L{Message} as the first item, and the 
+        leftover binary data, as a L{str}. 
+        """
         osc_address, leftover = _stringFromBinary(data)
         #print("Got OSC address: %s" % (osc_address))
         message = Message(osc_address)
@@ -121,6 +135,10 @@ class Bundle(object):
             #TODO create time tag
 
     def toBinary(self):
+        """
+        Encodes the L{Bundle} to binary form, ready to send over the wire.
+        @return A string with the binary presentation of this L{Bundle}.
+        """
         data = StringArgument("#bundle").toBinary()
         data += TimeTagArgument(self.time_tag).toBinary()
         for msg in self.messages:
@@ -142,6 +160,15 @@ class Bundle(object):
 
     @staticmethod
     def fromBinary(data):
+        """
+        Creates a L{Bundle} object from binary data that is passed to it.
+
+        This static method is a factory for L{Bundle} objects. 
+        
+        @param data String of bytes/characters formatted following the OSC protocol.
+        @return Two-item tuple with L{Bundle} as the first item, and the 
+        leftover binary data, as a L{str}. That leftover should be an empty string.
+        """
         bundleStart, data = _stringFromBinary(data)
         if bundleStart != "#bundle":
             raise OscError("Error parsing bundle string")
@@ -183,7 +210,8 @@ class Argument(object):
 
     def toBinary(self):
         """
-        Encode the value to binary form, ready to send over the wire.
+        Encodes the L{Argument} to binary form, ready to send over the wire.
+        @return A string with the binary presentation of this L{Message}.
         """
         raise NotImplemented('Override this method')
 
@@ -191,7 +219,15 @@ class Argument(object):
     @staticmethod
     def fromBinary(data):
         """
-        Decode the value from binary form. Result is a tuple of (Instance, leftover).
+        Creates a L{Message} object from binary data that is passed to it.
+
+        This static method is a factory for L{Message} objects. 
+        Each subclass of the L{Argument} class implements it to create an 
+        instance of its own type, parsing the data given as and argument.
+        
+        @param data String of bytes/characters formatted following the OSC protocol.
+        @return Two-item tuple with L{Argument} as the first item, and the 
+        leftover binary data, as a L{str}.
         """
         raise NotImplemented('Override this method')
 
@@ -238,14 +274,17 @@ class StringArgument(Argument):
     @staticmethod
     def fromBinary(data):
         """
-        Parses binary data to get the first string in it.
+        Creates a L{StringArgument} object from binary data that is passed to it.
 
-        Returns a tuple with string, leftover.
-        The leftover should be parsed next.
-        :rettype: tuple
-
+        This static method is a factory for L{StringArgument} objects. 
+        
         OSC-string A sequence of non-null ASCII characters followed by a null, 
-            followed by 0-3 additional null characters to make the total number of bits a multiple of 32.
+        followed by 0-3 additional null characters to make the total number 
+        of bits a multiple of 32.
+        
+        @param data String of bytes/characters formatted following the OSC protocol.
+        @return Two-item tuple with L{StringArgument} as the first item, and the leftover binary data, as a L{str}.
+
         """
         value, leftover = _stringFromBinary(data)
         return StringArgument(value), leftover
@@ -333,6 +372,9 @@ class BooleanArgument(Argument):
 class DatalessArgument(Argument):
     """
     An argument whose value is defined just by its type tag.
+        
+    This class should not be used directly. It is intended to gather 
+    common behaviour of L{NullArgument} and L{ImpulseArgument}.
     """
     typeTag = None # override in subclass
     value = None # override in subclass
@@ -385,9 +427,10 @@ def createArgument(value, type_tag=None):
     Creates an OSC argument, trying to guess its type if no type is given.
 
     Factory of *Attribute objects.
-    @param data: Any Python base type.
-    @param type_tag: One-letter string. Either "i", "f", etc.
-    @return: an Argument instance.
+    @param data Any Python base type .
+    @param type_tag One-letter string. One of "sifbTFNI".
+    @type type_tag One-letter string.
+    @return Returns an instance of one of the subclasses of the L{Argument} class.
     """
     global _types
     global _tags
@@ -480,6 +523,7 @@ class Receiver(object):
         """
         Retrieve all callbacks which are bound to given
         pattern. Returns a set() of callables.
+        @return L{set} of callbables.
         """
         path = self._patternPath(pattern)
         nodes = self.root.match(path)
@@ -493,7 +537,7 @@ class Receiver(object):
         Executes every callback matching the message address with Message as argument. 
         (and not only its arguments) 
         The order in which the callbacks are called in undefined.
-        -> None
+        @return None
         """
         if isinstance(element, Bundle):
             messages = element.getMessages()
@@ -516,12 +560,17 @@ class Receiver(object):
         Given a OSC address path like /foo/bar, return a list of
         ['foo', 'bar']. Note that an OSC address always starts with a
         slash.
+        @param pattern A L{str} OSC address.
+        @return A L{list} of L{str}. Each part of an OSC path.
         """
         return pattern.split("/")[1:]
 
 
 
 class AddressNode(object):
+    """
+    Node in the tree of OSC addresses.
+    """
     def __init__(self):
         self.childNodes = {}
         self.callbacks = set()
@@ -558,6 +607,14 @@ class AddressNode(object):
         return reduce(lambda a, b: a.union(b), [n.match(path[1:], all) for n, all in matchedNodes])
 
     def addCallback(self, path, cb):
+        """
+        Adds a callback for L{Message} instances received for a given OSC path.
+        @param path OSC address in the form /egg/spam/ham
+        @type path L{str}
+        @param cb Callback that will receive L{Message} as an argument when received.
+        @type cb Function of method.
+        @return None
+        """
         if not len(path):
             self.callbacks.add(cb)
         else:
@@ -571,6 +628,14 @@ class AddressNode(object):
             self.childNodes[part].addCallback(path[1:], cb)
 
     def removeCallback(self, path, cb):
+        """
+        Removes a callback for L{Message} instances received for a given OSC path.
+        @param path OSC address in the form /egg/spam/ham
+        @type path L{str}
+        @param cb Callback that will receive L{Message} as an argument when received.
+        @type cb Function of method.
+        @return None
+        """
         if not len(path):
             self.callbacks.remove(cb)
         else:
