@@ -378,16 +378,18 @@ class TestSenderAndReceiver(unittest.TestCase):
     def _send(self, element):
         self.sender.send(element, ("127.0.0.1", 17777))
 
-
     def testSingleElement(self):
         pingMsg = osc.Message("/ping")
-        
+        d = defer.Deferred()
+
         def ping(m, addr):
             self.assertEqual(m, pingMsg)
-        
+            d.callback(True)
+
         self.receiver.addCallback("/ping", ping)
         self._send(pingMsg)
         #self.assertEqual(self.state, {'
+        return d
 
 
 class TestReceiverWithExternalClient(unittest.TestCase):
