@@ -11,7 +11,7 @@ from twisted.internet import reactor
 from twisted.protocols import osc
 
 if __name__ == "__main__":
-    ds = osc.OscSender()
+    ds = osc.Sender()
     ds.send(osc.Message("/ping"), ("127.0.0.1", 17777))
     #ds.send(osc.Message("/foo", osc.StringArgument("bar")), ("127.0.0.1", 17777))
     #ds.send(osc.Bundle([osc.Message("/foo", osc.StringArgument("bar"))]), ("127.0.0.1", 17777))

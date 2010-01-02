@@ -8,8 +8,8 @@ Maintainer: Arjan Scherpenisse
 """
 
 from twisted.trial import unittest
+from twisted.internet import reactor, defer
 from twisted.protocols import osc
-
 
 class TestBlobArgument(unittest.TestCase):
     """
@@ -362,7 +362,42 @@ class TestReceiver(unittest.TestCase):
         self.assertEqual(state, {'cb': True, 'cb2': True})
 
 
-class TestServer(unittest.TestCase):
+class TestSenderAndReceiver(unittest.TestCase):
+    """
+    Test the sender and receiver over UDP via localhost.
+    """
+
+    def setUp(self):
+        self.receiver = osc.Receiver()
+        self.port = reactor.listenUDP(17777, self.receiver.getProtocol())
+        self.sender = osc.Sender()
+
+    def tearDown(self):
+        return defer.DeferredList([self.port.stopListening(), self.sender.stop()])
+
+    def _send(self, element):
+        self.sender.send(element, ("127.0.0.1", 17777))
+
+
+    def testSingleElement(self):
+        pingMsg = osc.Message("/ping")
+        
+        def ping(m, addr):
+            self.assertEqual(m, pingMsg)
+        
+        self.receiver.addCallback("/ping", ping)
+        self._send(pingMsg)
+        #self.assertEqual(self.state, {'
+
+
+class TestReceiverWithExternalClient(unittest.TestCase):
+    """
+    This test needs python-liblo.
+    """
+    pass
+
+
+class TestClientWithExternalReceiver(unittest.TestCase):
     """
     This test needs python-liblo.
     """

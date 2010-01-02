@@ -633,7 +633,7 @@ class OscClientProtocol(protocol.DatagramProtocol):
         self.onStart.callback(self)
 
 
-class OscSender(object):
+class Sender(object):
      def __init__(self):
          d = defer.Deferred()
          def listening(proto):
@@ -646,8 +646,7 @@ class OscSender(object):
          self.proto.transport.write(data, (host, port))
 
      def stop(self):
-         self._call.stop()
-         self._port.stopListening()
+         return self._port.stopListening()
 
 
 def _ceilToMultipleOfFour(num):
