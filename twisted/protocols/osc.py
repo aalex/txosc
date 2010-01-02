@@ -43,7 +43,7 @@ class Message(object):
     def toBinary(self):
         """
         Encodes the L{Message} to binary form, ready to send over the wire.
-        @return A string with the binary presentation of this L{Message}.
+        @return: A string with the binary presentation of this L{Message}.
         """
         return StringArgument(self.address).toBinary() + StringArgument("," + self.getTypeTags()).toBinary() + "".join([a.toBinary() for a in self.arguments])
 
@@ -59,7 +59,7 @@ class Message(object):
         """
         Adds an argument to this message with given value, using L{createArgument}.
 
-        @param value Argument to add to this message.
+        @param value: Argument to add to this message.
         """
         if not isinstance(value, Argument):
             value = createArgument(value)
@@ -75,8 +75,8 @@ class Message(object):
         It checks the type tags of the message, and parses each of its 
         arguments, calling each of the proper factory.
         
-        @param data String of bytes/characters formatted following the OSC protocol.
-        @return Two-item tuple with L{Message} as the first item, and the 
+        @param data: String of bytes/characters formatted following the OSC protocol.
+        @return: Two-item tuple with L{Message} as the first item, and the 
         leftover binary data, as a L{str}. 
         """
         osc_address, leftover = _stringFromBinary(data)
@@ -137,7 +137,7 @@ class Bundle(object):
     def toBinary(self):
         """
         Encodes the L{Bundle} to binary form, ready to send over the wire.
-        @return A string with the binary presentation of this L{Bundle}.
+        @return: A string with the binary presentation of this L{Bundle}.
         """
         data = StringArgument("#bundle").toBinary()
         data += TimeTagArgument(self.time_tag).toBinary()
@@ -165,8 +165,8 @@ class Bundle(object):
 
         This static method is a factory for L{Bundle} objects. 
         
-        @param data String of bytes/characters formatted following the OSC protocol.
-        @return Two-item tuple with L{Bundle} as the first item, and the 
+        @param data: String of bytes/characters formatted following the OSC protocol.
+        @return: Two-item tuple with L{Bundle} as the first item, and the 
         leftover binary data, as a L{str}. That leftover should be an empty string.
         """
         bundleStart, data = _stringFromBinary(data)
@@ -188,6 +188,7 @@ class Bundle(object):
     def getMessages(self):
         """
         Retrieve all Message objects from this bundle, recursively.
+        @return: L{set} of L{Message} of L{Bundle} instances.
         """
         r = set()
         for m in self.messages:
@@ -211,7 +212,7 @@ class Argument(object):
     def toBinary(self):
         """
         Encodes the L{Argument} to binary form, ready to send over the wire.
-        @return A string with the binary presentation of this L{Message}.
+        @return: A string with the binary presentation of this L{Message}.
         """
         raise NotImplemented('Override this method')
 
@@ -225,8 +226,8 @@ class Argument(object):
         Each subclass of the L{Argument} class implements it to create an 
         instance of its own type, parsing the data given as and argument.
         
-        @param data String of bytes/characters formatted following the OSC protocol.
-        @return Two-item tuple with L{Argument} as the first item, and the 
+        @param data: String of bytes/characters formatted following the OSC protocol.
+        @return: Two-item tuple with L{Argument} as the first item, and the 
         leftover binary data, as a L{str}.
         """
         raise NotImplemented('Override this method')
@@ -282,8 +283,8 @@ class StringArgument(Argument):
         followed by 0-3 additional null characters to make the total number 
         of bits a multiple of 32.
         
-        @param data String of bytes/characters formatted following the OSC protocol.
-        @return Two-item tuple with L{StringArgument} as the first item, and the leftover binary data, as a L{str}.
+        @param data: String of bytes/characters formatted following the OSC protocol.
+        @return: Two-item tuple with L{StringArgument} as the first item, and the leftover binary data, as a L{str}.
 
         """
         value, leftover = _stringFromBinary(data)
@@ -427,10 +428,10 @@ def createArgument(value, type_tag=None):
     Creates an OSC argument, trying to guess its type if no type is given.
 
     Factory of *Attribute objects.
-    @param data Any Python base type .
-    @param type_tag One-letter string. One of "sifbTFNI".
-    @type type_tag One-letter string.
-    @return Returns an instance of one of the subclasses of the L{Argument} class.
+    @param value: Any Python base type.
+    @param type_tag: One-letter string. One of "sifbTFNI".
+    @type type_tag: One-letter string.
+    @return: Returns an instance of one of the subclasses of the L{Argument} class.
     """
     global _types
     global _tags
@@ -523,7 +524,7 @@ class Receiver(object):
         """
         Retrieve all callbacks which are bound to given
         pattern. Returns a set() of callables.
-        @return L{set} of callbables.
+        @return: L{set} of callbables.
         """
         path = self._patternPath(pattern)
         nodes = self.root.match(path)
@@ -537,7 +538,7 @@ class Receiver(object):
         Executes every callback matching the message address with Message as argument. 
         (and not only its arguments) 
         The order in which the callbacks are called in undefined.
-        @return None
+        @return: None
         """
         if isinstance(element, Bundle):
             messages = element.getMessages()
@@ -560,8 +561,8 @@ class Receiver(object):
         Given a OSC address path like /foo/bar, return a list of
         ['foo', 'bar']. Note that an OSC address always starts with a
         slash.
-        @param pattern A L{str} OSC address.
-        @return A L{list} of L{str}. Each part of an OSC path.
+        @param pattern: A L{str} OSC address.
+        @return: A L{list} of L{str}. Each part of an OSC path.
         """
         return pattern.split("/")[1:]
 
@@ -609,11 +610,11 @@ class AddressNode(object):
     def addCallback(self, path, cb):
         """
         Adds a callback for L{Message} instances received for a given OSC path.
-        @param path OSC address in the form /egg/spam/ham
-        @type path L{str}
-        @param cb Callback that will receive L{Message} as an argument when received.
-        @type cb Function of method.
-        @return None
+        @param path: OSC address in the form /egg/spam/ham
+        @type path: L{str}
+        @param cb: Callback that will receive L{Message} as an argument when received.
+        @type cb: Function of method.
+        @return: None
         """
         if not len(path):
             self.callbacks.add(cb)
@@ -630,11 +631,11 @@ class AddressNode(object):
     def removeCallback(self, path, cb):
         """
         Removes a callback for L{Message} instances received for a given OSC path.
-        @param path OSC address in the form /egg/spam/ham
-        @type path L{str}
-        @param cb Callback that will receive L{Message} as an argument when received.
-        @type cb Function of method.
-        @return None
+        @param path: OSC address in the form /egg/spam/ham
+        @type path: L{str}
+        @param cb: Callback that will receive L{Message} as an argument when received.
+        @type cb: Function of method.
+        @return: None
         """
         if not len(path):
             self.callbacks.remove(cb)
