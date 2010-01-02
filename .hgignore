@@ -5,3 +5,5 @@ syntax: glob
 .*.swp
 _trial_temp/*
 twisted/plugins/dropin.cache
+#epydoc -v twisted.protocols.osc 
+html/*
