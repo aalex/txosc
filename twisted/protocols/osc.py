@@ -4,8 +4,10 @@
 
 """
 OSC 1.1 Protocol over UDP for Twisted.
-Specification : http://opensoundcontrol.org/spec-1_1
-Examples : http://opensoundcontrol.org/spec-1_0-examples
+
+The protocol is specified in OSC 1.0 specification at
+U{http://opensoundcontrol.org/spec-1_0} and has been further extended
+in the paper which can be found at U{http://opensoundcontrol.org/spec-1_1}.
 """
 import string
 import math
@@ -27,11 +29,9 @@ class Message(object):
     """
     An OSC Message element.
 
-    @ivar address: The OSC address string, e.g. "/foo/bar".
+    @ivar address: The OSC address string, e.g. C{"/foo/bar"}.
     @ivar arguments: List of L{Argument} instances for the message.
     """
-    address = None
-    arguments = None
 
     def __init__(self, address, *args):
         self.address = address
@@ -50,7 +50,7 @@ class Message(object):
 
     def getTypeTags(self):
         """
-        @return: A string  with this message's OSC type tag, e.g. "ii" when there are 2 int arguments.
+        @return: A string  with this message's OSC type tag, e.g. C{"ii"} when there are 2 int arguments.
         """
         return "".join([a.typeTag for a in self.arguments])
 
@@ -130,9 +130,7 @@ class Bundle(object):
             self.messages = []
 
         self.time_tag = time_tag
-        if self.time_tag is None:
-            pass
-            #TODO create time tag
+
 
     def toBinary(self):
         """
@@ -201,7 +199,7 @@ class Bundle(object):
 
 class Argument(object):
     """
-    Base OSC argument
+    Base OSC argument class.
     """
     typeTag = None  # Must be implemented in children classes
 
@@ -225,7 +223,7 @@ class Argument(object):
         This static method is a factory for L{Message} objects. 
         Each subclass of the L{Argument} class implements it to create an 
         instance of its own type, parsing the data given as and argument.
-        
+
         @param data: String of bytes/characters formatted following the OSC protocol.
         @return: Two-item tuple with L{Argument} as the first item, and the 
         leftover binary data, as a L{str}.
@@ -241,6 +239,10 @@ class Argument(object):
 #
 
 class BlobArgument(Argument):
+    """
+    An argument representing binary data.
+    """
+
     typeTag = "b"
 
     def toBinary(self):
@@ -248,7 +250,7 @@ class BlobArgument(Argument):
         #length = math.ceil((sz+1) / 4.0) * 4
         length = _ceilToMultipleOfFour(sz)
         return struct.pack(">i%ds" % (length), sz, str(self.value))
-    
+
     @staticmethod
     def fromBinary(data):
         try:
@@ -262,10 +264,14 @@ class BlobArgument(Argument):
             raise OscError("Not enough bytes to find size of a blob argument in %s." % (data))
         leftover = data[index_of_leftover:]
         return BlobArgument(blob_data), leftover
-        
+
 
 
 class StringArgument(Argument):
+    """
+    An argument representing a C{str}.
+    """
+
     typeTag = "s"
 
     def toBinary(self):
@@ -278,11 +284,11 @@ class StringArgument(Argument):
         Creates a L{StringArgument} object from binary data that is passed to it.
 
         This static method is a factory for L{StringArgument} objects. 
-        
+
         OSC-string A sequence of non-null ASCII characters followed by a null, 
         followed by 0-3 additional null characters to make the total number 
         of bits a multiple of 32.
-        
+
         @param data: String of bytes/characters formatted following the OSC protocol.
         @return: Two-item tuple with L{StringArgument} as the first item, and the leftover binary data, as a L{str}.
 
@@ -292,6 +298,10 @@ class StringArgument(Argument):
 
 
 class IntArgument(Argument):
+    """
+    An argument representing a 32bit signed integer.
+    """
+
     typeTag = "i"
 
     def toBinary(self):
@@ -313,6 +323,10 @@ class IntArgument(Argument):
 
 
 class FloatArgument(Argument):
+    """
+    An argument representing a 32bit floating-point value.
+    """
+
     typeTag = "f"
 
     def toBinary(self):
@@ -339,7 +353,6 @@ class TimeTagArgument(Argument):
     SECONDS_UTC_TO_UNIX_EPOCH = 2208988800
 
     def __init__(self, value=None):
-        # TODO: call parent's constructor ?
         if value is None:
             #FIXME: is that the correct NTP timestamp ?
             value = self.SECONDS_UTC_TO_UNIX_EPOCH + time.time()
@@ -358,6 +371,10 @@ class TimeTagArgument(Argument):
 
 
 class BooleanArgument(Argument):
+    """
+    An argument representing C{True} or C{False}.
+    """
+
     def __init__(self, value):
         Argument.__init__(self, value)
         if self.value:
@@ -372,13 +389,12 @@ class BooleanArgument(Argument):
 
 class DatalessArgument(Argument):
     """
-    An argument whose value is defined just by its type tag.
-        
-    This class should not be used directly. It is intended to gather 
+    Abstract class for defining arguments whose value is defined just
+    by its type tag.
+
+    This class should not be used directly. It is intended to gather
     common behaviour of L{NullArgument} and L{ImpulseArgument}.
     """
-    typeTag = None # override in subclass
-    value = None # override in subclass
 
     def __init__(self):
         Argument.__init__(self, self.value)
@@ -387,10 +403,19 @@ class DatalessArgument(Argument):
         return ""
 
 class NullArgument(DatalessArgument):
+    """
+    An argument representing C{None}.
+    """
+
     typeTag = "N"
     value = None
 
+
 class ImpulseArgument(DatalessArgument):
+    """
+    An argument representing the C{"bang"} impulse.
+    """
+
     typeTag = "I"
     value = True
 
@@ -429,7 +454,7 @@ def createArgument(value, type_tag=None):
 
     Factory of *Attribute objects.
     @param value: Any Python base type.
-    @param type_tag: One-letter string. One of "sifbTFNI".
+    @param type_tag: One-letter string. One of C{"sifbTFNI"}.
     @type type_tag: One-letter string.
     @return: Returns an instance of one of the subclasses of the L{Argument} class.
     """
@@ -473,8 +498,6 @@ class Receiver(object):
     @ivar root: L{AddressNode} instance representing the root of the callback tree.
     """
 
-    root = None
-
     def __init__(self):
         self.root = AddressNode()
 
@@ -505,11 +528,17 @@ class Receiver(object):
         self.root.removeCallback(path, callable)
 
 
-    def removeAllCallbacks(self, pattern):
+    def removeAllCallbacks(self, pattern="/*"):
         """
-        Remove all callbacks which match with the given pattern.
+        Remove all callbacks with the given pattern.
+
+        @param pattern: The pattern to match the callbacks. When
+        ommited, removes all callbacks.
         """
-        raise NotImplementedError("AddressSpace is in progress.")
+        path = self._patternPath(pattern)
+        nodes = self.root.match(path)
+        for n in nodes:
+            n.removeCallbacks()
 
 
     def matchCallbacks(self, message):
@@ -535,9 +564,10 @@ class Receiver(object):
 
     def dispatch(self, element, clientAddress):
         """
-        Executes every callback matching the message address with Message as argument. 
-        (and not only its arguments) 
+        Executes every callback matching the message address with element as argument. 
         The order in which the callbacks are called in undefined.
+
+        @param element: A L{Message} or L{Bundle}.
         @return: None
         """
         if isinstance(element, Bundle):
@@ -571,12 +601,35 @@ class Receiver(object):
 class AddressNode(object):
     """
     Node in the tree of OSC addresses.
+
+    @ivar part: the name of this node.
+    @ivar parent: the parent node.
     """
-    def __init__(self):
+
+    def __init__(self, part=None, parent=None):
+        self.part = part
+        self.parent = parent
         self.childNodes = {}
         self.callbacks = set()
         self.parent = None
         self.wildcardNodes = set()
+
+
+    def removeCallbacks(self):
+        """
+        Remove all callbacks from this node.
+        """
+        self.callbacks = set()
+        self._checkRemove()
+
+
+    def _checkRemove(self):
+        if not self.parent:
+            return
+        if not self.callbacks and not self.childNodes:
+            del self.parent.childNodes[self.part]
+        self.parent._checkRemove()
+
 
     def match(self, path, matchAllChilds = False):
         if not len(path) or matchAllChilds:
@@ -623,7 +676,7 @@ class AddressNode(object):
             if part not in self.childNodes:
                 if not AddressNode.isValidAddressPart(part):
                     raise ValueError("Invalid address part: '%s'" % part)
-                self.childNodes[part] = AddressNode()
+                self.childNodes[part] = AddressNode(part, self)
                 if AddressNode.isWildcard(part):
                     self.wildcardNodes.add(part)
             self.childNodes[part].addCallback(path[1:], cb)
@@ -676,7 +729,6 @@ class OscServerProtocol(protocol.DatagramProtocol):
 
     @ivar dispatcher: The dispatcher to dispatch received elements to.
     """
-    dispatcher = None
 
     def __init__(self, dispatcher):
         self.dispatcher = dispatcher
@@ -700,19 +752,26 @@ class OscClientProtocol(protocol.DatagramProtocol):
 
 
 class Sender(object):
-     def __init__(self):
-         d = defer.Deferred()
-         def listening(proto):
-             self.proto = proto
-         d.addCallback(listening)
-         self._port = reactor.listenUDP(0, OscClientProtocol(d))
+    """
+    Sends OSC messages to any destination.
+    """
 
-     def send(self, msg, (host, port)):
-         data = msg.toBinary()
-         self.proto.transport.write(data, (host, port))
+    def __init__(self):
+        d = defer.Deferred()
+        def listening(proto):
+            self.proto = proto
+        d.addCallback(listening)
+        self._port = reactor.listenUDP(0, OscClientProtocol(d))
 
-     def stop(self):
-         return self._port.stopListening()
+    def send(self, element, (host, port)):
+        """
+        Send a L{Message} or L{Bundle} to the address specified.
+        """
+        data = element.toBinary()
+        self.proto.transport.write(data, (host, port))
+
+    def stop(self):
+        return self._port.stopListening()
 
 
 def _ceilToMultipleOfFour(num):

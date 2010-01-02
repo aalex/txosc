@@ -196,7 +196,8 @@ class TestBundle(unittest.TestCase):
         b.messages.append(osc.Bundle([m2]))
         b.messages.append(osc.Bundle([m3]))
         self.assertEqual(b.getMessages(), set([m1, m2, m3]))
-        
+
+
 
 class TestReceiver(unittest.TestCase):
     """
@@ -207,76 +208,87 @@ class TestReceiver(unittest.TestCase):
 
         def callback(m):
             pass
-        space = osc.Receiver()
-        space.addCallback("/foo", callback)
-        self.assertEqual(space.getCallbacks("/foo"), set([callback]))
-        space.removeCallback("/foo", callback)
-        self.assertEqual(space.getCallbacks("/foo"), set())
+        recv = osc.Receiver()
+        recv.addCallback("/foo", callback)
+        self.assertEqual(recv.getCallbacks("/foo"), set([callback]))
+        recv.removeCallback("/foo", callback)
+        self.assertEqual(recv.getCallbacks("/foo"), set())
+
 
     def testRemoveAllCallbacks(self):
 
         def callback(m):
             pass
-        space = osc.Receiver()
-        space.addCallback("/foo", callback)
-        self.assertEqual(space.getCallbacks("/foo"), set([callback]))
-        space.removeAllCallbacks("/*")
-        self.assertEqual(space.getCallbacks("/foo"), set())
-    testRemoveAllCallbacks.skip = "removeAllCallbacks needs to be implemented"
+        def callback2(m):
+            pass
+        def callback3(m):
+            pass
+        recv = osc.Receiver()
+        recv.addCallback("/foo", callback)
+        self.assertEqual(recv.getCallbacks("/*"), set([callback]))
+        recv.removeAllCallbacks("/*")
+        self.assertEqual(recv.getCallbacks("/*"), set())
+
+        recv = osc.Receiver()
+        recv.addCallback("/foo", callback)
+        recv.addCallback("/foo/bar", callback2)
+        recv.removeAllCallbacks("/foo")
+        self.assertEqual(recv.getCallbacks("/*"), set([callback2]))
+
 
     def testAddInvalidCallback(self):
-        space = osc.Receiver()
-        self.assertRaises(ValueError, space.addCallback, "/foo bar/baz", lambda m: m)
-        self.assertEqual(space.addCallback("/foo/*/baz", lambda m: m), None)
+        recv = osc.Receiver()
+        self.assertRaises(ValueError, recv.addCallback, "/foo bar/baz", lambda m: m)
+        self.assertEqual(recv.addCallback("/foo/*/baz", lambda m: m), None)
 
 
     def testRemoveNonExistingCallback(self):
-        space = osc.Receiver()
-        self.assertRaises(KeyError, space.removeCallback, "/foo", lambda m: m)
+        recv = osc.Receiver()
+        self.assertRaises(KeyError, recv.removeCallback, "/foo", lambda m: m)
 
     def testMatchExact(self):
 
         def callback(m):
             pass
-        space = osc.Receiver()
-        space.addCallback("/foo", callback)
+        recv = osc.Receiver()
+        recv.addCallback("/foo", callback)
 
-        self.assertEqual(space.matchCallbacks(osc.Message("/foo")), set([callback]))
-        self.assertEqual(space.matchCallbacks(osc.Message("/bar")), set())
+        self.assertEqual(recv.matchCallbacks(osc.Message("/foo")), set([callback]))
+        self.assertEqual(recv.matchCallbacks(osc.Message("/bar")), set())
 
     def testMatchCallbackWildcards(self):
 
         def callback(m):
             pass
-        space = osc.Receiver()
-        space.addCallback("/foo/*", callback)
+        recv = osc.Receiver()
+        recv.addCallback("/foo/*", callback)
 
-        self.assertEqual(space.matchCallbacks(osc.Message("/foo")), set())
-        self.assertEqual(space.matchCallbacks(osc.Message("/foo/bar")), set([callback]))
-        self.assertEqual(space.matchCallbacks(osc.Message("/bar")), set())
-        self.assertEqual(space.matchCallbacks(osc.Message("/foo/bar/baz")), set([callback]))
+        self.assertEqual(recv.matchCallbacks(osc.Message("/foo")), set())
+        self.assertEqual(recv.matchCallbacks(osc.Message("/foo/bar")), set([callback]))
+        self.assertEqual(recv.matchCallbacks(osc.Message("/bar")), set())
+        self.assertEqual(recv.matchCallbacks(osc.Message("/foo/bar/baz")), set([callback]))
 
-        space = osc.Receiver()
-        space.addCallback("/*", callback)
-        self.assertEqual(space.matchCallbacks(osc.Message("/")), set([callback]))
-        self.assertEqual(space.matchCallbacks(osc.Message("/foo/bar")), set([callback]))
+        recv = osc.Receiver()
+        recv.addCallback("/*", callback)
+        self.assertEqual(recv.matchCallbacks(osc.Message("/")), set([callback]))
+        self.assertEqual(recv.matchCallbacks(osc.Message("/foo/bar")), set([callback]))
 
-        space = osc.Receiver()
-        space.addCallback("/*/baz", callback)
-        self.assertEqual(space.matchCallbacks(osc.Message("/foo/bar")), set())
-        self.assertEqual(space.matchCallbacks(osc.Message("/foo/baz")), set([callback]))
+        recv = osc.Receiver()
+        recv.addCallback("/*/baz", callback)
+        self.assertEqual(recv.matchCallbacks(osc.Message("/foo/bar")), set())
+        self.assertEqual(recv.matchCallbacks(osc.Message("/foo/baz")), set([callback]))
 
     def testMatchCallbackRangeWildcards(self):
 
         def callback1(m): pass
         def callback2(m): pass
-        space = osc.Receiver()
-        space.addCallback("/foo1", callback1)
-        space.addCallback("/foo2", callback2)
+        recv = osc.Receiver()
+        recv.addCallback("/foo1", callback1)
+        recv.addCallback("/foo2", callback2)
 
-        self.assertEqual(space.matchCallbacks(osc.Message("/foo[1]")), set([callback1]))
-        self.assertEqual(space.matchCallbacks(osc.Message("/foo[1-10]")), set([callback1, callback2]))
-        self.assertEqual(space.matchCallbacks(osc.Message("/foo[4-6]")), set([]))
+        self.assertEqual(recv.matchCallbacks(osc.Message("/foo[1]")), set([callback1]))
+        self.assertEqual(recv.matchCallbacks(osc.Message("/foo[1-10]")), set([callback1, callback2]))
+        self.assertEqual(recv.matchCallbacks(osc.Message("/foo[4-6]")), set([]))
     testMatchCallbackRangeWildcards.skip = "Range matching"
 
     def testMatchMessageWithWildcards(self):
@@ -289,17 +301,17 @@ class TestReceiver(unittest.TestCase):
             pass
         def foobarCallback(m):
             pass
-        space = osc.Receiver()
-        space.addCallback("/foo", fooCallback)
-        space.addCallback("/bar", barCallback)
-        space.addCallback("/baz", bazCallback)
-        space.addCallback("/foo/bar", foobarCallback)
+        recv = osc.Receiver()
+        recv.addCallback("/foo", fooCallback)
+        recv.addCallback("/bar", barCallback)
+        recv.addCallback("/baz", bazCallback)
+        recv.addCallback("/foo/bar", foobarCallback)
 
-        self.assertEqual(space.matchCallbacks(osc.Message("/*")), set([fooCallback, barCallback, bazCallback, foobarCallback]))
-        self.assertEqual(space.matchCallbacks(osc.Message("/spam")), set())
-        self.assertEqual(space.matchCallbacks(osc.Message("/ba*")), set([barCallback, bazCallback]))
-        self.assertEqual(space.matchCallbacks(osc.Message("/b*r")), set([barCallback]))
-        self.assertEqual(space.matchCallbacks(osc.Message("/ba?")), set([barCallback, bazCallback]))
+        self.assertEqual(recv.matchCallbacks(osc.Message("/*")), set([fooCallback, barCallback, bazCallback, foobarCallback]))
+        self.assertEqual(recv.matchCallbacks(osc.Message("/spam")), set())
+        self.assertEqual(recv.matchCallbacks(osc.Message("/ba*")), set([barCallback, bazCallback]))
+        self.assertEqual(recv.matchCallbacks(osc.Message("/b*r")), set([barCallback]))
+        self.assertEqual(recv.matchCallbacks(osc.Message("/ba?")), set([barCallback, bazCallback]))
 
 
     def testMatchMessageWithRange(self):
@@ -308,12 +320,12 @@ class TestReceiver(unittest.TestCase):
             pass
         def secondCallback(m):
             pass
-        space = osc.Receiver()
-        space.addCallback("/foo/1", firstCallback)
-        space.addCallback("/foo/2", secondCallback)
+        recv = osc.Receiver()
+        recv.addCallback("/foo/1", firstCallback)
+        recv.addCallback("/foo/2", secondCallback)
 
-        self.assertEqual(space.matchCallbacks(osc.Message("/baz")), set())
-        self.assertEqual(space.matchCallbacks(osc.Message("/foo/[1-2]")), set([firstCallback, secondCallback]))
+        self.assertEqual(recv.matchCallbacks(osc.Message("/baz")), set())
+        self.assertEqual(recv.matchCallbacks(osc.Message("/foo/[1-2]")), set([firstCallback, secondCallback]))
     testMatchMessageWithRange.skip = "Range matching"
 
 
@@ -349,16 +361,16 @@ class TestReceiver(unittest.TestCase):
             self.assertEqual(addr, a)
             state['cb2'] = True
 
-        space = osc.Receiver()
-        space.addCallback("/hello", cb)
-        space.addCallback("/there", cb2)
+        recv = osc.Receiver()
+        recv.addCallback("/hello", cb)
+        recv.addCallback("/there", cb2)
 
         state = {}
-        space.dispatch(hello, addr)
+        recv.dispatch(hello, addr)
         self.assertEqual(state, {'cb': True})
 
         state = {}
-        space.dispatch(osc.Bundle([hello, there]), addr)
+        recv.dispatch(osc.Bundle([hello, there]), addr)
         self.assertEqual(state, {'cb': True, 'cb2': True})
 
 
