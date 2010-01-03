@@ -487,131 +487,20 @@ def createArgument(value, type_tag=None):
 
 
 
-class Receiver(object):
-    """
-    Receive OSC elements (L{Bundle}s and L{Message}s) from the server
-    protocol and handles the matching and dispatching of these to
-    registered callbacks.
-
-    Callbacks are stored in a tree-like structure, using L{AddressNode} objects.
-
-    @ivar root: L{AddressNode} instance representing the root of the callback tree.
-    """
-
-    def __init__(self):
-        self.root = AddressNode()
-
-
-    def getProtocol(self):
-        return OscServerProtocol(self)
-
-
-    def addCallback(self, pattern, callable, typeTags=None):
-        """
-        Register a callback.
-
-        @param pattern: The pattern to register this callback for.
-        @param callable: The callable that will be registered.
-        """
-        path = self._patternPath(pattern)
-        self.root.addCallback(path, callable)
-
-
-    def removeCallback(self, pattern, callable):
-        """
-        Remove a single callback.
-
-        @param pattern: The pattern this callback was registered for.
-        @param callable: The callable that was registered.
-        """
-        path = self._patternPath(pattern)
-        self.root.removeCallback(path, callable)
-
-
-    def removeAllCallbacks(self, pattern="/*"):
-        """
-        Remove all callbacks with the given pattern.
-
-        @param pattern: The pattern to match the callbacks. When
-        ommited, removes all callbacks.
-        """
-        path = self._patternPath(pattern)
-        nodes = self.root.match(path)
-        for n in nodes:
-            n.removeCallbacks()
-
-
-    def matchCallbacks(self, message):
-        """
-        Get all callbacks for a given message
-        """
-        pattern = message.address
-        return self.getCallbacks(pattern)
-
-
-    def getCallbacks(self, pattern):
-        """
-        Retrieve all callbacks which are bound to given
-        pattern. Returns a set() of callables.
-        @return: L{set} of callbables.
-        """
-        path = self._patternPath(pattern)
-        nodes = self.root.match(path)
-        if not nodes:
-            return nodes
-        return reduce(lambda a, b: a.union(b), [n.callbacks for n in nodes])
-
-
-    def dispatch(self, element, clientAddress):
-        """
-        Executes every callback matching the message address with element as argument. 
-        The order in which the callbacks are called in undefined.
-
-        @param element: A L{Message} or L{Bundle}.
-        @return: None
-        """
-        if isinstance(element, Bundle):
-            messages = element.getMessages()
-        else:
-            messages = [element]
-        for m in messages:
-            for c in self.getCallbacks(m.address):
-                c(m, clientAddress)
-
-
-    def _messagePath(self, message):
-        """
-        Given an L{osc.Message}, return the path split up in components.
-        """
-        return self._patternPath(message.address)
-
-
-    def _patternPath(self, pattern):
-        """
-        Given a OSC address path like /foo/bar, return a list of
-        ['foo', 'bar']. Note that an OSC address always starts with a
-        slash.
-        @param pattern: A L{str} OSC address.
-        @return: A L{list} of L{str}. Each part of an OSC path.
-        """
-        return pattern.split("/")[1:]
-
-
-
 class AddressNode(object):
     """
-    Node in the tree of OSC addresses.
+    A node in the tree of OSC addresses.
 
     @ivar part: the name of this node.
     @ivar parent: the parent node.
     """
 
-    def __init__(self, part=None, parent=None):
-        self.part = part
-        self.parent = parent
+    def __init__(self, name=None, parent=None):
+        self._name = name
+        self._parent = parent
         self.childNodes = {}
         self.callbacks = set()
-        self.parent = None
+        self._parent = None
         self.wildcardNodes = set()
 
 
@@ -623,15 +512,54 @@ class AddressNode(object):
         self._checkRemove()
 
 
+    def setName(self, newname):
+        """
+        Give this node a new name.
+        """
+        if self._parent:
+            del self._parent.childNodes[self._name]
+        self._name = newname
+        if self._parent:
+            self._parent.childNodes[self._name] = self
+
+
+    def setParent(self, newparent):
+        """
+        Reparent this node to another parent.
+        """
+        if self._parent:
+            del self._parent.childNodes[self._name]
+            self._parent._checkRemove()
+        self._parent = newparent
+        self._parent.childNodes[self._name] = self
+
+
     def _checkRemove(self):
-        if not self.parent:
+        if not self._parent:
             return
         if not self.callbacks and not self.childNodes:
-            del self.parent.childNodes[self.part]
-        self.parent._checkRemove()
+            del self._parent.childNodes[self._name]
+        self._parent._checkRemove()
 
 
-    def match(self, path, matchAllChilds = False):
+    def addNode(self, name, instance):
+        """
+        Add a child node.
+        """
+        instance.setName(name)
+        instance.setParent(self)
+
+
+    def getName(self):
+        return self._name
+
+
+    def match(self, pattern, matchAllChilds = False):
+        """
+        Match a pattern.
+        """
+
+        path = self._patternPath(pattern)
         if not len(path) or matchAllChilds:
             c = set([self])
             if matchAllChilds and self.childNodes:
@@ -660,15 +588,17 @@ class AddressNode(object):
             return matchedNodes
         return reduce(lambda a, b: a.union(b), [n.match(path[1:], all) for n, all in matchedNodes])
 
-    def addCallback(self, path, cb):
+
+    def addCallback(self, pattern, cb):
         """
         Adds a callback for L{Message} instances received for a given OSC path.
-        @param path: OSC address in the form /egg/spam/ham
-        @type path: L{str}
+        @param path: OSC address in the form C{/egg/spam/ham}, or list C{['egg', 'spam', 'ham']}.
+        @type pattern: C{str} or C{list}.
         @param cb: Callback that will receive L{Message} as an argument when received.
         @type cb: Function of method.
         @return: None
         """
+        path = self._patternPath(pattern)
         if not len(path):
             self.callbacks.add(cb)
         else:
@@ -681,15 +611,17 @@ class AddressNode(object):
                     self.wildcardNodes.add(part)
             self.childNodes[part].addCallback(path[1:], cb)
 
-    def removeCallback(self, path, cb):
+
+    def removeCallback(self, pattern, cb):
         """
         Removes a callback for L{Message} instances received for a given OSC path.
-        @param path: OSC address in the form /egg/spam/ham
-        @type path: L{str}
+        @param path: OSC address in the form C{/egg/spam/ham}, or list C{['egg', 'spam', 'ham']}.
+        @type pattern: C{str} or C{list}.
         @param cb: Callback that will receive L{Message} as an argument when received.
         @type cb: Function of method.
         @return: None
         """
+        path = self._patternPath(pattern)
         if not len(path):
             self.callbacks.remove(cb)
         else:
@@ -703,15 +635,18 @@ class AddressNode(object):
                     self.wildcardNodes.remove(part)
                 del self.childNodes[part]
 
+
     @staticmethod
     def isWildcard(part):
         wildcardChars = set("*?[]{}")
         return len(set(part).intersection(wildcardChars)) > 0
 
+
     @staticmethod
     def isValidAddressPart(part):
         invalidChars = set(" #,/")
         return len(set(part).intersection(invalidChars)) == 0
+
 
     @staticmethod
     def matchesWildcard(value, wildcard):
@@ -722,21 +657,100 @@ class AddressNode(object):
 
         return fnmatch.fnmatchcase(value, wildcard)
 
+    def _patternPath(self, pattern):
+        """
+        Given a OSC address path like /foo/bar, return a list of
+        ['foo', 'bar']. Note that an OSC address always starts with a
+        slash. If a list is input, it is output directly.
+
+        @param pattern: A L{str} OSC address.
+        @return: A L{list} of L{str}. Each part of an OSC path.
+        """
+        if type(pattern) == list:
+            return pattern
+        return pattern.split("/")[1:]
+
+
+    def removeAllCallbacks(self, pattern="/*"):
+        """
+        Remove all callbacks with the given pattern.
+
+        @param pattern: The pattern to match the callbacks. When
+        ommited, removes all callbacks.
+        """
+        path = self._patternPath(pattern)
+        nodes = self.match(path)
+        for n in nodes:
+            n.removeCallbacks()
+
+
+    def matchCallbacks(self, message):
+        """
+        Get all callbacks for a given message
+        """
+        pattern = message.address
+        return self.getCallbacks(pattern)
+
+
+    def getCallbacks(self, pattern):
+        """
+        Retrieve all callbacks which are bound to given
+        pattern. Returns a set() of callables.
+        @return: L{set} of callbables.
+        """
+        path = self._patternPath(pattern)
+        nodes = self.match(path)
+        if not nodes:
+            return nodes
+        return reduce(lambda a, b: a.union(b), [n.callbacks for n in nodes])
+
+
+
+class Receiver(AddressNode):
+    """
+    Receive OSC elements (L{Bundle}s and L{Message}s) from the server
+    protocol and handles the matching and dispatching of these to the
+    registered callbacks.
+
+    Callbacks are stored in a tree-like structure, using L{AddressNode} objects.
+    """
+
+    def getProtocol(self):
+        return OscServerProtocol(self)
+
+
+    def dispatch(self, element, clientAddress):
+        """
+        Executes every callback matching the message address with element as argument. 
+        The order in which the callbacks are called in undefined.
+
+        @param element: A L{Message} or L{Bundle}.
+        @return: None
+        """
+        if isinstance(element, Bundle):
+            messages = element.getMessages()
+        else:
+            messages = [element]
+        for m in messages:
+            for c in self.getCallbacks(m.address):
+                c(m, clientAddress)
+
+
 
 class OscServerProtocol(protocol.DatagramProtocol):
     """
     The OSC server protocol.
 
-    @ivar dispatcher: The dispatcher to dispatch received elements to.
+    @ivar receiver: The L{Receiver} instance to dispatch received elements to.
     """
 
-    def __init__(self, dispatcher):
-        self.dispatcher = dispatcher
+    def __init__(self, receiver):
+        self.receiver = receiver
 
 
     def datagramReceived(self, data, (host, port)):
         element = _elementFromBinary(data)
-        self.dispatcher.dispatch(element, (host, port))
+        self.receiver.dispatch(element, (host, port))
 
 
 
