@@ -103,16 +103,19 @@ class Message(object):
 
 
     def __str__(self):
-        args = " ".join([str(a) for a in self.arguments])
-        return "%s ,%s %s" % (self.address, self.getTypeTags(), args)
+        s = self.address
+        if self.arguments:
+            args = " ".join([str(a) for a in self.arguments])
+            s += " ,%s %s" % (self.getTypeTags(), args)
+        return s
 
 
     def __eq__(self, other):
         if self.address != other.address:
             return False
-        if self.getTypeTags() != other.getTypeTags():
-            return False
         if len(self.arguments) != len(other.arguments):
+            return False
+        if self.getTypeTags() != other.getTypeTags():
             return False
         for i in range(len(self.arguments)):
             if self.arguments[i].value != other.arguments[i].value:
@@ -445,7 +448,7 @@ class DatalessArgument(Argument):
     common behaviour of L{NullArgument} and L{ImpulseArgument}.
     """
 
-    def __init__(self):
+    def __init__(self, ignoreValue=None):
         Argument.__init__(self, self.value)
 
 
@@ -486,17 +489,15 @@ _types = {
     float: FloatArgument,
     str: StringArgument,
     int: IntArgument,
-    bool: BooleanArgument
-    #TODO: unicode?: StringArgument,
-    #TODO : more types
+    bool: BooleanArgument,
+    type(None): NullArgument
     }
 
 _tags = {
     "b": BlobArgument,
     "f": FloatArgument,
     "i": IntArgument,
-    "s": StringArgument,
-    #TODO : more types
+    "s": StringArgument
     }
 
 

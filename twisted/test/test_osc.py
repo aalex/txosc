@@ -11,6 +11,31 @@ from twisted.trial import unittest
 from twisted.internet import reactor, defer
 from twisted.protocols import osc
 
+class TestArgumentCreation(unittest.TestCase):
+    """
+    Test the L{osc.CreateArgument} function.
+    """
+    
+    def testCreateFromValue(self):
+        self.assertEqual(type(osc.createArgument(True)), osc.BooleanArgument)
+        self.assertEqual(type(osc.createArgument(False)), osc.BooleanArgument)
+        self.assertEqual(type(osc.createArgument(None)), osc.NullArgument)
+        self.assertEqual(type(osc.createArgument(123)), osc.IntArgument)
+        self.assertEqual(type(osc.createArgument(3.14156)), osc.FloatArgument)
+        # Unicode is not supported.
+        self.assertRaises(osc.OscError, osc.createArgument, u'test')
+
+    def testCreateFromTypeTag(self):
+        self.assertEqual(type(osc.createArgument(123, "T")), osc.BooleanArgument)
+        self.assertEqual(type(osc.createArgument(123, "F")), osc.BooleanArgument)
+        self.assertEqual(type(osc.createArgument(123, "N")), osc.NullArgument)
+        self.assertEqual(type(osc.createArgument(123, "I")), osc.ImpulseArgument)
+        self.assertEqual(type(osc.createArgument(123, "i")), osc.IntArgument)
+        self.assertEqual(type(osc.createArgument(123, "f")), osc.FloatArgument)
+        self.assertRaises(osc.OscError, osc.createArgument, 123, "?")
+
+
+
 class TestBlobArgument(unittest.TestCase):
     """
     Encoding and decoding of a string argument.
@@ -101,30 +126,58 @@ class TestTimeTagArgument(unittest.TestCase):
         def test(value):
             timetag_arg, leftover = osc.TimeTagArgument.fromBinary(osc.TimeTagArgument(value).toBinary())
             self.assertEqual(leftover, "")
-            #self.assertEqual(value, timetag_arg.value)
-            # time tags should not differ more than 200 picoseconds
-            delta = 200 * (10 ** -12)
-            self.assertTrue(abs(value - timetag_arg.value) <= delta, "Timetag precision")
+            self.assertTrue(abs(timetag_arg.value - value) < 1e-6)
 
         test(1.0)
-        #test(1.101)
+        test(1.1331)
 
-    #testFromBinary.skip = "TimeTagArgument.fromBinary is not yet implemented"
 
 
 class TestMessage(unittest.TestCase):
 
-    def testEquality(self):
-        m = osc.Message("/example")
+    def testMessageStringRepresentation(self):
 
-        m2 = osc.Message("/example")
-        self.assertEqual(m, m2)
-        m2 = osc.Message("/example2")
-        self.assertNotEqual(m, m2)
-        m2 = osc.Message("/example", osc.IntArgument(1))
-        self.assertNotEqual(m, m2)
-        m = osc.Message("/example", osc.IntArgument(1))
-        self.assertEqual(m, m2)
+        self.assertEqual("/hello", str(osc.Message("/hello")))
+        self.assertEqual("/hello ,i i:1 ", str(osc.Message("/hello", 1)))
+        self.assertEqual("/hello ,T T:True ", str(osc.Message("/hello", True)))
+
+
+    def testAddMessageArguments(self):
+        """
+        Test adding arguments to a message
+        """
+        m = osc.Message("/example", osc.IntArgument(33), osc.BooleanArgument(True))
+        self.assertEqual(m.arguments[0].value, 33)
+        self.assertEqual(m.arguments[1].value, True)
+
+        m = osc.Message("/example", 33, True)
+        self.assertEqual(m.arguments[0].value, 33)
+        self.assertEqual(m.arguments[1].value, True)
+
+        m = osc.Message("/example")
+        m.add(33)
+        self.assertEqual(m.arguments[0].value, 33)
+        self.assertEqual(m.arguments[0].typeTag, "i")
+        m.add(True)
+        self.assertEqual(m.arguments[1].typeTag, "T")
+
+
+    def testEquality(self):
+        self.assertEqual(osc.Message("/example"),
+                         osc.Message("/example"))
+        self.assertNotEqual(osc.Message("/example"),
+                            osc.Message("/example2"))
+        self.assertEqual(osc.Message("/example", 33),
+                         osc.Message("/example", 33))
+        self.assertNotEqual(osc.Message("/example", 33),
+                            osc.Message("/example", 34))
+        self.assertNotEqual(osc.Message("/example", 33),
+                            osc.Message("/example", 33.0))
+        self.assertNotEqual(osc.Message("/example", 33),
+                            osc.Message("/example", 33, True))
+        self.assertEqual(osc.Message("/example", 33, True),
+                         osc.Message("/example", 33, True))
+
 
 
     def testGetTypeTag(self):
@@ -135,7 +188,12 @@ class TestMessage(unittest.TestCase):
         m.arguments.append(osc.StringArgument("spam"))
         self.assertEqual(m.getTypeTags(), "ss")
 
+
     def testToAndFromBinary(self):
+
+        self.assertRaises(osc.OscError, osc.Message.fromBinary, "invalidbinarydata..")
+        self.assertRaises(osc.OscError, osc.Message.fromBinary, "/example,invalidbinarydata..")
+        self.assertRaises(osc.OscError, osc.Message.fromBinary, "/hello\0\0,xxx\0")
 
         def test(m):
             binary = m.toBinary()
@@ -148,20 +206,29 @@ class TestMessage(unittest.TestCase):
         test(osc.Message("/example", osc.IntArgument(1), osc.IntArgument(2), osc.IntArgument(-1)))
         test(osc.Message("/example", osc.BooleanArgument(True)))
         test(osc.Message("/example", osc.BooleanArgument(False), osc.NullArgument(), osc.StringArgument("hello")))
+        test(osc.Message("/example", osc.ImpulseArgument()))
 
 
 class TestBundle(unittest.TestCase):
 
     def testEquality(self):
-        b = osc.Bundle()
-        b2 = osc.Bundle()
-        self.assertEqual(b, b2)
-        b2.add(osc.Message("/hello"))
-        self.assertNotEqual(b, b2)
-        b.add(osc.Message("/hello"))
-        self.assertEqual(b, b2)
+
+        self.assertEqual(osc.Bundle(), osc.Bundle())
+        self.assertNotEqual(osc.Bundle([osc.Message("/hello")]),
+                            osc.Bundle())
+        self.assertEqual(osc.Bundle([osc.Message("/hello")]),
+                         osc.Bundle([osc.Message("/hello")]))
+        self.assertNotEqual(osc.Bundle([osc.Message("/hello")]),
+                            osc.Bundle([osc.Message("/hello2")]))
+
 
     def testToAndFromBinary(self):
+
+        self.assertRaises(osc.OscError, osc.Bundle.fromBinary, "invalidbinarydata..")
+        self.assertRaises(osc.OscError, osc.Bundle.fromBinary, "#bundle|invalidbinarydata..")
+        self.assertRaises(osc.OscError, osc.Bundle.fromBinary, "#bundle\0\0\0\1\0\0\0\0hello")
+        self.assertRaises(osc.OscError, osc.Bundle.fromBinary, "#bundle\0\0\0\1\0\0\0\0\0\0\0\5hellofdsfds")
+
         def test(b):
             binary = b.toBinary()
             b2, leftover = osc.Bundle.fromBinary(binary)
