@@ -30,7 +30,9 @@ class Message(object):
     An OSC Message element.
 
     @ivar address: The OSC address string, e.g. C{"/foo/bar"}.
-    @ivar arguments: List of L{Argument} instances for the message.
+    @type address: C{str}
+    @ivar arguments: The L{Argument} instances for the message.
+    @type argument: C{list}
     """
 
     def __init__(self, address, *args):
@@ -43,6 +45,7 @@ class Message(object):
     def toBinary(self):
         """
         Encodes the L{Message} to binary form, ready to send over the wire.
+
         @return: A string with the binary presentation of this L{Message}.
         """
         return StringArgument(self.address).toBinary() + StringArgument("," + self.getTypeTags()).toBinary() + "".join([a.toBinary() for a in self.arguments])
@@ -50,7 +53,9 @@ class Message(object):
 
     def getTypeTags(self):
         """
-        @return: A string  with this message's OSC type tag, e.g. C{"ii"} when there are 2 int arguments.
+        Return the OSC type tags for this message.
+
+        @return: A string with this message's OSC type tag, e.g. C{"ii"} when there are 2 int arguments.
         """
         return "".join([a.typeTag for a in self.arguments])
 
@@ -59,7 +64,8 @@ class Message(object):
         """
         Adds an argument to this message with given value, using L{createArgument}.
 
-        @param value: Argument to add to this message.
+        @param value: Argument to add to this message. Can be any
+        Python type, or an L{Argument} instance.
         """
         if not isinstance(value, Argument):
             value = createArgument(value)
@@ -71,13 +77,14 @@ class Message(object):
         """
         Creates a L{Message} object from binary data that is passed to it.
 
-        This static method is a factory for L{Message} objects. 
-        It checks the type tags of the message, and parses each of its 
+        This static method is a factory for L{Message} objects.
+        It checks the type tags of the message, and parses each of its
         arguments, calling each of the proper factory.
-        
+
         @param data: String of bytes/characters formatted following the OSC protocol.
-        @return: Two-item tuple with L{Message} as the first item, and the 
-        leftover binary data, as a L{str}. 
+        @type data: C{str}
+        @return: Two-item tuple with L{Message} as the first item, and the
+        leftover binary data, as a L{str}.
         """
         osc_address, leftover = _stringFromBinary(data)
         #print("Got OSC address: %s" % (osc_address))
@@ -119,77 +126,94 @@ class Message(object):
 class Bundle(object):
     """
     An OSC Bundle element.
+
+    @ivar timeTag: A L{TimeTagArgument}, representing the time for this bundle.
+    @ivar elements: A C{list} of OSC elements (L{Message} or L{Bundle}s).
     """
-    time_tag = None
-    messages = None
+    timeTag = None
+    elements = None
 
-    def __init__(self, messages=None,  time_tag=0):
-        if messages:
-            self.messages = messages
+    def __init__(self, elements=None,  timeTag=0):
+        if elements:
+            self.elements = elements
         else:
-            self.messages = []
+            self.elements = []
 
-        self.time_tag = time_tag
+        self.timeTag = timeTag
 
 
     def toBinary(self):
         """
         Encodes the L{Bundle} to binary form, ready to send over the wire.
+
         @return: A string with the binary presentation of this L{Bundle}.
         """
         data = StringArgument("#bundle").toBinary()
-        data += TimeTagArgument(self.time_tag).toBinary()
-        for msg in self.messages:
+        data += TimeTagArgument(self.timeTag).toBinary()
+        for msg in self.elements:
             binary = msg.toBinary()
             data += IntArgument(len(binary)).toBinary()
             data += binary
         return data
 
+
+    def add(self, element):
+        """
+        Add an element to this bundle.
+
+        @param element: A L{Message} or a L{Bundle}.
+        """
+        self.elements.append(element)
+
+
     def __eq__(self, other):
-        if len(self.messages) != len(other.messages):
+        if len(self.elements) != len(other.elements):
             return False
-        for i in range(len(self.messages)):
-            if self.messages[i] != other.messages[i]:
+        for i in range(len(self.elements)):
+            if self.elements[i] != other.elements[i]:
                 return False
         return True
 
+
     def __ne__(self, other):
         return not (self == other)
+
 
     @staticmethod
     def fromBinary(data):
         """
         Creates a L{Bundle} object from binary data that is passed to it.
 
-        This static method is a factory for L{Bundle} objects. 
-        
-        @param data: String of bytes/characters formatted following the OSC protocol.
-        @return: Two-item tuple with L{Bundle} as the first item, and the 
+        This static method is a factory for L{Bundle} objects.
+
+        @param data: String of bytes formatted following the OSC protocol.
+        @return: Two-item tuple with L{Bundle} as the first item, and the
         leftover binary data, as a L{str}. That leftover should be an empty string.
         """
         bundleStart, data = _stringFromBinary(data)
         if bundleStart != "#bundle":
             raise OscError("Error parsing bundle string")
         bundle = Bundle()
-        bundle.time_tag, data = TimeTagArgument.fromBinary(data)
+        bundle.timeTag, data = TimeTagArgument.fromBinary(data)
         while data:
             size, data = IntArgument.fromBinary(data)
             size = size.value
             if len(data) < size:
                 raise OscError("Unexpected end of bundle: need %d bytes of data" % size)
             payload = data[:size]
-            bundle.messages.append(_elementFromBinary(payload))
+            bundle.elements.append(_elementFromBinary(payload))
             data = data[size:]
         return bundle, ""
 
 
     def getMessages(self):
         """
-        Retrieve all Message objects from this bundle, recursively.
-        @return: L{set} of L{Message} of L{Bundle} instances.
+        Retrieve all L{Message} elements from this bundle, recursively.
+
+        @return: L{set} of L{Message} instances.
         """
         r = set()
-        for m in self.messages:
+        for m in self.elements:
             if isinstance(m, Bundle):
                 r = r.union(m.getMessages())
             else:
@@ -200,8 +224,11 @@ class Bundle(object):
 class Argument(object):
     """
     Base OSC argument class.
+
+    @ivar typeTag: A 1-character C{str} which represents the OSC type
+    of this argument. Every subclass must define its own typeTag.
     """
-    typeTag = None  # Must be implemented in children classes
+    typeTag = None
 
     def __init__(self, value):
         self.value = value
@@ -210,9 +237,10 @@ class Argument(object):
     def toBinary(self):
         """
         Encodes the L{Argument} to binary form, ready to send over the wire.
+
         @return: A string with the binary presentation of this L{Message}.
         """
-        raise NotImplemented('Override this method')
+        raise NotImplementedError('Override this method')
 
 
     @staticmethod
@@ -220,15 +248,16 @@ class Argument(object):
         """
         Creates a L{Message} object from binary data that is passed to it.
 
-        This static method is a factory for L{Message} objects. 
-        Each subclass of the L{Argument} class implements it to create an 
-        instance of its own type, parsing the data given as and argument.
+        This static method is a factory for L{Argument} objects.
+        Each subclass of the L{Argument} class implements it to create an
+        instance of its own type, parsing the data given as an argument.
 
-        @param data: String of bytes/characters formatted following the OSC protocol.
-        @return: Two-item tuple with L{Argument} as the first item, and the 
+        @param data: C{str} of bytes formatted following the OSC protocol.
+        @return: Two-item tuple with L{Argument} as the first item, and the
         leftover binary data, as a L{str}.
         """
-        raise NotImplemented('Override this method')
+        raise NotImplementedError('Override this method')
+
 
     def __str__(self):
         return "%s:%s " % (self.typeTag, self.value)
@@ -240,19 +269,25 @@ class Argument(object):
 
 class BlobArgument(Argument):
     """
-    An argument representing binary data.
+    An L{Argument} representing arbitrary binary data.
     """
-
     typeTag = "b"
 
     def toBinary(self):
+        """
+        See L{Argument.toBinary}.
+        """
         sz = len(self.value)
         #length = math.ceil((sz+1) / 4.0) * 4
         length = _ceilToMultipleOfFour(sz)
         return struct.pack(">i%ds" % (length), sz, str(self.value))
 
+
     @staticmethod
     def fromBinary(data):
+        """
+        See L{Argument.fromBinary}.
+        """
         try:
             length = struct.unpack(">i", data[0:4])[0]
             index_of_leftover = _ceilToMultipleOfFour(length) + 4
@@ -278,15 +313,16 @@ class StringArgument(Argument):
         length = math.ceil((len(self.value)+1) / 4.0) * 4
         return struct.pack(">%ds" % (length), str(self.value))
 
+
     @staticmethod
     def fromBinary(data):
         """
         Creates a L{StringArgument} object from binary data that is passed to it.
 
-        This static method is a factory for L{StringArgument} objects. 
+        This static method is a factory for L{StringArgument} objects.
 
-        OSC-string A sequence of non-null ASCII characters followed by a null, 
-        followed by 0-3 additional null characters to make the total number 
+        OSC-string A sequence of non-null ASCII characters followed by a null,
+        followed by 0-3 additional null characters to make the total number
         of bits a multiple of 32.
 
         @param data: String of bytes/characters formatted following the OSC protocol.
@@ -297,11 +333,11 @@ class StringArgument(Argument):
         return StringArgument(value), leftover
 
 
+
 class IntArgument(Argument):
     """
-    An argument representing a 32bit signed integer.
+    An L{Argument} representing a 32-bit signed integer.
     """
-
     typeTag = "i"
 
     def toBinary(self):
@@ -310,6 +346,7 @@ class IntArgument(Argument):
         if self.value < -1<<31:
             raise OverflowError("Integer too small: %d" % self.value)
         return struct.pack(">i", int(self.value))
+
 
     @staticmethod
     def fromBinary(data):
@@ -322,9 +359,10 @@ class IntArgument(Argument):
         return IntArgument(i), leftover
 
 
+
 class FloatArgument(Argument):
     """
-    An argument representing a 32bit floating-point value.
+    An L{Argument} representing a 32-bit floating-point value.
     """
 
     typeTag = "f"
@@ -345,9 +383,17 @@ class FloatArgument(Argument):
 
 class TimeTagArgument(Argument):
     """
-    Time tags are represented by a 64 bit fixed point number. The first 32 bits specify the number of seconds since midnight on January 1, 1900, and the last 32 bits specify fractional parts of a second to a precision of about 200 picoseconds. This is the representation used by Internet NTP timestamps. 
+    An L{Argument} representing an OSC time tag.
 
-    The time tag value consisting of 63 zero bits followed by a one in the least signifigant bit is a special case meaning "immediately."
+    Like NTP timestamps, time tags are represented by a 64 bit fixed
+    point number. The first 32 bits specify the number of seconds
+    since midnight on January 1, 1900, and the last 32 bits specify
+    fractional parts of a second to a precision of about 200
+    picoseconds. This is the representation used by Internet NTP
+    timestamps.
+
+    The time tag value consisting of 63 zero bits followed by a one in
+    the least signifigant bit is a special case meaning "immediately."
     """
     typeTag = "t"
     SECONDS_UTC_TO_UNIX_EPOCH = 2208988800
@@ -358,9 +404,11 @@ class TimeTagArgument(Argument):
             value = self.SECONDS_UTC_TO_UNIX_EPOCH + time.time()
         self.value = value
 
+
     def toBinary(self):
         fr, sec = math.modf(self.value)
         return struct.pack('>ll', long(sec), long(fr * 1e9))
+
 
     @staticmethod
     def fromBinary(data):
@@ -370,9 +418,10 @@ class TimeTagArgument(Argument):
         return TimeTagArgument(time), leftover
 
 
+
 class BooleanArgument(Argument):
     """
-    An argument representing C{True} or C{False}.
+    An L{Argument} representing C{True} or C{False}.
     """
 
     def __init__(self, value):
@@ -389,8 +438,8 @@ class BooleanArgument(Argument):
 
 class DatalessArgument(Argument):
     """
-    Abstract class for defining arguments whose value is defined just
-    by its type tag.
+    Abstract L{Argument} class for defining arguments whose value is
+    defined just by its type tag.
 
     This class should not be used directly. It is intended to gather
     common behaviour of L{NullArgument} and L{ImpulseArgument}.
@@ -399,25 +448,28 @@ class DatalessArgument(Argument):
     def __init__(self):
         Argument.__init__(self, self.value)
 
+
     def toBinary(self):
         return ""
 
+
+
 class NullArgument(DatalessArgument):
     """
-    An argument representing C{None}.
+    An L{Argument} representing C{None}.
     """
-
     typeTag = "N"
     value = None
 
 
+
 class ImpulseArgument(DatalessArgument):
     """
-    An argument representing the C{"bang"} impulse.
+    An L{Argument} representing the C{"bang"} impulse.
     """
-
     typeTag = "I"
     value = True
+
 
 #
 # Optional arguments
@@ -457,6 +509,7 @@ def createArgument(value, type_tag=None):
     @param type_tag: One-letter string. One of C{"sifbTFNI"}.
     @type type_tag: One-letter string.
     @return: Returns an instance of one of the subclasses of the L{Argument} class.
+    @rtype: L{Argument} subclass.
     """
     global _types
     global _tags
@@ -618,11 +671,11 @@ class AddressNode(object):
     def removeCallback(self, pattern, cb):
         """
         Removes a callback for L{Message} instances received for a given OSC path.
+
         @param path: OSC address in the form C{/egg/spam/ham}, or list C{['egg', 'spam', 'ham']}.
         @type pattern: C{str} or C{list}.
         @param cb: Callback that will receive L{Message} as an argument when received.
-        @type cb: Function of method.
-        @return: None
+        @type cb: A callable object.
         """
         path = self._patternPath(pattern)
         if not len(path):
@@ -650,18 +703,26 @@ class AddressNode(object):
 
     @staticmethod
     def isValidAddressPart(part):
+        """
+        Check whether the address part can be used as an L{AddressNode} name.
+        @rtype bool
+        """
         invalidChars = set(" #,/")
         return len(set(part).intersection(invalidChars)) == 0
 
 
     @staticmethod
     def matchesWildcard(value, wildcard):
+        """
+        Match a value to a wildcard.
+        """
         if value == wildcard and not AddressNode.isWildcard(wildcard):
             return True
         if wildcard == "*":
             return True
 
         return fnmatch.fnmatchcase(value, wildcard)
+
 
     def _patternPath(self, pattern):
         """
@@ -722,16 +783,23 @@ class Receiver(AddressNode):
     """
 
     def getProtocol(self):
+        """
+        Factory method which creates an L{OscServerProtocol} instance tied to this L{Receiver}.
+
+        @rtype: L{OscServerProtocol}
+        """
         return OscServerProtocol(self)
 
 
     def dispatch(self, element, clientAddress):
         """
-        Executes every callback matching the message address with element as argument. 
-        The order in which the callbacks are called in undefined.
+        Dispatch an element to all matching callbacks.
+
+        Executes every callback matching the message address with
+        element as argument. The order in which the callbacks are
+        called is undefined.
 
         @param element: A L{Message} or L{Bundle}.
-        @return: None
         """
         if isinstance(element, Bundle):
             messages = element.getMessages()
@@ -767,13 +835,18 @@ class OscClientProtocol(protocol.DatagramProtocol):
     def __init__(self, onStart):
         self.onStart = onStart
 
+
     def startProtocol(self):
         self.onStart.callback(self)
+
 
 
 class Sender(object):
     """
     Sends OSC messages to any destination.
+
+    An instance of this class should be used to send L{Message} and
+    L{Bundle}s over the network.
     """
 
     def __init__(self):
@@ -783,12 +856,14 @@ class Sender(object):
         d.addCallback(listening)
         self._port = reactor.listenUDP(0, OscClientProtocol(d))
 
+
     def send(self, element, (host, port)):
         """
         Send a L{Message} or L{Bundle} to the address specified.
         """
         data = element.toBinary()
         self.proto.transport.write(data, (host, port))
+
 
     def stop(self):
         return self._port.stopListening()
@@ -800,7 +875,7 @@ def _ceilToMultipleOfFour(num):
     That is for data that need to be padded with zeros so that the length of their data
     must be a multiple of 32 bits.
     """
-    return num + (4 - (num % 4)) 
+    return num + (4 - (num % 4))
 
 
 def _argumentFromBinary(type_tag, data):

@@ -22,5 +22,4 @@ if __name__ == "__main__":
     receiver.addCallback("/*", prnt)
 
     reactor.listenUDP(17777, receiver.getProtocol())
-
     reactor.run()

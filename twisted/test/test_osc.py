@@ -156,9 +156,9 @@ class TestBundle(unittest.TestCase):
         b = osc.Bundle()
         b2 = osc.Bundle()
         self.assertEqual(b, b2)
-        b2.messages.append(osc.Message("/hello"))
+        b2.add(osc.Message("/hello"))
         self.assertNotEqual(b, b2)
-        b.messages.append(osc.Message("/hello"))
+        b.add(osc.Message("/hello"))
         self.assertEqual(b, b2)
 
     def testToAndFromBinary(self):
@@ -183,18 +183,18 @@ class TestBundle(unittest.TestCase):
         m3 = osc.Message("/foo/baz")
 
         b = osc.Bundle()
-        b.messages.append(m1)
+        b.add(m1)
         self.assertEqual(b.getMessages(), set([m1]))
 
         b = osc.Bundle()
-        b.messages.append(m1)
-        b.messages.append(m2)
+        b.add(m1)
+        b.add(m2)
         self.assertEqual(b.getMessages(), set([m1, m2]))
 
         b = osc.Bundle()
-        b.messages.append(m1)
-        b.messages.append(osc.Bundle([m2]))
-        b.messages.append(osc.Bundle([m3]))
+        b.add(m1)
+        b.add(osc.Bundle([m2]))
+        b.add(osc.Bundle([m3]))
         self.assertEqual(b.getMessages(), set([m1, m2, m3]))
 
 
@@ -417,6 +417,9 @@ class TestAddressNode(unittest.TestCase):
 
 
 class TestReceiver(unittest.TestCase):
+    """
+    Test the L{osc.Receiver} class.
+    """
 
     def testDispatching(self):
 
@@ -448,7 +451,7 @@ class TestReceiver(unittest.TestCase):
 
 class TestSenderAndReceiver(unittest.TestCase):
     """
-    Test the sender and receiver over UDP via localhost.
+    Test the L{osc.Sender} and L{osc.Receiver} over UDP via localhost.
     """
 
     def setUp(self):
@@ -456,11 +459,14 @@ class TestSenderAndReceiver(unittest.TestCase):
         self.port = reactor.listenUDP(17777, self.receiver.getProtocol())
         self.sender = osc.Sender()
 
+
     def tearDown(self):
         return defer.DeferredList([self.port.stopListening(), self.sender.stop()])
 
+
     def _send(self, element):
         self.sender.send(element, ("127.0.0.1", 17777))
+
 
     def testSingleElement(self):
         pingMsg = osc.Message("/ping")
@@ -472,8 +478,8 @@ class TestSenderAndReceiver(unittest.TestCase):
 
         self.receiver.addCallback("/ping", ping)
         self._send(pingMsg)
-        #self.assertEqual(self.state, {'
         return d
+
 
 
 class TestReceiverWithExternalClient(unittest.TestCase):
