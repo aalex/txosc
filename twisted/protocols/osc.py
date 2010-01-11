@@ -546,8 +546,10 @@ def createArgument(value, type_tag=None):
 class AddressNode(object):
     """
     A node in the tree of OSC addresses.
+    
+    This node can be either a container branch or a leaf. An OSC address is a series of names separated by forward slash characters. ('/') We say that a node is a branch when it has one or more child nodes. 
 
-    @ivar _name: the name of this node.
+    @ivar _name: the name of this node. 
     @ivar _parent: the parent node.
     """
 
@@ -650,7 +652,10 @@ class AddressNode(object):
 
     def addCallback(self, pattern, cb):
         """
-        Adds a callback for L{Message} instances received for a given OSC path.
+        Adds a callback for L{Message} instances received for a given OSC path, relative to this node's address as its root. 
+
+        In the OSC protocol, only leaf nodes can have callbacks, though this implementation allows also branch nodes to have callbacks.
+
         @param path: OSC address in the form C{/egg/spam/ham}, or list C{['egg', 'spam', 'ham']}.
         @type pattern: C{str} or C{list}.
         @param cb: Callback that will receive L{Message} as an argument when received.
