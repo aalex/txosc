@@ -654,7 +654,7 @@ class AddressNode(object):
         @param path: OSC address in the form C{/egg/spam/ham}, or list C{['egg', 'spam', 'ham']}.
         @type pattern: C{str} or C{list}.
         @param cb: Callback that will receive L{Message} as an argument when received.
-        @type cb: Function of method.
+        @type cb: Function or method.
         @return: None
         """
         path = self._patternPath(pattern)
