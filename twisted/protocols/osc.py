@@ -410,6 +410,7 @@ class TimeTagArgument(Argument):
 
     def toBinary(self):
         fr, sec = math.modf(self.value)
+        # FIXME: DeprecationWarning: struct integer overflow masking is deprecated. 
         return struct.pack('>ll', long(sec), long(fr * 1e9))
 
 
@@ -490,14 +491,15 @@ _types = {
     str: StringArgument,
     int: IntArgument,
     bool: BooleanArgument,
-    type(None): NullArgument
+    type(None): NullArgument,
     }
 
 _tags = {
     "b": BlobArgument,
     "f": FloatArgument,
     "i": IntArgument,
-    "s": StringArgument
+    "s": StringArgument,
+    "t": TimeTagArgument,
     }
 
 

@@ -492,7 +492,7 @@ class TestReceiver(unittest.TestCase):
 
         hello = osc.Message("/hello")
         there = osc.Message("/there")
-        addr = ("0.0.0.0", 17777)
+        addr = ("0.0.0.0", 17778)
 
         def cb(message, a):
             self.assertEqual(message, hello)
@@ -523,7 +523,7 @@ class TestSenderAndReceiver(unittest.TestCase):
 
     def setUp(self):
         self.receiver = osc.Receiver()
-        self.port = reactor.listenUDP(17777, self.receiver.getProtocol())
+        self.port = reactor.listenUDP(17778, self.receiver.getProtocol())
         self.sender = osc.Sender()
 
 
@@ -532,7 +532,7 @@ class TestSenderAndReceiver(unittest.TestCase):
 
 
     def _send(self, element):
-        self.sender.send(element, ("127.0.0.1", 17777))
+        self.sender.send(element, ("127.0.0.1", 17778))
 
 
     def testSingleElement(self):
