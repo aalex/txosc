@@ -13,7 +13,7 @@ import string
 import math
 import struct
 import time
-import fnmatch
+import re
 
 from twisted.internet import reactor, defer, protocol
 
@@ -716,13 +716,40 @@ class AddressNode(object):
     def matchesWildcard(value, wildcard):
         """
         Match a value to a wildcard.
+
+        Wildcards are glob-style, but with [x-y] as numeric range arguments (positive integers).
+        Examples:
+        fo? matches 'foo', but not 'foo2'
+        fo* matches 'foo', 'foo2', fofdsfdsfdsfds', etc
+        bar[1-3] matches 'bar1', 'bar2', 'bar3' but not 'bar4'.
         """
         if value == wildcard and not AddressNode.isWildcard(wildcard):
             return True
         if wildcard == "*":
             return True
 
-        return fnmatch.fnmatchcase(value, wildcard)
+        wildcard = wildcard.replace("*", ".*")
+        wildcard = wildcard.replace("?", ".?")
+
+        numeric_ranges = []
+        # Filter out the numeric arguments
+        while True:
+            m = re.match(".*?\[(\d+)\-(\d+)\].*", wildcard)
+            if not m:
+                break
+            numeric_ranges.append(map(int, m.groups()))
+            wildcard = wildcard[:m.start(1)-1] + "(\d+)" + wildcard[m.end(2)+1:]
+
+        m = re.match(wildcard, value)
+        if not m or (m and not numeric_ranges):
+            return bool(m)
+        g = m.groups()
+        #print g, numeric_ranges, wildcard
+        for i in range(len(numeric_ranges)):
+            val = int(g[i])
+            if val < numeric_ranges[i][0] or val > numeric_ranges[i][1]:
+                return False
+        return True
 
 
     def _patternPath(self, pattern):
