@@ -12,7 +12,6 @@ in the paper which can be found at U{http://opensoundcontrol.org/spec-1_1}.
 import string
 import math
 import struct
-import time
 import re
 
 from twisted.internet import reactor, defer, protocol
@@ -136,7 +135,7 @@ class Bundle(object):
     timeTag = None
     elements = None
 
-    def __init__(self, elements=None,  timeTag=0):
+    def __init__(self, elements=None,  timeTag=True):
         if elements:
             self.elements = elements
         else:
@@ -294,11 +293,10 @@ class BlobArgument(Argument):
         try:
             length = struct.unpack(">i", data[0:4])[0]
             index_of_leftover = _ceilToMultipleOfFour(length) + 4
-            try:
-                blob_data = data[4:length + 4]
-            except IndexError, e:
+            if len(data)+4 < length:
                 raise OscError("Not enough bytes to find size of a blob of size %s in %s." % (length, data))
-        except IndexError, e:
+            blob_data = data[4:length + 4]
+        except struct.error:
             raise OscError("Not enough bytes to find size of a blob argument in %s." % (data))
         leftover = data[index_of_leftover:]
         return BlobArgument(blob_data), leftover
@@ -356,7 +354,7 @@ class IntArgument(Argument):
         try:
             i = struct.unpack(">i", data[:4])[0]
             leftover = data[4:]
-        except IndexError, e:
+        except struct.error:
             raise OscError("Too few bytes left to get an int from %s." % (data))
             #FIXME: do not raise error and return leftover anyways ?
         return IntArgument(i), leftover
@@ -378,7 +376,7 @@ class FloatArgument(Argument):
         try:
             f = struct.unpack(">f", data[:4])[0]
             leftover = data[4:]
-        except IndexError, e:
+        except struct.error:
             raise OscError("Too few bytes left to get a float from %s." % (data))
             #FIXME: do not raise error and return leftover anyways ?
         return FloatArgument(f), leftover
@@ -388,37 +386,45 @@ class TimeTagArgument(Argument):
     """
     An L{Argument} representing an OSC time tag.
 
-    Like NTP timestamps, time tags are represented by a 64 bit fixed
-    point number. The first 32 bits specify the number of seconds
-    since midnight on January 1, 1900, and the last 32 bits specify
-    fractional parts of a second to a precision of about 200
-    picoseconds. This is the representation used by Internet NTP
-    timestamps.
+    Like NTP timestamps, the binary representation of a time tag is a
+    64 bit fixed point number. The first 32 bits specify the number of
+    seconds since midnight on January 1, 1900, and the last 32 bits
+    specify fractional parts of a second to a precision of about 200
+    picoseconds.
 
     The time tag value consisting of 63 zero bits followed by a one in
     the least signifigant bit is a special case meaning "immediately."
+
+    In the L{TimeTagArgument} class, the timetag value is a float, or
+    'True' when 'Immediately' is meant.
+
     """
     typeTag = "t"
-    SECONDS_UTC_TO_UNIX_EPOCH = 2208988800
 
-    def __init__(self, value=None):
-        if value is None:
-            #FIXME: is that the correct NTP timestamp ?
-            value = self.SECONDS_UTC_TO_UNIX_EPOCH + time.time()
-        self.value = value
+    def __init__(self, value=True):
+        Argument.__init__(self, value)
 
 
     def toBinary(self):
+        if self.value is True:
+            return struct.pack('>ll', 0, 1)
         fr, sec = math.modf(self.value)
-        # FIXME: DeprecationWarning: struct integer overflow masking is deprecated. 
         return struct.pack('>ll', long(sec), long(fr * 1e9))
 
 
     @staticmethod
     def fromBinary(data):
-        high, low = struct.unpack(">ll", data[0:8])
+        binary = data[0:8]
+        if len(binary) != 8:
+            raise OscError("Too few bytes left to get a timetag from %s." % (data))
         leftover = data[8:]
-        time = float(int(high) + low / float(1e9))
+
+        if binary == '\0\0\0\0\0\0\0\1':
+            # immediately
+            time = True
+        else:
+            high, low = struct.unpack(">ll", data[0:8])
+            time = float(int(high) + low / float(1e9))
         return TimeTagArgument(time), leftover
 
 

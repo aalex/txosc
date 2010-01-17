@@ -36,6 +36,16 @@ class TestArgumentCreation(unittest.TestCase):
 
 
 
+class TestArgument(unittest.TestCase):
+    """
+    Encoding and decoding of a string argument.
+    """
+    def testAbstractArgument(self):
+        a = osc.Argument(None)
+        self.assertRaises(NotImplementedError, a.toBinary)
+        self.assertRaises(NotImplementedError, a.fromBinary, "")
+
+
 class TestBlobArgument(unittest.TestCase):
     """
     Encoding and decoding of a string argument.
@@ -55,6 +65,10 @@ class TestBlobArgument(unittest.TestCase):
         second, leftover = osc.BlobArgument.fromBinary(leftover)
         self.assertEqual(second.value, "hello")
         self.assertEqual(leftover, "")
+
+        # invalid formatted 
+        self.assertRaises(osc.OscError, osc.BlobArgument.fromBinary, "\0\0\0") # invalid length packet
+        self.assertRaises(osc.OscError, osc.BlobArgument.fromBinary, "\0\0\0\99")
 
 
 class TestStringArgument(unittest.TestCase):
@@ -91,6 +105,7 @@ class TestFloatArgument(unittest.TestCase):
             self.fail("value is too small")
         if float_arg.value > 3.1416:
             self.fail("value is too big")
+        self.assertRaises(osc.OscError, osc.FloatArgument.fromBinary, "\0\0\0") # invalid value
 
 class TestIntArgument(unittest.TestCase):
 
@@ -102,11 +117,14 @@ class TestIntArgument(unittest.TestCase):
         test(1)
         test(-1)
         test(1<<31-1)
-        test(-1<<31)
+        test(-1<<31)        
+        self.assertRaises(osc.OscError, osc.IntArgument.fromBinary, "\0\0\0") # invalid value
 
     def testIntOverflow(self):
         self.assertRaises(OverflowError, osc.IntArgument(1<<31).toBinary)
         self.assertRaises(OverflowError, osc.IntArgument((-1<<31) - 1).toBinary)
+
+
 
 
 class TestTimeTagArgument(unittest.TestCase):
@@ -118,8 +136,12 @@ class TestTimeTagArgument(unittest.TestCase):
 
     def testFromBinary(self):
         # 1 second since Jan 1, 1900
-        val = osc.TimeTagArgument.fromBinary("\0\0\0\1\0\0\0\0")[0].value
-        self.assertEqual(val, 1.0)
+        self.assertEqual(1.0, osc.TimeTagArgument.fromBinary("\0\0\0\1\0\0\0\0")[0].value)
+        # immediately
+        self.assertEqual(True, osc.TimeTagArgument.fromBinary("\0\0\0\0\0\0\0\1")[0].value)
+        # error
+        self.assertRaises(osc.OscError, osc.TimeTagArgument.fromBinary, "\0\0\0\0\0\0")
+
 
     def testToAndFromBinary(self):
         # 1 second since Jan 1, 1900
@@ -226,8 +248,8 @@ class TestBundle(unittest.TestCase):
 
         self.assertRaises(osc.OscError, osc.Bundle.fromBinary, "invalidbinarydata..")
         self.assertRaises(osc.OscError, osc.Bundle.fromBinary, "#bundle|invalidbinarydata..")
-        self.assertRaises(osc.OscError, osc.Bundle.fromBinary, "#bundle\0\0\0\1\0\0\0\0hello")
-        self.assertRaises(osc.OscError, osc.Bundle.fromBinary, "#bundle\0\0\0\1\0\0\0\0\0\0\0\5hellofdsfds")
+        self.assertRaises(osc.OscError, osc.Bundle.fromBinary, "#bundle\0\0\0\0\1\0\0\0\0hello")
+        self.assertRaises(osc.OscError, osc.Bundle.fromBinary, "#bundle\0\0\0\0\1\0\0\0\0\0\0\0\5hellofdsfds")
 
         def test(b):
             binary = b.toBinary()
@@ -271,6 +293,15 @@ class TestAddressNode(unittest.TestCase):
     Test the L{osc.AddressNode}; adding/removing/dispatching callbacks, wildcard matching.
     """
 
+    def testName(self):
+
+        n = osc.AddressNode()
+        n.setName("the_name")
+        self.assertEqual("the_name", n.getName())
+        n = osc.AddressNode("the_name")
+        self.assertEqual("the_name", n.getName())
+
+
     def testAddRemoveCallback(self):
 
         def callback(m):
@@ -279,6 +310,11 @@ class TestAddressNode(unittest.TestCase):
         n.addCallback("/foo", callback)
         self.assertEqual(n.getCallbacks("/foo"), set([callback]))
         n.removeCallback("/foo", callback)
+        self.assertEqual(n.getCallbacks("/foo"), set())
+
+        n.addCallback("/*", callback)
+        self.assertEqual(n.getCallbacks("/foo"), set([callback]))
+        n.removeCallback("/*", callback)
         self.assertEqual(n.getCallbacks("/foo"), set())
 
 
