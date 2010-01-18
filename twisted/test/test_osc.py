@@ -17,21 +17,21 @@ class TestArgumentCreation(unittest.TestCase):
     """
     
     def testCreateFromValue(self):
-        self.assertEqual(type(osc.createArgument(True)), osc.BooleanArgument)
-        self.assertEqual(type(osc.createArgument(False)), osc.BooleanArgument)
-        self.assertEqual(type(osc.createArgument(None)), osc.NullArgument)
-        self.assertEqual(type(osc.createArgument(123)), osc.IntArgument)
-        self.assertEqual(type(osc.createArgument(3.14156)), osc.FloatArgument)
+        self.assertEquals(type(osc.createArgument(True)), osc.BooleanArgument)
+        self.assertEquals(type(osc.createArgument(False)), osc.BooleanArgument)
+        self.assertEquals(type(osc.createArgument(None)), osc.NullArgument)
+        self.assertEquals(type(osc.createArgument(123)), osc.IntArgument)
+        self.assertEquals(type(osc.createArgument(3.14156)), osc.FloatArgument)
         # Unicode is not supported.
         self.assertRaises(osc.OscError, osc.createArgument, u'test')
 
     def testCreateFromTypeTag(self):
-        self.assertEqual(type(osc.createArgument(123, "T")), osc.BooleanArgument)
-        self.assertEqual(type(osc.createArgument(123, "F")), osc.BooleanArgument)
-        self.assertEqual(type(osc.createArgument(123, "N")), osc.NullArgument)
-        self.assertEqual(type(osc.createArgument(123, "I")), osc.ImpulseArgument)
-        self.assertEqual(type(osc.createArgument(123, "i")), osc.IntArgument)
-        self.assertEqual(type(osc.createArgument(123, "f")), osc.FloatArgument)
+        self.assertEquals(type(osc.createArgument(123, "T")), osc.BooleanArgument)
+        self.assertEquals(type(osc.createArgument(123, "F")), osc.BooleanArgument)
+        self.assertEquals(type(osc.createArgument(123, "N")), osc.NullArgument)
+        self.assertEquals(type(osc.createArgument(123, "I")), osc.ImpulseArgument)
+        self.assertEquals(type(osc.createArgument(123, "i")), osc.IntArgument)
+        self.assertEquals(type(osc.createArgument(123, "f")), osc.FloatArgument)
         self.assertRaises(osc.OscError, osc.createArgument, 123, "?")
 
 
@@ -51,20 +51,20 @@ class TestBlobArgument(unittest.TestCase):
     Encoding and decoding of a string argument.
     """
     def testToBinary(self):
-        self.assertEqual(osc.BlobArgument("").toBinary(), "\0\0\0\0\0\0\0\0")
-        self.assertEqual(osc.BlobArgument("a").toBinary(), "\0\0\0\1a\0\0\0")
-        self.assertEqual(osc.BlobArgument("hi").toBinary(), "\0\0\0\2hi\0\0")
-        self.assertEqual(osc.BlobArgument("hello").toBinary(), "\0\0\0\5hello\0\0\0")
+        self.assertEquals(osc.BlobArgument("").toBinary(), "\0\0\0\0\0\0\0\0")
+        self.assertEquals(osc.BlobArgument("a").toBinary(), "\0\0\0\1a\0\0\0")
+        self.assertEquals(osc.BlobArgument("hi").toBinary(), "\0\0\0\2hi\0\0")
+        self.assertEquals(osc.BlobArgument("hello").toBinary(), "\0\0\0\5hello\0\0\0")
 
     def testFromBinary(self):
         data = "\0\0\0\2hi\0\0\0\0\0\5hello\0\0\0"
         first, leftover = osc.BlobArgument.fromBinary(data)
-        self.assertEqual(first.value, "hi")
-        self.assertEqual(leftover, "\0\0\0\5hello\0\0\0")
+        self.assertEquals(first.value, "hi")
+        self.assertEquals(leftover, "\0\0\0\5hello\0\0\0")
 
         second, leftover = osc.BlobArgument.fromBinary(leftover)
-        self.assertEqual(second.value, "hello")
-        self.assertEqual(leftover, "")
+        self.assertEquals(second.value, "hello")
+        self.assertEquals(leftover, "")
 
         # invalid formatted 
         self.assertRaises(osc.OscError, osc.BlobArgument.fromBinary, "\0\0\0") # invalid length packet
@@ -76,24 +76,24 @@ class TestStringArgument(unittest.TestCase):
     Encoding and decoding of a string argument.
     """
     def testToBinary(self):
-        self.assertEqual(osc.StringArgument("").toBinary(), "\0\0\0\0")
-        self.assertEqual(osc.StringArgument("OSC").toBinary(), "OSC\0")
-        self.assertEqual(osc.StringArgument("Hello").toBinary(), "Hello\0\0\0")
+        self.assertEquals(osc.StringArgument("").toBinary(), "\0\0\0\0")
+        self.assertEquals(osc.StringArgument("OSC").toBinary(), "OSC\0")
+        self.assertEquals(osc.StringArgument("Hello").toBinary(), "Hello\0\0\0")
 
     def testFromBinary(self):
         data = "aaa\0bb\0\0c\0\0\0dddd"
         first, leftover = osc.StringArgument.fromBinary(data)
         #padding with 0 to make strings length multiples of 4 chars
-        self.assertEqual(first.value, "aaa")
-        self.assertEqual(leftover, "bb\0\0c\0\0\0dddd")
+        self.assertEquals(first.value, "aaa")
+        self.assertEquals(leftover, "bb\0\0c\0\0\0dddd")
 
         second, leftover = osc.StringArgument.fromBinary(leftover)
-        self.assertEqual(second.value, "bb")
-        self.assertEqual(leftover, "c\0\0\0dddd")
+        self.assertEquals(second.value, "bb")
+        self.assertEquals(leftover, "c\0\0\0dddd")
 
         third, leftover = osc.StringArgument.fromBinary(leftover)
-        self.assertEqual(third.value, "c")
-        self.assertEqual(leftover, "dddd")
+        self.assertEquals(third.value, "c")
+        self.assertEquals(leftover, "dddd")
 
 class TestFloatArgument(unittest.TestCase):
 
@@ -112,7 +112,7 @@ class TestIntArgument(unittest.TestCase):
     def testToAndFromBinary(self):
         def test(value):
             int_arg = osc.IntArgument.fromBinary(osc.IntArgument(value).toBinary())[0]
-            self.assertEqual(int_arg.value, value)
+            self.assertEquals(int_arg.value, value)
         test(0)
         test(1)
         test(-1)
@@ -132,13 +132,13 @@ class TestTimeTagArgument(unittest.TestCase):
         # 1 second since Jan 1, 1900
         arg = osc.TimeTagArgument(1)
         binary = arg.toBinary()
-        self.assertEqual(binary, "\0\0\0\1\0\0\0\0")
+        self.assertEquals(binary, "\0\0\0\1\0\0\0\0")
 
     def testFromBinary(self):
         # 1 second since Jan 1, 1900
-        self.assertEqual(1.0, osc.TimeTagArgument.fromBinary("\0\0\0\1\0\0\0\0")[0].value)
+        self.assertEquals(1.0, osc.TimeTagArgument.fromBinary("\0\0\0\1\0\0\0\0")[0].value)
         # immediately
-        self.assertEqual(True, osc.TimeTagArgument.fromBinary("\0\0\0\0\0\0\0\1")[0].value)
+        self.assertEquals(True, osc.TimeTagArgument.fromBinary("\0\0\0\0\0\0\0\1")[0].value)
         # error
         self.assertRaises(osc.OscError, osc.TimeTagArgument.fromBinary, "\0\0\0\0\0\0")
 
@@ -147,7 +147,7 @@ class TestTimeTagArgument(unittest.TestCase):
         # 1 second since Jan 1, 1900
         def test(value):
             timetag_arg, leftover = osc.TimeTagArgument.fromBinary(osc.TimeTagArgument(value).toBinary())
-            self.assertEqual(leftover, "")
+            self.assertEquals(leftover, "")
             self.assertTrue(abs(timetag_arg.value - value) < 1e-6)
 
         test(1.0)
@@ -159,9 +159,9 @@ class TestMessage(unittest.TestCase):
 
     def testMessageStringRepresentation(self):
 
-        self.assertEqual("/hello", str(osc.Message("/hello")))
-        self.assertEqual("/hello ,i i:1 ", str(osc.Message("/hello", 1)))
-        self.assertEqual("/hello ,T T:True ", str(osc.Message("/hello", True)))
+        self.assertEquals("/hello", str(osc.Message("/hello")))
+        self.assertEquals("/hello ,i i:1 ", str(osc.Message("/hello", 1)))
+        self.assertEquals("/hello ,T T:True ", str(osc.Message("/hello", True)))
 
 
     def testAddMessageArguments(self):
@@ -169,27 +169,27 @@ class TestMessage(unittest.TestCase):
         Test adding arguments to a message
         """
         m = osc.Message("/example", osc.IntArgument(33), osc.BooleanArgument(True))
-        self.assertEqual(m.arguments[0].value, 33)
-        self.assertEqual(m.arguments[1].value, True)
+        self.assertEquals(m.arguments[0].value, 33)
+        self.assertEquals(m.arguments[1].value, True)
 
         m = osc.Message("/example", 33, True)
-        self.assertEqual(m.arguments[0].value, 33)
-        self.assertEqual(m.arguments[1].value, True)
+        self.assertEquals(m.arguments[0].value, 33)
+        self.assertEquals(m.arguments[1].value, True)
 
         m = osc.Message("/example")
         m.add(33)
-        self.assertEqual(m.arguments[0].value, 33)
-        self.assertEqual(m.arguments[0].typeTag, "i")
+        self.assertEquals(m.arguments[0].value, 33)
+        self.assertEquals(m.arguments[0].typeTag, "i")
         m.add(True)
-        self.assertEqual(m.arguments[1].typeTag, "T")
+        self.assertEquals(m.arguments[1].typeTag, "T")
 
 
     def testEquality(self):
-        self.assertEqual(osc.Message("/example"),
+        self.assertEquals(osc.Message("/example"),
                          osc.Message("/example"))
         self.assertNotEqual(osc.Message("/example"),
                             osc.Message("/example2"))
-        self.assertEqual(osc.Message("/example", 33),
+        self.assertEquals(osc.Message("/example", 33),
                          osc.Message("/example", 33))
         self.assertNotEqual(osc.Message("/example", 33),
                             osc.Message("/example", 34))
@@ -197,18 +197,18 @@ class TestMessage(unittest.TestCase):
                             osc.Message("/example", 33.0))
         self.assertNotEqual(osc.Message("/example", 33),
                             osc.Message("/example", 33, True))
-        self.assertEqual(osc.Message("/example", 33, True),
+        self.assertEquals(osc.Message("/example", 33, True),
                          osc.Message("/example", 33, True))
 
 
 
     def testGetTypeTag(self):
         m = osc.Message("/example")
-        self.assertEqual(m.getTypeTags(), "")
+        self.assertEquals(m.getTypeTags(), "")
         m.arguments.append(osc.StringArgument("egg"))
-        self.assertEqual(m.getTypeTags(), "s")
+        self.assertEquals(m.getTypeTags(), "s")
         m.arguments.append(osc.StringArgument("spam"))
-        self.assertEqual(m.getTypeTags(), "ss")
+        self.assertEquals(m.getTypeTags(), "ss")
 
 
     def testToAndFromBinary(self):
@@ -220,8 +220,8 @@ class TestMessage(unittest.TestCase):
         def test(m):
             binary = m.toBinary()
             m2, leftover = osc.Message.fromBinary(binary)
-            self.assertEqual(leftover, "")
-            self.assertEqual(m, m2)
+            self.assertEquals(leftover, "")
+            self.assertEquals(m, m2)
 
         test(osc.Message("/example"))
         test(osc.Message("/example", osc.StringArgument("hello")))
@@ -235,10 +235,10 @@ class TestBundle(unittest.TestCase):
 
     def testEquality(self):
 
-        self.assertEqual(osc.Bundle(), osc.Bundle())
+        self.assertEquals(osc.Bundle(), osc.Bundle())
         self.assertNotEqual(osc.Bundle([osc.Message("/hello")]),
                             osc.Bundle())
-        self.assertEqual(osc.Bundle([osc.Message("/hello")]),
+        self.assertEquals(osc.Bundle([osc.Message("/hello")]),
                          osc.Bundle([osc.Message("/hello")]))
         self.assertNotEqual(osc.Bundle([osc.Message("/hello")]),
                             osc.Bundle([osc.Message("/hello2")]))
@@ -254,8 +254,8 @@ class TestBundle(unittest.TestCase):
         def test(b):
             binary = b.toBinary()
             b2, leftover = osc.Bundle.fromBinary(binary)
-            self.assertEqual(leftover, "")
-            self.assertEqual(b, b2)
+            self.assertEquals(leftover, "")
+            self.assertEquals(b, b2)
 
         test(osc.Bundle())
         test(osc.Bundle([osc.Message("/foo")]))
@@ -273,18 +273,18 @@ class TestBundle(unittest.TestCase):
 
         b = osc.Bundle()
         b.add(m1)
-        self.assertEqual(b.getMessages(), set([m1]))
+        self.assertEquals(b.getMessages(), set([m1]))
 
         b = osc.Bundle()
         b.add(m1)
         b.add(m2)
-        self.assertEqual(b.getMessages(), set([m1, m2]))
+        self.assertEquals(b.getMessages(), set([m1, m2]))
 
         b = osc.Bundle()
         b.add(m1)
         b.add(osc.Bundle([m2]))
         b.add(osc.Bundle([m3]))
-        self.assertEqual(b.getMessages(), set([m1, m2, m3]))
+        self.assertEquals(b.getMessages(), set([m1, m2, m3]))
 
 
 
@@ -297,9 +297,9 @@ class TestAddressNode(unittest.TestCase):
 
         n = osc.AddressNode()
         n.setName("the_name")
-        self.assertEqual("the_name", n.getName())
+        self.assertEquals("the_name", n.getName())
         n = osc.AddressNode("the_name")
-        self.assertEqual("the_name", n.getName())
+        self.assertEquals("the_name", n.getName())
 
 
     def testAddRemoveCallback(self):
@@ -308,14 +308,14 @@ class TestAddressNode(unittest.TestCase):
             pass
         n = osc.AddressNode()
         n.addCallback("/foo", callback)
-        self.assertEqual(n.getCallbacks("/foo"), set([callback]))
+        self.assertEquals(n.getCallbacks("/foo"), set([callback]))
         n.removeCallback("/foo", callback)
-        self.assertEqual(n.getCallbacks("/foo"), set())
+        self.assertEquals(n.getCallbacks("/foo"), set())
 
         n.addCallback("/*", callback)
-        self.assertEqual(n.getCallbacks("/foo"), set([callback]))
+        self.assertEquals(n.getCallbacks("/foo"), set([callback]))
         n.removeCallback("/*", callback)
-        self.assertEqual(n.getCallbacks("/foo"), set())
+        self.assertEquals(n.getCallbacks("/foo"), set())
 
 
     def testRemoveAllCallbacks(self):
@@ -328,21 +328,21 @@ class TestAddressNode(unittest.TestCase):
             pass
         n = osc.AddressNode()
         n.addCallback("/foo", callback)
-        self.assertEqual(n.getCallbacks("/*"), set([callback]))
+        self.assertEquals(n.getCallbacks("/*"), set([callback]))
         n.removeAllCallbacks("/*")
-        self.assertEqual(n.getCallbacks("/*"), set())
+        self.assertEquals(n.getCallbacks("/*"), set())
 
         n = osc.AddressNode()
         n.addCallback("/foo", callback)
         n.addCallback("/foo/bar", callback2)
         n.removeAllCallbacks("/foo")
-        self.assertEqual(n.getCallbacks("/*"), set([callback2]))
+        self.assertEquals(n.getCallbacks("/*"), set([callback2]))
 
 
     def testAddInvalidCallback(self):
         n = osc.AddressNode()
         self.assertRaises(ValueError, n.addCallback, "/foo bar/baz", lambda m: m)
-        self.assertEqual(n.addCallback("/foo/*/baz", lambda m: m), None)
+        self.assertEquals(n.addCallback("/foo/*/baz", lambda m: m), None)
 
 
     def testRemoveNonExistingCallback(self):
@@ -356,8 +356,8 @@ class TestAddressNode(unittest.TestCase):
         n = osc.AddressNode()
         n.addCallback("/foo", callback)
 
-        self.assertEqual(n.matchCallbacks(osc.Message("/foo")), set([callback]))
-        self.assertEqual(n.matchCallbacks(osc.Message("/bar")), set())
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo")), set([callback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/bar")), set())
 
     def testMatchCallbackWildcards(self):
 
@@ -366,20 +366,20 @@ class TestAddressNode(unittest.TestCase):
         n = osc.AddressNode()
         n.addCallback("/foo/*", callback)
 
-        self.assertEqual(n.matchCallbacks(osc.Message("/foo")), set())
-        self.assertEqual(n.matchCallbacks(osc.Message("/foo/bar")), set([callback]))
-        self.assertEqual(n.matchCallbacks(osc.Message("/bar")), set())
-        self.assertEqual(n.matchCallbacks(osc.Message("/foo/bar/baz")), set([callback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo")), set())
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo/bar")), set([callback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/bar")), set())
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo/bar/baz")), set([callback]))
 
         n = osc.AddressNode()
         n.addCallback("/*", callback)
-        self.assertEqual(n.matchCallbacks(osc.Message("/")), set([callback]))
-        self.assertEqual(n.matchCallbacks(osc.Message("/foo/bar")), set([callback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/")), set([callback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo/bar")), set([callback]))
 
         n = osc.AddressNode()
         n.addCallback("/*/baz", callback)
-        self.assertEqual(n.matchCallbacks(osc.Message("/foo/bar")), set())
-        self.assertEqual(n.matchCallbacks(osc.Message("/foo/baz")), set([callback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo/bar")), set())
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo/baz")), set([callback]))
 
     def testMatchCallbackRangeWildcards(self):
 
@@ -389,9 +389,9 @@ class TestAddressNode(unittest.TestCase):
         n.addCallback("/foo1", callback1)
         n.addCallback("/foo2", callback2)
 
-        self.assertEqual(n.matchCallbacks(osc.Message("/foo[1]")), set([callback1]))
-        self.assertEqual(n.matchCallbacks(osc.Message("/foo[1-10]")), set([callback1, callback2]))
-        self.assertEqual(n.matchCallbacks(osc.Message("/foo[4-6]")), set([]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo[1]")), set([callback1]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo[1-10]")), set([callback1, callback2]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo[4-6]")), set([]))
 
     def testMatchMessageWithWildcards(self):
 
@@ -409,11 +409,11 @@ class TestAddressNode(unittest.TestCase):
         n.addCallback("/baz", bazCallback)
         n.addCallback("/foo/bar", foobarCallback)
 
-        self.assertEqual(n.matchCallbacks(osc.Message("/*")), set([fooCallback, barCallback, bazCallback, foobarCallback]))
-        self.assertEqual(n.matchCallbacks(osc.Message("/spam")), set())
-        self.assertEqual(n.matchCallbacks(osc.Message("/ba*")), set([barCallback, bazCallback]))
-        self.assertEqual(n.matchCallbacks(osc.Message("/b*r")), set([barCallback]))
-        self.assertEqual(n.matchCallbacks(osc.Message("/ba?")), set([barCallback, bazCallback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/*")), set([fooCallback, barCallback, bazCallback, foobarCallback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/spam")), set())
+        self.assertEquals(n.matchCallbacks(osc.Message("/ba*")), set([barCallback, bazCallback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/b*r")), set([barCallback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/ba?")), set([barCallback, bazCallback]))
 
 
     def testMatchMessageWithRange(self):
@@ -426,9 +426,9 @@ class TestAddressNode(unittest.TestCase):
         n.addCallback("/foo/1", firstCallback)
         n.addCallback("/foo/2", secondCallback)
 
-        self.assertEqual(n.matchCallbacks(osc.Message("/baz")), set())
-        self.assertEqual(n.matchCallbacks(osc.Message("/foo/[1-10]")), set([firstCallback, secondCallback]))
-        self.assertEqual(n.matchCallbacks(osc.Message("/foo/[2-10]")), set([secondCallback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/baz")), set())
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo/[1-10]")), set([firstCallback, secondCallback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo/[2-10]")), set([secondCallback]))
 
 
     def testWildcardMatching(self):
@@ -468,9 +468,9 @@ class TestAddressNode(unittest.TestCase):
         parent = osc.AddressNode()
         parent.addNode("foo", child)
 
-        self.assertEqual(parent.getCallbacks("/foo/bar"), set([cb]))
-        self.assertEqual(parent.getCallbacks("/foo/b*"), set([cb]))
-        self.assertEqual(parent.getCallbacks("/foo/baz"), set())
+        self.assertEquals(parent.getCallbacks("/foo/bar"), set([cb]))
+        self.assertEquals(parent.getCallbacks("/foo/b*"), set([cb]))
+        self.assertEquals(parent.getCallbacks("/foo/baz"), set())
 
     def testAddressNodeNestingMultiple(self):
 
@@ -488,9 +488,9 @@ class TestAddressNode(unittest.TestCase):
         parent.addNode("foo", c1)
         parent.addNode("bar", c2)
 
-        self.assertEqual(parent.getCallbacks("/foo/*"), set([c1.trigger]))
-        self.assertEqual(parent.getCallbacks("/bar/*"), set([c2.trigger]))
-        self.assertEqual(parent.getCallbacks("/*/trigger"), set([c1.trigger, c2.trigger]))
+        self.assertEquals(parent.getCallbacks("/foo/*"), set([c1.trigger]))
+        self.assertEquals(parent.getCallbacks("/bar/*"), set([c2.trigger]))
+        self.assertEquals(parent.getCallbacks("/*/trigger"), set([c1.trigger, c2.trigger]))
 
 
     def testAddressNodeRenaming(self):
@@ -503,9 +503,9 @@ class TestAddressNode(unittest.TestCase):
         parent = osc.AddressNode()
         parent.addNode("foo", child)
 
-        self.assertEqual(parent.getCallbacks("/foo/bar"), set([cb]))
+        self.assertEquals(parent.getCallbacks("/foo/bar"), set([cb]))
         child.setName("bar")
-        self.assertEqual(parent.getCallbacks("/bar/bar"), set([cb]))
+        self.assertEquals(parent.getCallbacks("/bar/bar"), set([cb]))
 
 
     def testAddressNodeReparenting(self):
@@ -521,10 +521,10 @@ class TestAddressNode(unittest.TestCase):
         parent.addNode("foo", child)
         parent.addNode("baz", baz) # empty node
 
-        self.assertEqual(parent.getCallbacks("/foo/bar"), set([cb]))
+        self.assertEquals(parent.getCallbacks("/foo/bar"), set([cb]))
         child.setParent(baz)
-        self.assertEqual(parent.getCallbacks("/foo/bar"), set([]))
-        self.assertEqual(parent.getCallbacks("/baz/foo/bar"), set([cb]))
+        self.assertEquals(parent.getCallbacks("/foo/bar"), set([]))
+        self.assertEquals(parent.getCallbacks("/baz/foo/bar"), set([cb]))
 
 
 
@@ -540,12 +540,12 @@ class TestReceiver(unittest.TestCase):
         addr = ("0.0.0.0", 17778)
 
         def cb(message, a):
-            self.assertEqual(message, hello)
-            self.assertEqual(addr, a)
+            self.assertEquals(message, hello)
+            self.assertEquals(addr, a)
             state['cb'] = True
         def cb2(message, a):
-            self.assertEqual(message, there)
-            self.assertEqual(addr, a)
+            self.assertEquals(message, there)
+            self.assertEquals(addr, a)
             state['cb2'] = True
 
         recv = osc.Receiver()
@@ -554,11 +554,11 @@ class TestReceiver(unittest.TestCase):
 
         state = {}
         recv.dispatch(hello, addr)
-        self.assertEqual(state, {'cb': True})
+        self.assertEquals(state, {'cb': True})
 
         state = {}
         recv.dispatch(osc.Bundle([hello, there]), addr)
-        self.assertEqual(state, {'cb': True, 'cb2': True})
+        self.assertEquals(state, {'cb': True, 'cb2': True})
 
 
 class TestSenderAndReceiver(unittest.TestCase):
@@ -585,7 +585,7 @@ class TestSenderAndReceiver(unittest.TestCase):
         d = defer.Deferred()
 
         def ping(m, addr):
-            self.assertEqual(m, pingMsg)
+            self.assertEquals(m, pingMsg)
             d.callback(True)
 
         self.receiver.addCallback("/ping", ping)
