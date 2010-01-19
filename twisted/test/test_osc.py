@@ -335,7 +335,7 @@ class TestAddressNode(unittest.TestCase):
         n = osc.AddressNode()
         n.addCallback("/foo", callback)
         n.addCallback("/foo/bar", callback2)
-        n.removeAllCallbacks("/foo")
+        n.removeAllCallbacks()
         self.assertEquals(n.getCallbacks("/*"), set([callback2]))
 
 
@@ -374,12 +374,17 @@ class TestAddressNode(unittest.TestCase):
         n = osc.AddressNode()
         n.addCallback("/*", callback)
         self.assertEquals(n.matchCallbacks(osc.Message("/")), set([callback]))
-        self.assertEquals(n.matchCallbacks(osc.Message("/foo/bar")), set([callback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo/bar")), set([]))
 
         n = osc.AddressNode()
         n.addCallback("/*/baz", callback)
         self.assertEquals(n.matchCallbacks(osc.Message("/foo/bar")), set())
         self.assertEquals(n.matchCallbacks(osc.Message("/foo/baz")), set([callback]))
+
+        n = osc.AddressNode()
+        n.addCallback("/*/*", callback)
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo/baz")), set([callback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo/bar/baz")), set([]))
 
     def testMatchCallbackRangeWildcards(self):
 
@@ -390,7 +395,7 @@ class TestAddressNode(unittest.TestCase):
         n.addCallback("/foo2", callback2)
 
         self.assertEquals(n.matchCallbacks(osc.Message("/foo[1]")), set([callback1]))
-        self.assertEquals(n.matchCallbacks(osc.Message("/foo[1-10]")), set([callback1, callback2]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo[1-9]")), set([callback1, callback2]))
         self.assertEquals(n.matchCallbacks(osc.Message("/foo[4-6]")), set([]))
 
     def testMatchMessageWithWildcards(self):
@@ -427,35 +432,75 @@ class TestAddressNode(unittest.TestCase):
         n.addCallback("/foo/2", secondCallback)
 
         self.assertEquals(n.matchCallbacks(osc.Message("/baz")), set())
-        self.assertEquals(n.matchCallbacks(osc.Message("/foo/[1-10]")), set([firstCallback, secondCallback]))
-        self.assertEquals(n.matchCallbacks(osc.Message("/foo/[2-10]")), set([secondCallback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo/[1-3]")), set([firstCallback, secondCallback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo/[!1]")), set([secondCallback]))
 
 
     def testWildcardMatching(self):
-        self.assertTrue(osc.AddressNode.matchesWildcard("foo", "foo"))
-        self.assertTrue(osc.AddressNode.matchesWildcard("foo", "*"))
+
         self.assertFalse(osc.AddressNode.matchesWildcard("foo", "bar"))
-        self.assertTrue(osc.AddressNode.matchesWildcard("foo", "f*"))
+
+        self.assertTrue(osc.AddressNode.matchesWildcard("", "?"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("f", "?"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("fo", "?"))
+
         self.assertTrue(osc.AddressNode.matchesWildcard("foo", "f?o"))
-        self.assertTrue(osc.AddressNode.matchesWildcard("foo", "fo?"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("fo", "f?o"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("fooo", "f?o"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("foo", "f??o"))
+
+        self.assertTrue(osc.AddressNode.matchesWildcard("foo", "*"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("foo", "f*"))
         self.assertTrue(osc.AddressNode.matchesWildcard("fo", "f*o"))
         self.assertTrue(osc.AddressNode.matchesWildcard("foo", "f*o"))
-        self.assertTrue(osc.AddressNode.matchesWildcard("foo", "f?o"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("foo", "f*bar"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("foo", "*bar"))
+
+        self.assertTrue(osc.AddressNode.matchesWildcard("foobar", "*bar"))
         self.assertTrue(osc.AddressNode.matchesWildcard("foobar", "f?ob*r"))
+
+
+    def testWildcardCharMatching(self):
+        self.assertTrue(osc.AddressNode.matchesWildcard("abc", "a[b]c"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("abc", "a[bc]c"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("abc", "a[abcdefg][abc]"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("abc", "a[abcdefg][def]"))
+        self.assertRaises(osc.OscError, osc.AddressNode.matchesWildcard, "abc", "a[abcdefg][def")
 
 
     def testWildcardRangeMatching(self):
         self.assertTrue(osc.AddressNode.matchesWildcard("bar1", "bar[1-3]"))
-        self.assertTrue(osc.AddressNode.matchesWildcard("bar23", "bar[19-30]"))
-        self.assertFalse(osc.AddressNode.matchesWildcard("bar4", "bar[1-3]"))
-        self.assertTrue(osc.AddressNode.matchesWildcard("foo1bar2", "foo[1-3]bar2"))
-        self.assertFalse(osc.AddressNode.matchesWildcard("foo5bar2", "foo[1-3]bar2"))
-        self.assertTrue(osc.AddressNode.matchesWildcard("foo1bar2", "foo[1-3]bar[1-3]"))
-        self.assertFalse(osc.AddressNode.matchesWildcard("foo1bar2", "foo[2-3]bar[1-3]"))
-        self.assertTrue(osc.AddressNode.matchesWildcard("bar1001", "bar10[01-10]"))
-        self.assertTrue(osc.AddressNode.matchesWildcard("bar101", "bar[1-20]1"))
-        self.assertFalse(osc.AddressNode.matchesWildcard("bar101", "bar[1-20]2"))
-        self.assertFalse(osc.AddressNode.matchesWildcard("bar101", "bar[1-9]1"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("bar23", "bar[1-3]3"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("bar23", "bar[1-3][1-9]"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("bar2", "bar[a-z]"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("bar20", "bar[10-30]"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("a-c", "a[x-]c"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("a-c", "a[x-z]c"))
+
+
+    def testWildcardRangeNegateMatching(self):
+        self.assertTrue(osc.AddressNode.matchesWildcard("bar", "b[!b]r"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("bar", "b[!b][!a-z]"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("bar23", "bar[!1-3]3"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("bar2", "bar[!a-z]"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("abc", "a[b!]c"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("a!c", "a[b!]c"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("a!c", "a[!!]c"))
+
+
+    def testWildcardAnyStringsMatching(self):
+        self.assertTrue(osc.AddressNode.matchesWildcard("foo", "{foo,bar}"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("bar", "{foo,bar}"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("bar", "{foo,bar,baz}"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("foobar", "foo{bar}"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("foobar", "foo{bar}"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("bar", "{foo,bar,baz}bar"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("foobar", "{foo,bar,baz}bar"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("barbar", "{foo,bar,baz}bar"))
+
+
+    def testWildcardCombined(self):
+        self.assertTrue(osc.AddressNode.matchesWildcard("foobar", "f??{abc,ba}[o-s]"))
 
 
     def testAddressNodeNesting(self):

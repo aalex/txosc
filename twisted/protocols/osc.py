@@ -622,7 +622,7 @@ class AddressNode(object):
         return self._name
 
 
-    def match(self, pattern, _matchAllChilds = False):
+    def match(self, pattern):
         """
         Match a pattern to return a set of nodes.
 
@@ -631,11 +631,8 @@ class AddressNode(object):
         """
 
         path = self._patternPath(pattern)
-        if not len(path) or _matchAllChilds:
-            c = set([self])
-            if _matchAllChilds and self._childNodes:
-                c = c.union(reduce(lambda a, b: a.union(b), [n.match(path, True) for n in self._childNodes.values()]))
-            return c
+        if not len(path):
+            return set([self])
 
         matchedNodes = set()
 
@@ -643,21 +640,20 @@ class AddressNode(object):
         if AddressNode.isWildcard(part):
             for c in self._childNodes:
                 if AddressNode.matchesWildcard(c, part):
-                    matchedNodes.add( (self._childNodes[c], part[-1] == "*") )
+                    matchedNodes.add( self._childNodes[c] )
             # FIXME - what if both the part and some of my childs have wildcards?
         elif self._wildcardNodes:
             matches = set()
             for c in self._wildcardNodes:
                 if AddressNode.matchesWildcard(part, c):
-                    all = c[-1] == "*" and not self._childNodes[c]._childNodes
-                    matchedNodes.add( (self._childNodes[c], all) )
+                    matchedNodes.add( self._childNodes[c] )
                     break
         if part in self._childNodes:
-            matchedNodes.add( (self._childNodes[part], False) )
+            matchedNodes.add( self._childNodes[part] )
 
         if not matchedNodes:
             return matchedNodes
-        return reduce(lambda a, b: a.union(b), [n.match(path[1:], all) for n, all in matchedNodes])
+        return reduce(lambda a, b: a.union(b), [n.match(path[1:]) for n in matchedNodes])
 
 
     def addCallback(self, pattern, cb):
@@ -733,12 +729,6 @@ class AddressNode(object):
     def matchesWildcard(value, wildcard):
         """
         Match a value to a wildcard.
-
-        Wildcards are glob-style, but with [x-y] as numeric range arguments (positive integers).
-        Examples:
-        fo? matches 'foo', but not 'foo2'
-        fo* matches 'foo', 'foo2', fofdsfdsfdsfds', etc
-        bar[1-3] matches 'bar1', 'bar2', 'bar3' but not 'bar4'.
         """
         if value == wildcard and not AddressNode.isWildcard(wildcard):
             return True
@@ -747,26 +737,20 @@ class AddressNode(object):
 
         wildcard = wildcard.replace("*", ".*")
         wildcard = wildcard.replace("?", ".?")
+        wildcard = wildcard.replace("[!", "[^")
+        wildcard = wildcard.replace("(", "\(")
+        wildcard = wildcard.replace(")", "\)")
+        wildcard = wildcard.replace("|", "\|")
+        wildcard = wildcard.replace("{", "(")
+        wildcard = wildcard.replace("}", ")")
+        wildcard = wildcard.replace(",", "|")
+        wildcard = "^" + wildcard + "$"
 
-        numeric_ranges = []
-        # Filter out the numeric arguments
-        while True:
-            m = re.match(".*?\[(\d+)\-(\d+)\].*", wildcard)
-            if not m:
-                break
-            numeric_ranges.append(map(int, m.groups()))
-            wildcard = wildcard[:m.start(1)-1] + "(\d+)" + wildcard[m.end(2)+1:]
-
-        m = re.match(wildcard, value)
-        if not m or (m and not numeric_ranges):
-            return bool(m)
-        g = m.groups()
-        #print g, numeric_ranges, wildcard
-        for i in range(len(numeric_ranges)):
-            val = int(g[i])
-            if val < numeric_ranges[i][0] or val > numeric_ranges[i][1]:
-                return False
-        return True
+        try:
+            r = re.compile(wildcard)
+            return re.match(wildcard, value) is not None
+        except:
+            raise OscError("Invalid character in wildcard.")
 
 
     def _patternPath(self, pattern):
@@ -783,17 +767,22 @@ class AddressNode(object):
         return pattern.split("/")[1:]
 
 
-    def removeAllCallbacks(self, pattern="/*"):
+    def removeCallbacks(self, pattern):
         """
         Remove all callbacks with the given pattern.
 
         @param pattern: The pattern to match the callbacks. When
         ommited, removes all callbacks.
         """
-        path = self._patternPath(pattern)
-        nodes = self.match(path)
-        for n in nodes:
-            n.removeCallbacks()
+        raise NotImplementedError("Implement removeCallbacks")
+
+    def removeAllCallbacks(self):
+        """
+        Remove all callbacks from this node.
+        """
+        self._childNodes = []
+        self._wildcardNodes = set()
+        self._callbacks = set()
 
 
     def matchCallbacks(self, message):
