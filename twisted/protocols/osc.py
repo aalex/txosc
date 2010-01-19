@@ -767,7 +767,7 @@ class AddressNode(object):
         return pattern.split("/")[1:]
 
 
-    def removeCallbacks(self, pattern):
+    def removeCallbacksByPattern(self, pattern):
         """
         Remove all callbacks with the given pattern.
 
@@ -783,6 +783,7 @@ class AddressNode(object):
         self._childNodes = []
         self._wildcardNodes = set()
         self._callbacks = set()
+        self._checkRemove()
 
 
     def matchCallbacks(self, message):
