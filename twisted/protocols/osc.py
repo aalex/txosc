@@ -13,6 +13,10 @@ import string
 import math
 import struct
 import re
+try:
+    import cStringIO as StringIO
+except ImportError:
+    import StringIO
 
 from twisted.internet import reactor, defer, protocol
 
@@ -829,6 +833,7 @@ class Receiver(AddressNode):
 
         @rtype: L{OscServerProtocol}
         """
+        #TODO: implement TCP receiver
         return OscServerProtocol(self)
 
 
@@ -860,6 +865,9 @@ class OscServerProtocol(protocol.DatagramProtocol):
     """
 
     def __init__(self, receiver):
+        """
+        @param receiver: L{Receiver} instance.
+        """
         self.receiver = receiver
 
 
@@ -874,6 +882,9 @@ class OscClientProtocol(protocol.DatagramProtocol):
     The OSC client protocol.
     """
     def __init__(self, onStart):
+        """
+        @param onStart: L{Deferred} to call when starting to send.
+        """
         self.onStart = onStart
 
 
@@ -881,6 +892,30 @@ class OscClientProtocol(protocol.DatagramProtocol):
         self.onStart.callback(self)
 
 
+class OscTcpServerProtocol(protocol.Protocol):
+    """
+    OSC Server protocol implemented using TCP.
+    """
+    #TODO: make the TCP implementation bidirectional
+    #TODO: flush the bufferer and parse data !
+    def __init__(self):
+        self.bufferer = StringIO.StringIO()
+    
+    def dataReceived(self, data):
+        """
+        Called whenever data is received.
+        
+        @type data: L{str}
+        """
+        self.bufferer.write(data)
+
+    def connectionLost(self, reason):
+        """
+        Called when the connection is shut down.
+
+        @type reason: L{twisted.python.failure.Failure}
+        """
+        pass
 
 class Sender(object):
     """
@@ -888,9 +923,16 @@ class Sender(object):
 
     An instance of this class should be used to send L{Message} and
     L{Bundle}s over the network.
-    """
 
-    def __init__(self):
+    In a stream-based protocol such as TCP, the stream should begin with an int32 giving the size of the first packet, followed by the contents of the first packet, followed by the size of the second packet, etc.
+    """
+    def __init__(self, layer='UDP'):
+        """
+        @param layer: either 'UDP' or 'TCP'
+        """
+        #TODO: test and use TCP implementation
+        #TODO: make sure the TCP implementation can be bidirectional.
+        self.layer = layer
         d = defer.Deferred()
         def listening(proto):
             self.proto = proto
@@ -903,6 +945,10 @@ class Sender(object):
         Send a L{Message} or L{Bundle} to the address specified.
         """
         data = element.toBinary()
+        if self.layer == 'TCP':
+            #TODO: test this ! (using a TCP receiver)
+            len(data)
+            data = createArgument(len(data), type_tag='i').toBinary() + data
         self.proto.transport.write(data, (host, port))
 
 

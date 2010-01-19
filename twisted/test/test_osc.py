@@ -607,3 +607,16 @@ class TestClientWithExternalReceiver(unittest.TestCase):
     """
     pass
 
+class TestTcpLayer(unittest.TestCase):
+    def testSingleElement(self):
+        pass
+    testSingleElement.skip = "We should implement the TCP layer."
+
+
+    def testWithArguments(self):
+        pass
+    testWithArguments.skip = "We should implement the TCP layer."
+
+    def testBundle(self):
+        pass
+    testBundle.skip = "We should implement the TCP layer."
