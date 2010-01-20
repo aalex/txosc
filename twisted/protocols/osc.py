@@ -13,10 +13,6 @@ import string
 import math
 import struct
 import re
-try:
-    import cStringIO as StringIO
-except ImportError:
-    import StringIO
 
 from twisted.internet import reactor, defer, protocol
 
@@ -827,14 +823,17 @@ class Receiver(AddressNode):
     Callbacks are stored in a tree-like structure, using L{AddressNode} objects.
     """
 
-    def getProtocol(self):
+    def getProtocol(self, layer='UDP'):
         """
         Factory method which creates an L{OscServerProtocol} instance tied to this L{Receiver}.
 
         @rtype: L{OscServerProtocol}
         """
         #TODO: implement TCP receiver
-        return OscServerProtocol(self)
+        if layer == 'TCP':
+            return OscTcpServerProtocol(self)
+        else:
+            return OscServerProtocol(self)
 
 
     def dispatch(self, element, clientAddress):
@@ -846,6 +845,7 @@ class Receiver(AddressNode):
         called is undefined.
 
         @param element: A L{Message} or L{Bundle}.
+        @param clientAddress: An (host, port) L{tuple}.
         """
         if isinstance(element, Bundle):
             messages = element.getMessages()
@@ -879,7 +879,7 @@ class OscServerProtocol(protocol.DatagramProtocol):
 
 class OscClientProtocol(protocol.DatagramProtocol):
     """
-    The OSC client protocol.
+    The OSC UDP client protocol.
     """
     def __init__(self, onStart):
         """
@@ -898,8 +898,10 @@ class OscTcpServerProtocol(protocol.Protocol):
     """
     #TODO: make the TCP implementation bidirectional
     #TODO: flush the bufferer and parse data !
-    def __init__(self):
-        self.bufferer = StringIO.StringIO()
+    def __init__(self, receiver):
+        self.receiver = receiver
+        self._buffer = ""
+        self._packet_size = None
     
     def dataReceived(self, data):
         """
@@ -907,7 +909,21 @@ class OscTcpServerProtocol(protocol.Protocol):
         
         @type data: L{str}
         """
-        self.bufferer.write(data)
+        host = None # FIXME
+        port = None # FIXME
+        self._buffer += data
+        buffer_length = len(self.buffer)
+        if buffer_length >= 4:
+            if self._packet_size is None:
+                self._packet_size = struct.unpack(">i", data[:4])
+            if buffer_length >= self._packet_size + 4:
+                packet_contents = self._buffer[4:self._packet_size + 4]
+                self._buffer = self._buffer[self._packet_size + 4:] # leftover
+                self._packet_size = None
+                
+                element = _elementFromBinary(data)
+                self.receiver.dispatch(element, (host, port))
+
 
     def connectionLost(self, reason):
         """
@@ -916,6 +932,21 @@ class OscTcpServerProtocol(protocol.Protocol):
         @type reason: L{twisted.python.failure.Failure}
         """
         pass
+
+class TcpServerFactory(protocol.Factory):
+    protocol = OscTcpServerProtocol
+    def __init__(self, receiver):
+        """
+        @param receiver: L{Receiver}
+        """
+        self.receiver = receiver
+
+    def startFactory(self):
+        pass
+
+    def stopFactory(self):
+        pass
+
 
 class Sender(object):
     """
@@ -926,13 +957,7 @@ class Sender(object):
 
     In a stream-based protocol such as TCP, the stream should begin with an int32 giving the size of the first packet, followed by the contents of the first packet, followed by the size of the second packet, etc.
     """
-    def __init__(self, layer='UDP'):
-        """
-        @param layer: either 'UDP' or 'TCP'
-        """
-        #TODO: test and use TCP implementation
-        #TODO: make sure the TCP implementation can be bidirectional.
-        self.layer = layer
+    def __init__(self):
         d = defer.Deferred()
         def listening(proto):
             self.proto = proto
@@ -945,16 +970,27 @@ class Sender(object):
         Send a L{Message} or L{Bundle} to the address specified.
         """
         data = element.toBinary()
-        if self.layer == 'TCP':
-            #TODO: test this ! (using a TCP receiver)
-            len(data)
-            data = createArgument(len(data), type_tag='i').toBinary() + data
         self.proto.transport.write(data, (host, port))
 
 
     def stop(self):
         return self._port.stopListening()
 
+
+class TcpSender(protocol.Protocol):
+    """
+    Protocol to pass to a twisted.internet.protocol.ClientCreator
+    """
+    def sendMessage(self, element):
+        """
+        Send a L{Message} or L{Bundle} to the address specified.
+        """
+        #TODO: test and use TCP implementation
+        #TODO: make sure the TCP implementation can be bidirectional.
+        #TODO: test this ! (using a TCP receiver)
+        data = element.toBinary()
+        data = struct.pack(">i", len(data)) + data
+        self.transport.write(data)
 
 def _ceilToMultipleOfFour(num):
     """

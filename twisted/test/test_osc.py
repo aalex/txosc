@@ -8,7 +8,7 @@ Maintainer: Arjan Scherpenisse
 """
 
 from twisted.trial import unittest
-from twisted.internet import reactor, defer
+from twisted.internet import reactor, defer, protocol
 from twisted.protocols import osc
 
 class TestArgumentCreation(unittest.TestCase):
@@ -620,3 +620,49 @@ class TestTcpLayer(unittest.TestCase):
     def testBundle(self):
         pass
     testBundle.skip = "We should implement the TCP layer."
+
+
+
+class TestTcpLayer(unittest.TestCase):
+    """
+    Test the L{osc.TcpSender} and L{osc.OscTcpServerProtocol} over TCP
+    """
+
+    def setUp(self):
+        def _gotProtocol(proto, self):
+            print 'got proto', proto, self
+            self.proto = proto
+
+        def _gotServer(serv, self):
+            print 'got serv'
+        self.receiver = osc.Receiver()
+        self.factory = osc.TcpServerFactory(self.receiver)
+        p1 = reactor.listenTCP(18888, self.factory)
+        #print p1
+        #d1.addCallback(_gotServer, self)
+        self.client = protocol.ClientCreator(reactor, osc.TcpSender)
+        d2 = self.client.connectTCP("localhost", 18888)
+        #print d2
+        d2.addCallback(_gotProtocol, self)
+
+
+    def tearDown(self):
+        return defer.DeferredList([self.server.transport.loseConnection(), self.proto.transport.lostConnection()])
+
+
+    def _send(self, element):
+        self.proto.sendMessage(element)
+
+
+    def testSingleElement(self):
+        pingMsg = osc.Message("/ping")
+        d = defer.Deferred()
+
+        def ping(m, addr):
+            self.assertEquals(m, pingMsg)
+            d.callback(True)
+
+        self.receiver.addCallback("/ping", ping)
+        self._send(pingMsg)
+        return d
+    testSingleElement.skip = "TCP design not ready"
