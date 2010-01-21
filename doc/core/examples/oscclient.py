@@ -7,22 +7,37 @@ from twisted.internet import reactor
 from twisted.protocols import osc
 
 if __name__ == "__main__":
-    ds = osc.Sender()
-    port = 17777
-    def send_messages(ds, port):
+
+    # send over UDP
+    ds = osc.DatagramClientProtocol()
+    reactor.listenUDP(0, ds)
+
+    def send_udp():
+        print "sending UDP..."
         # no argument
-        ds.send(osc.Message("/ping"), ("127.0.0.1", port))
+        ds.send(osc.Message("/ping"), ("127.0.0.1", 17777))
         # float argument
-        ds.send(osc.Message("/ham/egg", 3.14159), ("127.0.0.1", port))
+        ds.send(osc.Message("/ham/egg", 3.14159), ("127.0.0.1", 17777))
+
+    reactor.callLater(0.1, send_udp)
+
+    # send over TCP
+    client = osc.ClientFactory()
+    reactor.connectTCP("localhost", 17776, client)
+
+    def send_tcp():
+        print "sending TCP..."
         # str and int arguments
-        ds.send(osc.Message("/spam", "hello", 1), ("127.0.0.1", port))
+        client.send(osc.Message("/spam", "hello", 1))
         # NTP timestamp argument. See http://opensoundcontrol.org/spec-1_0
-        ds.send(osc.Message("/bacon", osc.TimeTagArgument()), ("127.0.0.1", port))
+        client.send(osc.Message("/bacon", osc.TimeTagArgument()))
         # no argument
-        ds.send(osc.Message("/cheese"), ("127.0.0.1", port))
-        ds.send(osc.Message("/cheese/cheddar"), ("127.0.0.1", port))
+        client.send(osc.Message("/cheese"))
+        client.send(osc.Message("/cheese/cheddar"))
 
-        reactor.stop()
+        reactor.callLater(0.1, reactor.stop)
 
-    reactor.callLater(0, send_messages, ds, port)
+
+    reactor.callLater(0.2, send_tcp)
+
     reactor.run()

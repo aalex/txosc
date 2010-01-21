@@ -329,14 +329,14 @@ class TestAddressNode(unittest.TestCase):
         n = osc.AddressNode()
         n.addCallback("/foo", callback)
         self.assertEquals(n.getCallbacks("/*"), set([callback]))
-        n.removeAllCallbacks("/*")
+        n.removeAllCallbacks()
         self.assertEquals(n.getCallbacks("/*"), set())
 
         n = osc.AddressNode()
         n.addCallback("/foo", callback)
         n.addCallback("/foo/bar", callback2)
         n.removeAllCallbacks()
-        self.assertEquals(n.getCallbacks("/*"), set([callback2]))
+        self.assertEquals(n.getCallbacks("/*"), set([]))
 
 
     def testAddInvalidCallback(self):
@@ -369,7 +369,8 @@ class TestAddressNode(unittest.TestCase):
         self.assertEquals(n.matchCallbacks(osc.Message("/foo")), set())
         self.assertEquals(n.matchCallbacks(osc.Message("/foo/bar")), set([callback]))
         self.assertEquals(n.matchCallbacks(osc.Message("/bar")), set())
-        self.assertEquals(n.matchCallbacks(osc.Message("/foo/bar/baz")), set([callback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo/bar/baz")), set([]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo/bar")), set([callback]))
 
         n = osc.AddressNode()
         n.addCallback("/*", callback)
@@ -414,7 +415,7 @@ class TestAddressNode(unittest.TestCase):
         n.addCallback("/baz", bazCallback)
         n.addCallback("/foo/bar", foobarCallback)
 
-        self.assertEquals(n.matchCallbacks(osc.Message("/*")), set([fooCallback, barCallback, bazCallback, foobarCallback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/*")), set([fooCallback, barCallback, bazCallback]))
         self.assertEquals(n.matchCallbacks(osc.Message("/spam")), set())
         self.assertEquals(n.matchCallbacks(osc.Message("/ba*")), set([barCallback, bazCallback]))
         self.assertEquals(n.matchCallbacks(osc.Message("/b*r")), set([barCallback]))
