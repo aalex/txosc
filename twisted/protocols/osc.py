@@ -842,7 +842,8 @@ class Receiver(AddressNode):
         """
         The default fallback handler.
         """
-        raise OscError("Unhandled message from %s): %s" % (repr(client), str(message)))
+        from twisted.python import log
+        log.msg("Unhandled message from %s): %s" % (repr(client), str(message)))
 
 
 
@@ -854,6 +855,8 @@ class StreamBasedProtocol(protocol.Protocol):
 
     def connectionMade(self):
         self.factory.connectedProtocol = self
+        if hasattr(self.factory, 'deferred'):
+            self.factory.deferred.callback(True)
         self._buffer = ""
         self._pkgLen = None
 
@@ -875,7 +878,7 @@ class StreamBasedProtocol(protocol.Protocol):
         if self._pkgLen is None:
             self._pkgLen = struct.unpack(">i", self._buffer[:4])[0]
         if len(self._buffer) < self._pkgLen + 4:
-            #print "waiting for %d more bytes" % (self._pkgLen+4 - len(self._buffer))
+            print "waiting for %d more bytes" % (self._pkgLen+4 - len(self._buffer))
             return
         payload = self._buffer[4:4+self._pkgLen]
         self._buffer = self._buffer[4+self._pkgLen:]
@@ -929,6 +932,10 @@ class StreamBasedFactory(object):
 
 class ClientFactory(protocol.ClientFactory, StreamBasedFactory):
     protocol = StreamBasedProtocol
+
+    def __init__(self, receiver=None):
+        StreamBasedFactory.__init__(self, receiver)
+        self.deferred = defer.Deferred()
 
 
 class ServerFactory(protocol.ServerFactory, StreamBasedFactory):

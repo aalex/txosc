@@ -607,26 +607,13 @@ class TestReceiver(unittest.TestCase):
         self.assertEquals(state, {'cb': True, 'cb2': True})
 
 
-class TestSenderAndReceiver(unittest.TestCase):
+class ClientServerTests(object):
     """
-    Test the L{osc.Sender} and L{osc.Receiver} over UDP via localhost.
+    Common class for the L{TestUDPClientServer} and
+    L{TestTCPClientServer} for shared test functions.
     """
 
-    def setUp(self):
-        self.receiver = osc.Receiver()
-        self.port = reactor.listenUDP(17778, self.receiver.getProtocol())
-        self.sender = osc.Sender()
-
-
-    def tearDown(self):
-        return defer.DeferredList([self.port.stopListening(), self.sender.stop()])
-
-
-    def _send(self, element):
-        self.sender.send(element, ("127.0.0.1", 17778))
-
-
-    def testSingleElement(self):
+    def testSingleMessage(self):
         pingMsg = osc.Message("/ping")
         d = defer.Deferred()
 
@@ -637,6 +624,75 @@ class TestSenderAndReceiver(unittest.TestCase):
         self.receiver.addCallback("/ping", ping)
         self._send(pingMsg)
         return d
+
+
+    def testBundle(self):
+
+        pingMsg = osc.Message("/ping")
+        bundle = osc.Bundle()
+        bundle.add(osc.Message("/pong"))
+        bundle.add(pingMsg)
+        bundle.add(osc.Message("/foo/bar", 1, 2, 3.13))
+
+        d = defer.Deferred()
+        def ping(m, addr):
+            self.assertEquals(m, pingMsg)
+            d.callback(True)
+
+        # d2 = defer.Deferred()
+        # def foo(m, addr):
+        #     self.assertEquals(m, osc.Message("/foo/bar", 1, 2, 3.13))
+        #     d2.callback(True)
+
+        self.receiver.addCallback("/ping", ping)
+        #self.receiver.addCallback("/foo/*", foo)
+        self._send(bundle)
+        return d
+        #return defer.DeferredList([d, d2])
+
+
+
+class TestUDPClientServer(unittest.TestCase, ClientServerTests):
+    """
+    Test the L{osc.Sender} and L{osc.Receiver} over UDP via localhost.
+    """
+
+    def setUp(self):
+        self.receiver = osc.Receiver()
+        self.serverPort = reactor.listenUDP(17778, osc.DatagramServerProtocol(self.receiver))
+        self.client = osc.DatagramClientProtocol()
+        self.clientPort = reactor.listenUDP(0, self.client)
+
+
+    def tearDown(self):
+        return defer.DeferredList([self.serverPort.stopListening(), self.clientPort.stopListening()])
+
+
+    def _send(self, element):
+        self.client.send(element, ("127.0.0.1", 17778))
+
+
+
+class TestTCPClientServer(unittest.TestCase, ClientServerTests):
+    """
+    Test the L{osc.Sender} and L{osc.Receiver} over UDP via localhost.
+    """
+
+    def setUp(self):
+        self.receiver = osc.Receiver()
+        self.serverPort = reactor.listenTCP(17778, osc.ServerFactory(self.receiver))
+        self.client = osc.ClientFactory()
+        self.clientPort = reactor.connectTCP("localhost", 17778, self.client)
+        return self.client.deferred
+
+
+    def tearDown(self):
+        self.clientPort.transport.loseConnection()
+        return defer.DeferredList([self.serverPort.stopListening()])
+
+
+    def _send(self, element):
+        self.client.send(element)
 
 
 
@@ -653,16 +709,3 @@ class TestClientWithExternalReceiver(unittest.TestCase):
     """
     pass
 
-class TestTcpLayer(unittest.TestCase):
-    def testSingleElement(self):
-        pass
-    testSingleElement.skip = "We should implement the TCP layer."
-
-
-    def testWithArguments(self):
-        pass
-    testWithArguments.skip = "We should implement the TCP layer."
-
-    def testBundle(self):
-        pass
-    testBundle.skip = "We should implement the TCP layer."
