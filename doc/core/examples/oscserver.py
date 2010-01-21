@@ -11,7 +11,7 @@ if __name__ == "__main__":
     
     # Adding a simple callback for /ping:
     def ping(msg, addr):
-        print "PING!", msg, addr
+        print "PING! from %s" % repr(addr)
     receiver.addCallback("/ping", ping)
     
     # Adding a callback for /ham/egg:
@@ -20,10 +20,9 @@ if __name__ == "__main__":
     receiver.addCallback("/ham/egg", ham_egg)
 
     # Adding a callback for any message:
-    # (note that it is called on every incoming message)
-    def prnt(msg, addr):
-        print "Catch-all: ", addr, ":", msg
-    receiver.addCallback("/*", prnt)
+    def fb(msg, addr):
+        print "Fallback: ", addr, ":", msg
+    receiver.fallback = fb
 
     # Adding a node for /cheese:
     def cheese(msg, addr):
@@ -35,10 +34,14 @@ if __name__ == "__main__":
     # Adding a node for /cheese/cheddar:
     def cheddar(msg, addr):
         print "Got cheddar from", addr, ":", msg
+
     cheddarNode = osc.AddressNode("cheddar")
     cheddarNode.addCallback("*", cheddar)
     cheeseNode.addNode("cheddar", cheddarNode)
-    
-    # Starting the server:
-    reactor.listenUDP(17777, receiver.getProtocol())
+
+    # Starting the server on UDP:
+    reactor.listenUDP(17777, osc.DatagramServerProtocol(receiver))
+
+    # Starting the server on TCP:
+    reactor.listenTCP(17776, osc.ServerFactory(receiver))
     reactor.run()

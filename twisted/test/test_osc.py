@@ -8,7 +8,7 @@ Maintainer: Arjan Scherpenisse
 """
 
 from twisted.trial import unittest
-from twisted.internet import reactor, defer, protocol
+from twisted.internet import reactor, defer
 from twisted.protocols import osc
 
 class TestArgumentCreation(unittest.TestCase):
@@ -329,14 +329,14 @@ class TestAddressNode(unittest.TestCase):
         n = osc.AddressNode()
         n.addCallback("/foo", callback)
         self.assertEquals(n.getCallbacks("/*"), set([callback]))
-        n.removeAllCallbacks("/*")
+        n.removeAllCallbacks()
         self.assertEquals(n.getCallbacks("/*"), set())
 
         n = osc.AddressNode()
         n.addCallback("/foo", callback)
         n.addCallback("/foo/bar", callback2)
-        n.removeAllCallbacks("/foo")
-        self.assertEquals(n.getCallbacks("/*"), set([callback2]))
+        n.removeAllCallbacks()
+        self.assertEquals(n.getCallbacks("/*"), set([]))
 
 
     def testAddInvalidCallback(self):
@@ -369,17 +369,23 @@ class TestAddressNode(unittest.TestCase):
         self.assertEquals(n.matchCallbacks(osc.Message("/foo")), set())
         self.assertEquals(n.matchCallbacks(osc.Message("/foo/bar")), set([callback]))
         self.assertEquals(n.matchCallbacks(osc.Message("/bar")), set())
-        self.assertEquals(n.matchCallbacks(osc.Message("/foo/bar/baz")), set([callback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo/bar/baz")), set([]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo/bar")), set([callback]))
 
         n = osc.AddressNode()
         n.addCallback("/*", callback)
         self.assertEquals(n.matchCallbacks(osc.Message("/")), set([callback]))
-        self.assertEquals(n.matchCallbacks(osc.Message("/foo/bar")), set([callback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo/bar")), set([]))
 
         n = osc.AddressNode()
         n.addCallback("/*/baz", callback)
         self.assertEquals(n.matchCallbacks(osc.Message("/foo/bar")), set())
         self.assertEquals(n.matchCallbacks(osc.Message("/foo/baz")), set([callback]))
+
+        n = osc.AddressNode()
+        n.addCallback("/*/*", callback)
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo/baz")), set([callback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo/bar/baz")), set([]))
 
     def testMatchCallbackRangeWildcards(self):
 
@@ -390,7 +396,7 @@ class TestAddressNode(unittest.TestCase):
         n.addCallback("/foo2", callback2)
 
         self.assertEquals(n.matchCallbacks(osc.Message("/foo[1]")), set([callback1]))
-        self.assertEquals(n.matchCallbacks(osc.Message("/foo[1-10]")), set([callback1, callback2]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo[1-9]")), set([callback1, callback2]))
         self.assertEquals(n.matchCallbacks(osc.Message("/foo[4-6]")), set([]))
 
     def testMatchMessageWithWildcards(self):
@@ -409,7 +415,7 @@ class TestAddressNode(unittest.TestCase):
         n.addCallback("/baz", bazCallback)
         n.addCallback("/foo/bar", foobarCallback)
 
-        self.assertEquals(n.matchCallbacks(osc.Message("/*")), set([fooCallback, barCallback, bazCallback, foobarCallback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/*")), set([fooCallback, barCallback, bazCallback]))
         self.assertEquals(n.matchCallbacks(osc.Message("/spam")), set())
         self.assertEquals(n.matchCallbacks(osc.Message("/ba*")), set([barCallback, bazCallback]))
         self.assertEquals(n.matchCallbacks(osc.Message("/b*r")), set([barCallback]))
@@ -427,35 +433,75 @@ class TestAddressNode(unittest.TestCase):
         n.addCallback("/foo/2", secondCallback)
 
         self.assertEquals(n.matchCallbacks(osc.Message("/baz")), set())
-        self.assertEquals(n.matchCallbacks(osc.Message("/foo/[1-10]")), set([firstCallback, secondCallback]))
-        self.assertEquals(n.matchCallbacks(osc.Message("/foo/[2-10]")), set([secondCallback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo/[1-3]")), set([firstCallback, secondCallback]))
+        self.assertEquals(n.matchCallbacks(osc.Message("/foo/[!1]")), set([secondCallback]))
 
 
     def testWildcardMatching(self):
-        self.assertTrue(osc.AddressNode.matchesWildcard("foo", "foo"))
-        self.assertTrue(osc.AddressNode.matchesWildcard("foo", "*"))
+
         self.assertFalse(osc.AddressNode.matchesWildcard("foo", "bar"))
-        self.assertTrue(osc.AddressNode.matchesWildcard("foo", "f*"))
+
+        self.assertTrue(osc.AddressNode.matchesWildcard("", "?"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("f", "?"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("fo", "?"))
+
         self.assertTrue(osc.AddressNode.matchesWildcard("foo", "f?o"))
-        self.assertTrue(osc.AddressNode.matchesWildcard("foo", "fo?"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("fo", "f?o"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("fooo", "f?o"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("foo", "f??o"))
+
+        self.assertTrue(osc.AddressNode.matchesWildcard("foo", "*"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("foo", "f*"))
         self.assertTrue(osc.AddressNode.matchesWildcard("fo", "f*o"))
         self.assertTrue(osc.AddressNode.matchesWildcard("foo", "f*o"))
-        self.assertTrue(osc.AddressNode.matchesWildcard("foo", "f?o"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("foo", "f*bar"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("foo", "*bar"))
+
+        self.assertTrue(osc.AddressNode.matchesWildcard("foobar", "*bar"))
         self.assertTrue(osc.AddressNode.matchesWildcard("foobar", "f?ob*r"))
+
+
+    def testWildcardCharMatching(self):
+        self.assertTrue(osc.AddressNode.matchesWildcard("abc", "a[b]c"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("abc", "a[bc]c"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("abc", "a[abcdefg][abc]"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("abc", "a[abcdefg][def]"))
+        self.assertRaises(osc.OscError, osc.AddressNode.matchesWildcard, "abc", "a[abcdefg][def")
 
 
     def testWildcardRangeMatching(self):
         self.assertTrue(osc.AddressNode.matchesWildcard("bar1", "bar[1-3]"))
-        self.assertTrue(osc.AddressNode.matchesWildcard("bar23", "bar[19-30]"))
-        self.assertFalse(osc.AddressNode.matchesWildcard("bar4", "bar[1-3]"))
-        self.assertTrue(osc.AddressNode.matchesWildcard("foo1bar2", "foo[1-3]bar2"))
-        self.assertFalse(osc.AddressNode.matchesWildcard("foo5bar2", "foo[1-3]bar2"))
-        self.assertTrue(osc.AddressNode.matchesWildcard("foo1bar2", "foo[1-3]bar[1-3]"))
-        self.assertFalse(osc.AddressNode.matchesWildcard("foo1bar2", "foo[2-3]bar[1-3]"))
-        self.assertTrue(osc.AddressNode.matchesWildcard("bar1001", "bar10[01-10]"))
-        self.assertTrue(osc.AddressNode.matchesWildcard("bar101", "bar[1-20]1"))
-        self.assertFalse(osc.AddressNode.matchesWildcard("bar101", "bar[1-20]2"))
-        self.assertFalse(osc.AddressNode.matchesWildcard("bar101", "bar[1-9]1"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("bar23", "bar[1-3]3"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("bar23", "bar[1-3][1-9]"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("bar2", "bar[a-z]"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("bar20", "bar[10-30]"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("a-c", "a[x-]c"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("a-c", "a[x-z]c"))
+
+
+    def testWildcardRangeNegateMatching(self):
+        self.assertTrue(osc.AddressNode.matchesWildcard("bar", "b[!b]r"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("bar", "b[!b][!a-z]"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("bar23", "bar[!1-3]3"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("bar2", "bar[!a-z]"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("abc", "a[b!]c"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("a!c", "a[b!]c"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("a!c", "a[!!]c"))
+
+
+    def testWildcardAnyStringsMatching(self):
+        self.assertTrue(osc.AddressNode.matchesWildcard("foo", "{foo,bar}"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("bar", "{foo,bar}"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("bar", "{foo,bar,baz}"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("foobar", "foo{bar}"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("foobar", "foo{bar}"))
+        self.assertFalse(osc.AddressNode.matchesWildcard("bar", "{foo,bar,baz}bar"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("foobar", "{foo,bar,baz}bar"))
+        self.assertTrue(osc.AddressNode.matchesWildcard("barbar", "{foo,bar,baz}bar"))
+
+
+    def testWildcardCombined(self):
+        self.assertTrue(osc.AddressNode.matchesWildcard("foobar", "f??{abc,ba}[o-s]"))
 
 
     def testAddressNodeNesting(self):
@@ -561,26 +607,13 @@ class TestReceiver(unittest.TestCase):
         self.assertEquals(state, {'cb': True, 'cb2': True})
 
 
-class TestSenderAndReceiver(unittest.TestCase):
+class ClientServerTests(object):
     """
-    Test the L{osc.Sender} and L{osc.Receiver} over UDP via localhost.
+    Common class for the L{TestUDPClientServer} and
+    L{TestTCPClientServer} for shared test functions.
     """
 
-    def setUp(self):
-        self.receiver = osc.Receiver()
-        self.port = reactor.listenUDP(17778, self.receiver.getProtocol())
-        self.sender = osc.Sender()
-
-
-    def tearDown(self):
-        return defer.DeferredList([self.port.stopListening(), self.sender.stop()])
-
-
-    def _send(self, element):
-        self.sender.send(element, ("127.0.0.1", 17778))
-
-
-    def testSingleElement(self):
+    def testSingleMessage(self):
         pingMsg = osc.Message("/ping")
         d = defer.Deferred()
 
@@ -591,6 +624,75 @@ class TestSenderAndReceiver(unittest.TestCase):
         self.receiver.addCallback("/ping", ping)
         self._send(pingMsg)
         return d
+
+
+    def testBundle(self):
+
+        pingMsg = osc.Message("/ping")
+        bundle = osc.Bundle()
+        bundle.add(osc.Message("/pong"))
+        bundle.add(pingMsg)
+        bundle.add(osc.Message("/foo/bar", 1, 2, 3.13))
+
+        d = defer.Deferred()
+        def ping(m, addr):
+            self.assertEquals(m, pingMsg)
+            d.callback(True)
+
+        # d2 = defer.Deferred()
+        # def foo(m, addr):
+        #     self.assertEquals(m, osc.Message("/foo/bar", 1, 2, 3.13))
+        #     d2.callback(True)
+
+        self.receiver.addCallback("/ping", ping)
+        #self.receiver.addCallback("/foo/*", foo)
+        self._send(bundle)
+        return d
+        #return defer.DeferredList([d, d2])
+
+
+
+class TestUDPClientServer(unittest.TestCase, ClientServerTests):
+    """
+    Test the L{osc.Sender} and L{osc.Receiver} over UDP via localhost.
+    """
+
+    def setUp(self):
+        self.receiver = osc.Receiver()
+        self.serverPort = reactor.listenUDP(17778, osc.DatagramServerProtocol(self.receiver))
+        self.client = osc.DatagramClientProtocol()
+        self.clientPort = reactor.listenUDP(0, self.client)
+
+
+    def tearDown(self):
+        return defer.DeferredList([self.serverPort.stopListening(), self.clientPort.stopListening()])
+
+
+    def _send(self, element):
+        self.client.send(element, ("127.0.0.1", 17778))
+
+
+
+class TestTCPClientServer(unittest.TestCase, ClientServerTests):
+    """
+    Test the L{osc.Sender} and L{osc.Receiver} over UDP via localhost.
+    """
+
+    def setUp(self):
+        self.receiver = osc.Receiver()
+        self.serverPort = reactor.listenTCP(17778, osc.ServerFactory(self.receiver))
+        self.client = osc.ClientFactory()
+        self.clientPort = reactor.connectTCP("localhost", 17778, self.client)
+        return self.client.deferred
+
+
+    def tearDown(self):
+        self.clientPort.transport.loseConnection()
+        return defer.DeferredList([self.serverPort.stopListening()])
+
+
+    def _send(self, element):
+        self.client.send(element)
 
 
 
@@ -607,62 +709,3 @@ class TestClientWithExternalReceiver(unittest.TestCase):
     """
     pass
 
-class TestTcpLayer(unittest.TestCase):
-    def testSingleElement(self):
-        pass
-    testSingleElement.skip = "We should implement the TCP layer."
-
-
-    def testWithArguments(self):
-        pass
-    testWithArguments.skip = "We should implement the TCP layer."
-
-    def testBundle(self):
-        pass
-    testBundle.skip = "We should implement the TCP layer."
-
-
-
-class TestTcpLayer(unittest.TestCase):
-    """
-    Test the L{osc.TcpSender} and L{osc.OscTcpServerProtocol} over TCP
-    """
-
-    def setUp(self):
-        def _gotProtocol(proto, self):
-            print 'got proto', proto, self
-            self.proto = proto
-
-        def _gotServer(serv, self):
-            print 'got serv'
-        self.receiver = osc.Receiver()
-        self.factory = osc.TcpServerFactory(self.receiver)
-        p1 = reactor.listenTCP(18888, self.factory)
-        #print p1
-        #d1.addCallback(_gotServer, self)
-        self.client = protocol.ClientCreator(reactor, osc.TcpSender)
-        d2 = self.client.connectTCP("localhost", 18888)
-        #print d2
-        d2.addCallback(_gotProtocol, self)
-
-
-    def tearDown(self):
-        return defer.DeferredList([self.server.transport.loseConnection(), self.proto.transport.lostConnection()])
-
-
-    def _send(self, element):
-        self.proto.sendMessage(element)
-
-
-    def testSingleElement(self):
-        pingMsg = osc.Message("/ping")
-        d = defer.Deferred()
-
-        def ping(m, addr):
-            self.assertEquals(m, pingMsg)
-            d.callback(True)
-
-        self.receiver.addCallback("/ping", ping)
-        self._send(pingMsg)
-        return d
-    testSingleElement.skip = "TCP design not ready"

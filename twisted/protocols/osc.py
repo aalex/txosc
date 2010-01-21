@@ -86,7 +86,6 @@ class Message(object):
         leftover binary data, as a L{str}.
         """
         osc_address, leftover = _stringFromBinary(data)
-        #print("Got OSC address: %s" % (osc_address))
         message = Message(osc_address)
         type_tags, leftover = _stringFromBinary(leftover)
 
@@ -228,7 +227,7 @@ class Argument(object):
     Base OSC argument class.
 
     @ivar typeTag: A 1-character C{str} which represents the OSC type
-    of this argument. Every subclass must define its own typeTag.
+        of this argument. Every subclass must define its own typeTag.
     """
     typeTag = None
 
@@ -618,7 +617,7 @@ class AddressNode(object):
         return self._name
 
 
-    def match(self, pattern, _matchAllChilds = False):
+    def match(self, pattern):
         """
         Match a pattern to return a set of nodes.
 
@@ -627,11 +626,8 @@ class AddressNode(object):
         """
 
         path = self._patternPath(pattern)
-        if not len(path) or _matchAllChilds:
-            c = set([self])
-            if _matchAllChilds and self._childNodes:
-                c = c.union(reduce(lambda a, b: a.union(b), [n.match(path, True) for n in self._childNodes.values()]))
-            return c
+        if not len(path):
+            return set([self])
 
         matchedNodes = set()
 
@@ -639,21 +635,20 @@ class AddressNode(object):
         if AddressNode.isWildcard(part):
             for c in self._childNodes:
                 if AddressNode.matchesWildcard(c, part):
-                    matchedNodes.add( (self._childNodes[c], part[-1] == "*") )
+                    matchedNodes.add( self._childNodes[c] )
             # FIXME - what if both the part and some of my childs have wildcards?
         elif self._wildcardNodes:
             matches = set()
             for c in self._wildcardNodes:
                 if AddressNode.matchesWildcard(part, c):
-                    all = c[-1] == "*" and not self._childNodes[c]._childNodes
-                    matchedNodes.add( (self._childNodes[c], all) )
+                    matchedNodes.add( self._childNodes[c] )
                     break
         if part in self._childNodes:
-            matchedNodes.add( (self._childNodes[part], False) )
+            matchedNodes.add( self._childNodes[part] )
 
         if not matchedNodes:
             return matchedNodes
-        return reduce(lambda a, b: a.union(b), [n.match(path[1:], all) for n, all in matchedNodes])
+        return reduce(lambda a, b: a.union(b), [n.match(path[1:]) for n in matchedNodes])
 
 
     def addCallback(self, pattern, cb):
@@ -729,12 +724,6 @@ class AddressNode(object):
     def matchesWildcard(value, wildcard):
         """
         Match a value to a wildcard.
-
-        Wildcards are glob-style, but with [x-y] as numeric range arguments (positive integers).
-        Examples:
-        fo? matches 'foo', but not 'foo2'
-        fo* matches 'foo', 'foo2', fofdsfdsfdsfds', etc
-        bar[1-3] matches 'bar1', 'bar2', 'bar3' but not 'bar4'.
         """
         if value == wildcard and not AddressNode.isWildcard(wildcard):
             return True
@@ -743,26 +732,20 @@ class AddressNode(object):
 
         wildcard = wildcard.replace("*", ".*")
         wildcard = wildcard.replace("?", ".?")
+        wildcard = wildcard.replace("[!", "[^")
+        wildcard = wildcard.replace("(", "\(")
+        wildcard = wildcard.replace(")", "\)")
+        wildcard = wildcard.replace("|", "\|")
+        wildcard = wildcard.replace("{", "(")
+        wildcard = wildcard.replace("}", ")")
+        wildcard = wildcard.replace(",", "|")
+        wildcard = "^" + wildcard + "$"
 
-        numeric_ranges = []
-        # Filter out the numeric arguments
-        while True:
-            m = re.match(".*?\[(\d+)\-(\d+)\].*", wildcard)
-            if not m:
-                break
-            numeric_ranges.append(map(int, m.groups()))
-            wildcard = wildcard[:m.start(1)-1] + "(\d+)" + wildcard[m.end(2)+1:]
-
-        m = re.match(wildcard, value)
-        if not m or (m and not numeric_ranges):
-            return bool(m)
-        g = m.groups()
-        #print g, numeric_ranges, wildcard
-        for i in range(len(numeric_ranges)):
-            val = int(g[i])
-            if val < numeric_ranges[i][0] or val > numeric_ranges[i][1]:
-                return False
-        return True
+        try:
+            r = re.compile(wildcard)
+            return re.match(wildcard, value) is not None
+        except:
+            raise OscError("Invalid character in wildcard.")
 
 
     def _patternPath(self, pattern):
@@ -779,17 +762,23 @@ class AddressNode(object):
         return pattern.split("/")[1:]
 
 
-    def removeAllCallbacks(self, pattern="/*"):
+    def removeCallbacksByPattern(self, pattern):
         """
         Remove all callbacks with the given pattern.
 
         @param pattern: The pattern to match the callbacks. When
         ommited, removes all callbacks.
         """
-        path = self._patternPath(pattern)
-        nodes = self.match(path)
-        for n in nodes:
-            n.removeCallbacks()
+        raise NotImplementedError("Implement removeCallbacks")
+
+    def removeAllCallbacks(self):
+        """
+        Remove all callbacks from this node.
+        """
+        self._childNodes = []
+        self._wildcardNodes = set()
+        self._callbacks = set()
+        self._checkRemove()
 
 
     def matchCallbacks(self, message):
@@ -823,20 +812,7 @@ class Receiver(AddressNode):
     Callbacks are stored in a tree-like structure, using L{AddressNode} objects.
     """
 
-    def getProtocol(self, layer='UDP'):
-        """
-        Factory method which creates an L{OscServerProtocol} instance tied to this L{Receiver}.
-
-        @rtype: L{OscServerProtocol}
-        """
-        #TODO: implement TCP receiver
-        if layer == 'TCP':
-            return OscTcpServerProtocol(self)
-        else:
-            return OscServerProtocol(self)
-
-
-    def dispatch(self, element, clientAddress):
+    def dispatch(self, element, client):
         """
         Dispatch an element to all matching callbacks.
 
@@ -844,24 +820,139 @@ class Receiver(AddressNode):
         element as argument. The order in which the callbacks are
         called is undefined.
 
-        @param element: A L{Message} or L{Bundle}.
-        @param clientAddress: An (host, port) L{tuple}.
+        @param element: A L{Message} or L{Bundle}.  @param client:
+        Either a (host, port) tuple with the originator's address, or
+        an instance of L{StreamBasedFactory} whose C{send()} method
+        can be used to send a message back.
         """
         if isinstance(element, Bundle):
             messages = element.getMessages()
         else:
             messages = [element]
         for m in messages:
+            matched = False
             for c in self.getCallbacks(m.address):
-                c(m, clientAddress)
+                c(m, client)
+                matched = True
+            if not matched:
+                self.fallback(m, client)
+
+
+    def fallback(self, message, client):
+        """
+        The default fallback handler.
+        """
+        from twisted.python import log
+        log.msg("Unhandled message from %s): %s" % (repr(client), str(message)))
 
 
 
-class OscServerProtocol(protocol.DatagramProtocol):
+#
+# Stream based client/server protocols
+#
+
+class StreamBasedProtocol(protocol.Protocol):
+
+    def connectionMade(self):
+        self.factory.connectedProtocol = self
+        if hasattr(self.factory, 'deferred'):
+            self.factory.deferred.callback(True)
+        self._buffer = ""
+        self._pkgLen = None
+
+
+    def dataReceived(self, data):
+        """
+        Called whenever data is received.
+
+        In a stream-based protocol such as TCP, the stream should
+        begin with an int32 giving the size of the first packet,
+        followed by the contents of the first packet, followed by the
+        size of the second packet, etc.
+
+        @type data: L{str}
+        """
+        self._buffer += data
+        if len(self._buffer) < 4:
+            return
+        if self._pkgLen is None:
+            self._pkgLen = struct.unpack(">i", self._buffer[:4])[0]
+        if len(self._buffer) < self._pkgLen + 4:
+            print "waiting for %d more bytes" % (self._pkgLen+4 - len(self._buffer))
+            return
+        payload = self._buffer[4:4+self._pkgLen]
+        self._buffer = self._buffer[4+self._pkgLen:]
+        self._pkgLen = None
+
+        if payload:
+            element = _elementFromBinary(payload)
+            self.factory.gotElement(element)
+
+        if len(self._buffer):
+            self.dataReceived("")
+
+
+    def send(self, element):
+        """
+        Send an OSC element over the TCP wire.
+        """
+        binary = element.toBinary()
+        self.transport.write(struct.pack(">i", len(binary)) + binary)
+
+
+
+class StreamBasedFactory(object):
+    """
+    Factory object for the sending and receiving of elements in a
+    stream-based protocol (e.g. TCP, serial).
+
+    @ivar receiver:  A L{Receiver} object which is used to dispatch
+        incoming messages to.
+    @ivar connectedProtocol: An instance of L{StreamBasedProtocol}
+        representing the current connection.
+    """
+    receiver = None
+    connectedProtocol = None
+
+    def __init__(self, receiver=None):
+        if receiver:
+            self.receiver = receiver
+
+
+    def send(self, element):
+        self.connectedProtocol.send(element)
+
+
+    def gotElement(self, element):
+        if self.receiver:
+            self.receiver.dispatch(element, self)
+        else:
+            raise OscError("Element received, but no Receiver in place: " + str(element))
+
+
+class ClientFactory(protocol.ClientFactory, StreamBasedFactory):
+    protocol = StreamBasedProtocol
+
+    def __init__(self, receiver=None):
+        StreamBasedFactory.__init__(self, receiver)
+        self.deferred = defer.Deferred()
+
+
+class ServerFactory(protocol.ServerFactory, StreamBasedFactory):
+    protocol = StreamBasedProtocol
+
+
+
+#
+# Datagram client/server protocols
+#
+
+class DatagramServerProtocol(protocol.DatagramProtocol):
     """
     The OSC server protocol.
 
-    @ivar receiver: The L{Receiver} instance to dispatch received elements to.
+    @ivar receiver: The L{Receiver} instance to dispatch received
+        elements to.
     """
 
     def __init__(self, receiver):
@@ -870,127 +961,25 @@ class OscServerProtocol(protocol.DatagramProtocol):
         """
         self.receiver = receiver
 
-
     def datagramReceived(self, data, (host, port)):
         element = _elementFromBinary(data)
         self.receiver.dispatch(element, (host, port))
 
 
 
-class OscClientProtocol(protocol.DatagramProtocol):
+class DatagramClientProtocol(protocol.DatagramProtocol):
     """
-    The OSC UDP client protocol.
+    The OSC datagram-based client protocol.
     """
-    def __init__(self, onStart):
-        """
-        @param onStart: L{Deferred} to call when starting to send.
-        """
-        self.onStart = onStart
-
-
-    def startProtocol(self):
-        self.onStart.callback(self)
-
-
-class OscTcpServerProtocol(protocol.Protocol):
-    """
-    OSC Server protocol implemented using TCP.
-    """
-    #TODO: make the TCP implementation bidirectional
-    #TODO: flush the bufferer and parse data !
-    def __init__(self, receiver):
-        self.receiver = receiver
-        self._buffer = ""
-        self._packet_size = None
-    
-    def dataReceived(self, data):
-        """
-        Called whenever data is received.
-        
-        @type data: L{str}
-        """
-        host = None # FIXME
-        port = None # FIXME
-        self._buffer += data
-        buffer_length = len(self.buffer)
-        if buffer_length >= 4:
-            if self._packet_size is None:
-                self._packet_size = struct.unpack(">i", data[:4])
-            if buffer_length >= self._packet_size + 4:
-                packet_contents = self._buffer[4:self._packet_size + 4]
-                self._buffer = self._buffer[self._packet_size + 4:] # leftover
-                self._packet_size = None
-                
-                element = _elementFromBinary(data)
-                self.receiver.dispatch(element, (host, port))
-
-
-    def connectionLost(self, reason):
-        """
-        Called when the connection is shut down.
-
-        @type reason: L{twisted.python.failure.Failure}
-        """
-        pass
-
-class TcpServerFactory(protocol.Factory):
-    protocol = OscTcpServerProtocol
-    def __init__(self, receiver):
-        """
-        @param receiver: L{Receiver}
-        """
-        self.receiver = receiver
-
-    def startFactory(self):
-        pass
-
-    def stopFactory(self):
-        pass
-
-
-class Sender(object):
-    """
-    Sends OSC messages to any destination.
-
-    An instance of this class should be used to send L{Message} and
-    L{Bundle}s over the network.
-
-    In a stream-based protocol such as TCP, the stream should begin with an int32 giving the size of the first packet, followed by the contents of the first packet, followed by the size of the second packet, etc.
-    """
-    def __init__(self):
-        d = defer.Deferred()
-        def listening(proto):
-            self.proto = proto
-        d.addCallback(listening)
-        self._port = reactor.listenUDP(0, OscClientProtocol(d))
-
 
     def send(self, element, (host, port)):
         """
         Send a L{Message} or L{Bundle} to the address specified.
         """
         data = element.toBinary()
-        self.proto.transport.write(data, (host, port))
+        self.transport.write(data, (host, port))
 
 
-    def stop(self):
-        return self._port.stopListening()
-
-
-class TcpSender(protocol.Protocol):
-    """
-    Protocol to pass to a twisted.internet.protocol.ClientCreator
-    """
-    def sendMessage(self, element):
-        """
-        Send a L{Message} or L{Bundle} to the address specified.
-        """
-        #TODO: test and use TCP implementation
-        #TODO: make sure the TCP implementation can be bidirectional.
-        #TODO: test this ! (using a TCP receiver)
-        data = element.toBinary()
-        data = struct.pack(">i", len(data)) + data
-        self.transport.write(data)
 
 def _ceilToMultipleOfFour(num):
     """
