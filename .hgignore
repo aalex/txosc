@@ -3,7 +3,9 @@ syntax: glob
 *.pyc
 # vim files... ;)
 .*.swp
-_trial_temp/*
-twisted/plugins/dropin.cache
-#epydoc -v twisted.protocols.osc 
-html/*
+_trial_temp
+html
+txosc.egg-info
+build
+dist
+
