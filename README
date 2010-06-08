@@ -27,3 +27,16 @@ Unit Tests
 
    $ trial txosc
 
+
+Project Informations
+====================
+
+  URL : http://bitbucket.org/arjan/txosc
+  Mailing list: https://listes.koumbit.net/cgi-bin/mailman/listinfo/txosc-toonloop.com
+
+Authors
+=======
+
+  Arjan Scherpenisse <arjan@scherpenisse.net>
+  Alexandre Quessy <alexandre@quessy.net>
+
