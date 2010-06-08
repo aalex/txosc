@@ -108,7 +108,6 @@ class TestReceiverWithExternalClient(unittest.TestCase):
     """
     This test needs python-liblo.
     """
-    # TODO: skip in case of ImportError
     timeout = 1
 
     def setUp(self):
@@ -192,3 +191,4 @@ try:
 except ImportError:
     TestReceiverWithExternalClient.skip = "pyliblo not installed"
 TestClientWithExternalReceiver.skip = "FIXME: liblo server does not run with twisted"
+#FIXME: yes it does. see rats.osc in Toonloop 1.2
