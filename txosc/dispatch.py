@@ -62,6 +62,19 @@ class AddressNode(object):
         self._parent = newparent
         self._parent._childNodes[self._name] = self
 
+    def getParent(self):
+        """
+        Returns the parent node or None.
+        """
+        return self._parent
+    
+    def getChildren(self):
+        """
+        Returns a set of children nodes.
+        """
+        return set(self._childNodes)
+        
+
 
     def _checkRemove(self):
         if not self._parent:
