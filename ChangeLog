@@ -1,0 +1,7 @@
+2010-06-07: Stripped into TxOSC by Alexandre Quessy
+	
+	* A self-contained Pure Python library for OSC was needed
+
+2009-12-29: Started to be written by Arjan Scherpenisse and Alexandre Quessy
+
+	* It was first aimed to be part of Twisted
