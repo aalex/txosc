@@ -3,7 +3,7 @@
 # See LICENSE for details.
 
 """
-OSC 1.1 Protocol over UDP for Twisted.
+Open Sounc Control 1.1 Protocol for Twisted.
 
 The protocol is specified in OSC 1.0 specification at
 U{http://opensoundcontrol.org/spec-1_0} and has been further extended
