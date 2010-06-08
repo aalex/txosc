@@ -65,6 +65,7 @@ class StreamBasedProtocol(protocol.Protocol):
         """
         binary = element.toBinary()
         self.transport.write(struct.pack(">i", len(binary)) + binary)
+        #TODO: return a Deferred
 
 
 

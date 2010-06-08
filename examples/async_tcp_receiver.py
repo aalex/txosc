@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Example of a UDP TxOSC receiver with Twisted.
+Example of a TCP TxOSC receiver with Twisted.
 
 This example is in the public domain.
 """
@@ -15,18 +15,18 @@ def foo_handler(message, address):
     """
     print("Got %s from %s" % (message, address))
 
-class UDPReceiverApplication(object):
+class TCPReceiverApplication(object):
     """
     Example that receives UDP OSC messages.
     """
     def __init__(self, port):
         self.port = port
         self.receiver = dispatch.Receiver()
-        self.serverPort = reactor.listenUDP(self.port, async.DatagramServerProtocol(self.receiver))
-        print("Listening on osc.udp://localhost:%s" % (self.port))
         self.receiver.addCallback("/foo", foo_handler)
         self.receiver.addCallback("/ping", self.ping_handler)
         self.receiver.addCallback("/quit", self.quit_handler)
+        self._server_port = reactor.listenTCP(self.port, async.ServerFactory(self.receiver))
+        print("Listening on osc.tcp://127.0.0.1:%s" % (self.port))
 
     def ping_handler(self, message, address):
         """
@@ -43,6 +43,6 @@ class UDPReceiverApplication(object):
         print("Goodbye.")
 
 if __name__ == "__main__":
-    app = UDPReceiverApplication(17779)
+    app = TCPReceiverApplication(17779)
     reactor.run()
 
