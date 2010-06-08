@@ -1,11 +1,768 @@
-2010-06-08: Release 0.1.0
+changeset:   136:18894a433289
+branch:      0.1
+tag:         tip
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 14:41:54 2010 -0400
+summary:     updated ChangeLog and added __all__ in __init__.py
 
-    * First official release
+changeset:   135:b09c5845db67
+branch:      0.1
+parent:      134:855167d5c155
+parent:      133:daee842dc056
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Jun 08 17:36:46 2010 +0200
+summary:     merged
 
-2010-06-07: Stripped into TxOSC by Alexandre Quessy
-	
-	* A self-contained Pure Python library for OSC was needed
+changeset:   134:855167d5c155
+branch:      0.1
+parent:      129:ae3db60a0753
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Jun 08 17:34:05 2010 +0200
+summary:     Removed 2 ugly examples.
 
-2009-12-29: Started to be written by Arjan Scherpenisse and Alexandre Quessy
+changeset:   133:daee842dc056
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 11:25:29 2010 -0400
+summary:     revert my tag
 
-	* It was first aimed to be part of Twisted
+changeset:   132:08e71ee33113
+branch:      0.1
+parent:      131:46fff436f81e
+parent:      129:ae3db60a0753
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 11:25:05 2010 -0400
+summary:     merged
+
+changeset:   131:46fff436f81e
+branch:      0.1
+parent:      128:fdba9b50c346
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 11:24:30 2010 -0400
+summary:     Added tag 0.1.0 for changeset fdba9b50c346
+
+changeset:   130:2058c60c6ca2
+branch:      debian
+parent:      127:66ae2f1fbde2
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 11:10:06 2010 -0400
+summary:     fix in Debian packaging
+
+changeset:   129:ae3db60a0753
+branch:      0.1
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Jun 08 17:18:36 2010 +0200
+summary:     Updated examples/osc{server,client}.py to work again with new modules.
+
+changeset:   128:fdba9b50c346
+branch:      0.1
+parent:      124:1339c7174104
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 10:57:38 2010 -0400
+summary:     I like when tags have major.minor.micro version.
+
+changeset:   127:66ae2f1fbde2
+branch:      debian
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 10:56:31 2010 -0400
+summary:     added ChangeLog in doc
+
+changeset:   126:eeedac67ba08
+branch:      debian
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 10:55:21 2010 -0400
+summary:     initial packaging - maybe not working yet
+
+changeset:   125:f9bf5ff6eed6
+branch:      debian
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 10:32:42 2010 -0400
+summary:     removed everything from the debian branch
+
+changeset:   124:1339c7174104
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 10:27:49 2010 -0400
+summary:     made examples executable
+
+changeset:   123:706d093bcd08
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 10:27:28 2010 -0400
+summary:     Re-adding oscclient.py and oscserver.py examples.
+
+changeset:   122:fe803bdc3e44
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 10:16:27 2010 -0400
+summary:     updated project URL and added mailing list
+
+changeset:   121:a5b5a807da86
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 10:00:55 2010 -0400
+summary:     added a TODO
+
+changeset:   120:75d1915dd93e
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 10:00:05 2010 -0400
+summary:     Added working TCP examples
+
+changeset:   119:15b2f6d708cd
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 09:37:32 2010 -0400
+summary:     added async UDP examples.
+
+changeset:   118:46e24edcaa7d
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 09:00:03 2010 -0400
+summary:     adding ChangeLog
+
+changeset:   117:cbd89d2c3c3c
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 08:57:00 2010 -0400
+summary:     fixed comments
+
+changeset:   116:886ebf7a78f2
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 08:51:33 2010 -0400
+summary:     splitted the tests as well
+
+changeset:   115:47066478f48f
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 08:47:07 2010 -0400
+summary:     splitted osc.py into dispatch.py and async.py
+
+changeset:   114:0ebd6ed7ecab
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 08:33:20 2010 -0400
+summary:     better comments
+
+changeset:   113:2aac5e83629e
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 08:31:29 2010 -0400
+summary:     fixes in the epydoc command line
+
+changeset:   112:862336fb58f0
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 08 08:26:35 2010 -0400
+summary:     added README and INSTALL
+
+changeset:   111:ad3023757e8e
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jun 07 18:19:54 2010 -0400
+summary:     modif ignored files
+
+changeset:   110:82ae304a2528
+branch:      0.1
+parent:      108:bca7c6899af9
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jun 07 18:06:06 2010 -0400
+summary:     added setup.py for txosc
+
+changeset:   109:44620d2f984d
+branch:      twisted-osc
+parent:      106:3d84a3dcac42
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jun 07 18:01:14 2010 -0400
+summary:     Dummy commit, just to create a new head.
+
+changeset:   108:bca7c6899af9
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jun 07 18:00:06 2010 -0400
+summary:     fixed text-case-name
+
+changeset:   107:4a6fce0be214
+branch:      twosc
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jun 07 17:56:10 2010 -0400
+summary:     Removed all the Twisted library and made txosc standalone.
+
+changeset:   106:3d84a3dcac42
+parent:      104:40c0ad69b3ff
+parent:      105:f2483f0639d8
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Mar 24 01:53:50 2010 -0400
+summary:     merged
+
+changeset:   105:f2483f0639d8
+parent:      103:a26c476a005e
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Fri Jan 22 11:39:55 2010 +0100
+summary:     Added test with liblo sender.
+
+changeset:   104:40c0ad69b3ff
+parent:      68:5af56b61e753
+parent:      103:a26c476a005e
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Thu Jan 21 22:13:26 2010 -0500
+summary:     merged
+
+changeset:   103:a26c476a005e
+parent:      102:1083c70eab59
+parent:      98:4c4a005f4de6
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Thu Jan 21 21:54:41 2010 +0100
+summary:     Merged
+
+changeset:   102:1083c70eab59
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Thu Jan 21 21:44:33 2010 +0100
+summary:     Added TCP server and client tests.
+
+changeset:   101:2756083ef5ee
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Thu Jan 21 21:16:12 2010 +0100
+summary:     Added stream-based OSC support (TCP).
+
+changeset:   100:73604e775e70
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Jan 19 20:10:01 2010 +0100
+summary:     Fixed duplicate method name
+
+changeset:   99:1e9da21fff3a
+parent:      97:5a2df6c58542
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Jan 19 20:09:07 2010 +0100
+summary:     Rewrite of pattern matching according to regex; removeCallbacks rewrite (start)
+
+changeset:   98:4c4a005f4de6
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jan 19 22:06:55 2010 -0500
+summary:     TCP implementation not working. Skipping test. More to do later.
+
+changeset:   97:5a2df6c58542
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jan 19 08:34:45 2010 -0500
+summary:     Starting to code a TCP sender/receiver. Added the skipped unit test to test it.
+
+changeset:   96:ea354a4dc3a1
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Mon Jan 18 15:03:26 2010 +0100
+summary:     Prefer `assertEquals` over `assertEqual`. See twisted #4204.
+
+changeset:   95:dea0986f164f
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Sun Jan 17 15:34:08 2010 +0100
+summary:     100% code coverage in test.
+
+changeset:   94:850cf949f573
+parent:      93:1618f013426a
+parent:      92:f720e6684d9f
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Sun Jan 17 14:50:54 2010 +0100
+summary:     Merged
+
+changeset:   93:1618f013426a
+parent:      88:b9f1b74c3159
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Sun Jan 17 14:47:34 2010 +0100
+summary:     Implemented range matching for address nodes.
+
+changeset:   92:f720e6684d9f
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jan 11 02:49:30 2010 -0500
+summary:     Updated AddressNode's doc so that I can understand it.
+
+changeset:   91:7d7eb5c5b701
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jan 11 02:33:14 2010 -0500
+summary:     Improved examples by adding sub-nodes and arguments.
+
+changeset:   90:2d34356b38a1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jan 11 02:14:17 2010 -0500
+summary:     Fixed what I assumed to be a typo in a comment.
+
+changeset:   89:6e4c37416cb5
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jan 11 02:11:55 2010 -0500
+summary:     Fixed timetag arg parsing. Improved examples. Changes testing UDP port number.
+
+changeset:   88:b9f1b74c3159
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Thu Jan 07 13:54:03 2010 +0100
+summary:     Cleaned up the OSC client/server examples.
+
+changeset:   87:c11018f22f85
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Thu Jan 07 12:17:27 2010 +0100
+summary:     More test coverage, now at 99%.
+
+changeset:   86:ef637559c7eb
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Thu Jan 07 10:16:28 2010 +0100
+summary:     Added Bundle.add function; tweaked docstrings and whitespaces some more.
+
+changeset:   85:a9f209986c1d
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Sun Jan 03 19:01:33 2010 +0100
+summary:     Variable renaming; cleanups
+
+changeset:   84:8956b638f03d
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Sun Jan 03 18:53:04 2010 +0100
+summary:     Reworked Receiver to be a subclass of AddressNode.
+
+changeset:   83:77938f8971e9
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Sat Jan 02 20:09:47 2010 +0100
+summary:     Docstrings and implemented removeAllCallbacks.
+
+changeset:   82:1db87e0e1cea
+user:        Alexandre Quessy on plouf <alexandre@quessy.net>
+date:        Sat Jan 02 09:17:58 2010 -0500
+summary:     added html/ to .hgignore
+
+changeset:   81:a0e279dfbcf6
+user:        Alexandre Quessy on plouf <alexandre@quessy.net>
+date:        Sat Jan 02 09:16:44 2010 -0500
+summary:     Corrected doc string in the epydoc style.
+
+changeset:   80:6ce80ddc1a53
+user:        Alexandre Quessy on plouf <alexandre@quessy.net>
+date:        Sat Jan 02 09:09:33 2010 -0500
+summary:     Added doc to osc.py
+
+changeset:   79:158336969577
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Sat Jan 02 13:21:32 2010 +0100
+summary:     Test sending/receiving of simple message
+
+changeset:   78:f8b80734d04e
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Sat Jan 02 13:01:19 2010 +0100
+summary:     OscSender -> Sender, and started with client/server unit tests.
+
+changeset:   77:018bbc4068e9
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Sat Jan 02 12:45:33 2010 +0100
+summary:     Documentation cleanups; rename AddressSpace to Receiver, fix examples.
+
+changeset:   76:4f5e0a0532d2
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Fri Jan 01 23:26:28 2010 +0100
+summary:     Fixed copyright in files
+
+changeset:   75:18f5922d4c09
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Fri Jan 01 18:37:54 2010 +0100
+summary:     More testing
+
+changeset:   74:6f74aab2be60
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Fri Jan 01 18:31:52 2010 +0100
+summary:     Implemented dispatching
+
+changeset:   73:6345eda9c78f
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Fri Jan 01 18:17:47 2010 +0100
+summary:     Unittest cleanups
+
+changeset:   72:d1ecc3e57dc6
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Fri Jan 01 17:09:09 2010 +0100
+summary:     Added OSC client and server examples.
+
+changeset:   71:1a24f33151a9
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Fri Jan 01 16:48:52 2010 +0100
+summary:     Added test with nested bundle
+
+changeset:   70:eab4030250d2
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Fri Jan 01 16:37:05 2010 +0100
+summary:     Implemented Bundle.fromBinary and added tests
+
+changeset:   69:24c6713e1056
+parent:      67:8bbf0c46c35b
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Fri Jan 01 15:42:34 2010 +0100
+summary:     More matching; equality functions in Bundle and Message.
+
+changeset:   68:5af56b61e753
+parent:      64:ca30ae0819d6
+parent:      67:8bbf0c46c35b
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Thu Dec 31 10:58:31 2009 -0500
+summary:     Merged with Arjan's changes for callbacks management, which looks better.
+
+changeset:   67:8bbf0c46c35b
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Thu Dec 31 16:23:41 2009 +0100
+summary:     More matching magic; using fnmatch module.
+
+changeset:   66:f9ca4b0752fa
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Thu Dec 31 16:05:31 2009 +0100
+summary:     Wildcard matching stuff
+
+changeset:   65:e944cebd1b35
+parent:      63:a0528f561b4c
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Thu Dec 31 13:32:14 2009 +0100
+summary:     Fix AddressSpace tests; implement add/remove callbacks.
+
+changeset:   64:ca30ae0819d6
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Thu Dec 31 10:54:56 2009 -0500
+summary:     Added CallbacksDict and its tests.
+
+changeset:   63:a0528f561b4c
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Dec 30 12:21:38 2009 -0500
+summary:     fixed syntax error in previous commit
+
+changeset:   62:765e935fbf7c
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Dec 30 12:20:21 2009 -0500
+summary:     Added AddressSpace class. Not yet implemented.
+
+changeset:   61:1334d7254134
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Dec 30 12:10:51 2009 -0500
+summary:     more wildcard tests.
+
+changeset:   60:d5d8662779d5
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Dec 30 12:06:19 2009 -0500
+summary:     added test with wildcard in the middle of a word
+
+changeset:   59:9a4b9e5c856e
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Wed Dec 30 17:56:54 2009 +0100
+summary:     Wildcard matches into own functions
+
+changeset:   58:994e1a23a5e8
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Wed Dec 30 17:53:19 2009 +0100
+summary:     AddressSpace unit tests
+
+changeset:   57:b882cd12f63e
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Wed Dec 30 17:11:27 2009 +0100
+summary:     Move stringFromBinary out StringArgument;
+
+changeset:   56:2ca8251a7339
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Wed Dec 30 16:57:19 2009 +0100
+summary:     Resurrected int unit tests; removed print from message testcase
+
+changeset:   55:fe1b57588a6e
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Wed Dec 30 16:52:48 2009 +0100
+summary:     TimeTagArgument - fromBinary
+
+changeset:   54:9730c5faca8e
+parent:      52:30caa3ab3148
+parent:      53:cc98bdc92960
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Dec 30 10:45:19 2009 -0500
+summary:     Merged with more changes from arjan
+
+changeset:   53:cc98bdc92960
+parent:      50:0a7a8cc5bd0a
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Wed Dec 30 16:27:21 2009 +0100
+summary:     Overflow checking on IntegerArgument
+
+changeset:   52:30caa3ab3148
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Dec 30 10:41:19 2009 -0500
+summary:     added __str__ again
+
+changeset:   51:cde1107b2c84
+parent:      48:b5a5e4ab1992
+parent:      50:0a7a8cc5bd0a
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Dec 30 10:36:39 2009 -0500
+summary:     I think I am merging with verion 50
+
+changeset:   50:0a7a8cc5bd0a
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Wed Dec 30 16:04:53 2009 +0100
+summary:     Fixed Message.fromBinary and test
+
+changeset:   49:74cb572743e8
+parent:      47:f8ac3466705a
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Wed Dec 30 11:04:06 2009 +0100
+summary:     Tweaks in createArgument.
+
+changeset:   48:b5a5e4ab1992
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Dec 30 10:26:17 2009 -0500
+summary:     Added __str__ to Message and Argument classes. Created the strFromBinary, since it is used al over in the module.
+
+changeset:   47:f8ac3466705a
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 19:39:08 2009 -0500
+summary:     Fixed error in Message.fromBinary
+
+changeset:   46:b50f54e96bbe
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 19:10:51 2009 -0500
+summary:     Type tags must be padded with zeros
+
+changeset:   45:ea50c0c9ebaf
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 18:48:33 2009 -0500
+summary:     skipping the timetag fromBinary test
+
+changeset:   44:28e25220b1b9
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 18:46:55 2009 -0500
+summary:     added test from time tag from binary
+
+changeset:   43:00b1c69b94b6
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 18:41:30 2009 -0500
+summary:     testing TimeTag.toBinary
+
+changeset:   42:7f499514e7be
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 18:25:14 2009 -0500
+summary:     fixed test for binary arg
+
+changeset:   41:b1befe3e39c9
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 18:22:48 2009 -0500
+summary:     Implemented BlobArgument.fromBinary. Test not passed.
+
+changeset:   40:2e8f91468029
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 18:13:39 2009 -0500
+summary:     Added _ceilToMultipleOfFour
+
+changeset:   39:711e60d4f3ad
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 18:05:32 2009 -0500
+summary:     fixed imports to comply with pep8
+
+changeset:   38:9e7606be2246
+parent:      35:3cb3aadd147c
+parent:      37:9cb25dffc089
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 18:04:37 2009 -0500
+summary:     Merged with blobs changes
+
+changeset:   37:9cb25dffc089
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Dec 29 23:46:55 2009 +0100
+summary:     classmethod -> staticmethod
+
+changeset:   36:a079b84c5c0b
+parent:      30:d42eecdcdd7d
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Dec 29 23:45:12 2009 +0100
+summary:     BlobArgument
+
+changeset:   35:3cb3aadd147c
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 18:03:24 2009 -0500
+summary:     added Int.fromBinary and its test
+
+changeset:   34:26148c7fa327
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 18:00:33 2009 -0500
+summary:     added test for Float.fromBinary
+
+changeset:   33:7d7a0e496210
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 17:54:12 2009 -0500
+summary:     Added FloatArgument.fromBinary
+
+changeset:   32:b97d9ec5eea9
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 17:45:08 2009 -0500
+summary:     fix in tabulation
+
+changeset:   31:ddb0915320e5
+parent:      29:8b91059154c7
+parent:      30:d42eecdcdd7d
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 17:40:48 2009 -0500
+summary:     Merged with remote branch again
+
+changeset:   30:d42eecdcdd7d
+parent:      28:a94c6888d2c0
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Dec 29 23:32:22 2009 +0100
+summary:     Refactor _readString into StringArgument.fromBinary
+
+changeset:   29:8b91059154c7
+parent:      27:76a21fd8c14b
+parent:      28:a94c6888d2c0
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 17:40:08 2009 -0500
+summary:     I guessed I merged something
+
+changeset:   28:a94c6888d2c0
+parent:      26:74cdae5f73a4
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Dec 29 23:20:02 2009 +0100
+summary:     Removed getTypeTags()
+
+changeset:   27:76a21fd8c14b
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 17:25:04 2009 -0500
+summary:     commented out unicode to Str
+
+changeset:   26:74cdae5f73a4
+parent:      25:08fea07399dc
+parent:      24:01f8b6e940c8
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Dec 29 23:17:55 2009 +0100
+summary:     merged
+
+changeset:   25:08fea07399dc
+parent:      22:19ac4d334005
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Dec 29 23:15:13 2009 +0100
+summary:     Arguments now named and specced according to OSC 1.1. Added NulLArgument, BooleanArgument, ImpulseArgument.
+
+changeset:   24:01f8b6e940c8
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 17:14:27 2009 -0500
+summary:     added test for getTypeTags()
+
+changeset:   23:045096727670
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 17:10:52 2009 -0500
+summary:     added Message.getTypeTags()
+
+changeset:   22:19ac4d334005
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Dec 29 22:58:01 2009 +0100
+summary:     Fixed string reading, started with adding typeTags to Argument classes.
+
+changeset:   21:875621b94e93
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 16:49:44 2009 -0500
+summary:     Improved the string parsing, but my test do not work
+
+changeset:   20:776dd2b98cb3
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Dec 29 22:45:18 2009 +0100
+summary:     TimeTag argument encoding
+
+changeset:   19:5f7824fc1dbe
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Dec 29 22:42:47 2009 +0100
+summary:     Added OscSender class
+
+changeset:   18:cfd1807f829e
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 16:10:55 2009 -0500
+summary:     Fixed error in testing _readString
+
+changeset:   17:613d60ed3ac2
+parent:      12:445839d8c594
+parent:      16:59e621b9d35a
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 16:08:52 2009 -0500
+summary:     Merged with progress in ecoding args from Arjan
+
+changeset:   16:59e621b9d35a
+parent:      11:4c1dcb132568
+parent:      15:56d46658c533
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Dec 29 21:59:25 2009 +0100
+summary:     Merged tip with encoding of arguments
+
+changeset:   15:56d46658c533
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Dec 29 21:36:25 2009 +0100
+summary:     Encoding of arguments
+
+changeset:   14:b79ded013aaa
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Dec 29 21:21:36 2009 +0100
+summary:     Added blob typetag; added encode function.
+
+changeset:   13:36ce709fd4b0
+parent:      8:3d8f86b8f150
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Dec 29 21:11:53 2009 +0100
+summary:     Added <type 'long'> to type map
+
+changeset:   12:445839d8c594
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 16:06:21 2009 -0500
+summary:     Progess in parsing test
+
+changeset:   11:4c1dcb132568
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 15:47:12 2009 -0500
+summary:     Added OscProtocol (receiver)
+
+changeset:   10:6fc9478be29c
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Dec 29 15:32:02 2009 -0500
+summary:     added padding
+
+changeset:   9:7559b226754c
+user:        aalex@ding
+date:        Tue Dec 29 15:20:54 2009 -0500
+summary:     merged with adding spaces changes
+
+changeset:   8:3d8f86b8f150
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Dec 29 21:08:56 2009 +0100
+summary:     Twisted compliant header
+
+changeset:   7:02fd5dc325ab
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Dec 29 21:07:09 2009 +0100
+summary:     Added more whitespace
+
+changeset:   6:7298f0d94cdd
+user:        aalex@ding
+date:        Tue Dec 29 15:04:41 2009 -0500
+summary:     Added vim files to ignores
+
+changeset:   5:3b3d63f12a13
+parent:      4:eb4803ba7d34
+parent:      3:93755606c553
+user:        aalex@ding
+date:        Tue Dec 29 15:04:03 2009 -0500
+summary:     merged with arjan changes.
+
+changeset:   4:eb4803ba7d34
+parent:      1:926ee709d642
+user:        aalex@ding
+date:        Tue Dec 29 15:03:39 2009 -0500
+summary:     progress in casting types in osc.py
+
+changeset:   3:93755606c553
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Dec 29 20:56:56 2009 +0100
+summary:     Added unit test for OSC.
+
+changeset:   2:b9387520f947
+parent:      0:79136855c835
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Dec 29 20:56:00 2009 +0100
+summary:     Added .hgignore file.
+
+changeset:   1:926ee709d642
+user:        aalex@ding
+date:        Tue Dec 29 14:50:24 2009 -0500
+summary:     added osc.py
+
+changeset:   0:79136855c835
+user:        Arjan Scherpenisse <arjan@scherpenisse.net>
+date:        Tue Dec 29 19:57:19 2009 +0100
+summary:     Import of twisted r27896 from svn://svn.twistedmatrix.com/svn/Twisted/trunk
+
