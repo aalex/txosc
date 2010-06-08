@@ -25,5 +25,5 @@ Unit Tests
 
   See our unit tests run proving that the software is bug free::
 
-   $ trial txosc/test
+   $ trial txosc
 
