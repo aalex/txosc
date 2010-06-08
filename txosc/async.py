@@ -108,6 +108,7 @@ class ClientFactory(protocol.ClientFactory, StreamBasedFactory):
 
 class ServerFactory(protocol.ServerFactory, StreamBasedFactory):
     protocol = StreamBasedProtocol
+    # TODO: implement __str__ and return an OSC address as a str
 
 
 
