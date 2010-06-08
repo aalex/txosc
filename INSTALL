@@ -20,7 +20,7 @@ Building the documentation
 
   You can build the HTML documentation using a tool such as Epydoc::
 
-   $ epydoc  --html --output pythondocs --url \
+   $ epydoc  --html --output html --url \
         http://bitbucket.org/arjan/txosc/ --name TxOSC --verbose \
-        --simple-term --css epydoc.css txosc 
+        --simple-term --css white txosc 
 
