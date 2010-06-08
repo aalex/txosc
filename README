@@ -1,0 +1,29 @@
+TxOSC 0.1.0
+
+Open Sound Control (OSC) protocol for Twisted
+=============================================
+  
+  Open Sound Control (OSC) is an open, transport-independent, 
+  message-based protocol developed for communication among computers, 
+  sound synthesizers, and other multimedia devices. 
+  
+  This library implements OSC version 1.1 over both UDP and TCP for 
+  the Twisted Python framework. 
+  
+  Twisted is an event-based framework for internet applications 
+  which works on Python 2.3 through 2.6.  
+
+
+Installing
+==========
+
+  Instructions for installing this software are in INSTALL.
+
+
+Unit Tests
+==========
+
+  See our unit tests run proving that the software is bug free::
+
+   $ trial txosc/test
+

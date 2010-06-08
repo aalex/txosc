@@ -1,0 +1,26 @@
+Requirements
+============
+
+  * Twisted 8.1.0 or later
+
+Installation
+============
+
+  * Debian and Ubuntu
+    Packages will soon be included in the main distribution.
+
+  * Other
+    As with other Python packages, the standard way of installing from source
+    is:
+
+      python setup.py install
+
+Building the documentation
+==========================
+
+  You can build the HTML documentation using a tool such as Epydoc::
+
+   $ epydoc  --html --output pythondocs --url \
+        http://bitbucket.org/arjan/txosc/ --name TxOSC --verbose \
+        --simple-term --css epydoc.css txosc 
+
