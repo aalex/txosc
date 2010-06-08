@@ -4,12 +4,12 @@
 """ Simple OSC client. """
 
 from twisted.internet import reactor
-from twisted.protocols import osc
+from txosc import dispatch, osc, async
 
 if __name__ == "__main__":
 
     # send over UDP
-    ds = osc.DatagramClientProtocol()
+    ds = async.DatagramClientProtocol()
     reactor.listenUDP(0, ds)
 
     def send_udp():
@@ -22,7 +22,7 @@ if __name__ == "__main__":
     reactor.callLater(0.1, send_udp)
 
     # send over TCP
-    client = osc.ClientFactory()
+    client = async.ClientFactory()
     reactor.connectTCP("localhost", 17776, client)
 
     def send_tcp():
@@ -36,7 +36,6 @@ if __name__ == "__main__":
         client.send(osc.Message("/cheese/cheddar"))
 
         reactor.callLater(0.1, reactor.stop)
-
 
     reactor.callLater(0.2, send_tcp)
 

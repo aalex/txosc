@@ -5,12 +5,9 @@
 """
 Asynchronous implementation of OSC for Twisted
 """
-import string
-import math
 import struct
-import re
 
-from twisted.internet import reactor, defer, protocol
+from twisted.internet import defer, protocol
 from txosc.osc import *
 from txosc.osc import _elementFromBinary
 

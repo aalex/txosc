@@ -4,10 +4,10 @@
 """ Simple OSC server. """
 
 from twisted.internet import reactor
-from twisted.protocols import osc
+from txosc import async, dispatch
 
 if __name__ == "__main__":
-    receiver = osc.Receiver()
+    receiver = dispatch.Receiver()
     
     # Adding a simple callback for /ping:
     def ping(msg, addr):
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     # Adding a node for /cheese:
     def cheese(msg, addr):
         print "Got cheese from", addr, ":", msg
-    cheeseNode = osc.AddressNode("cheese")
+    cheeseNode = dispatch.AddressNode("cheese")
     cheeseNode.addCallback("*", cheese) # not only leaves can have callbacks in this implementation of OSC
     receiver.addNode("cheese", cheeseNode)
 
@@ -35,13 +35,14 @@ if __name__ == "__main__":
     def cheddar(msg, addr):
         print "Got cheddar from", addr, ":", msg
 
-    cheddarNode = osc.AddressNode("cheddar")
+    cheddarNode = dispatch.AddressNode("cheddar")
     cheddarNode.addCallback("*", cheddar)
     cheeseNode.addNode("cheddar", cheddarNode)
 
     # Starting the server on UDP:
-    reactor.listenUDP(17777, osc.DatagramServerProtocol(receiver))
+    reactor.listenUDP(17777, async.DatagramServerProtocol(receiver))
 
     # Starting the server on TCP:
-    reactor.listenTCP(17776, osc.ServerFactory(receiver))
+    reactor.listenTCP(17776, async.ServerFactory(receiver))
+    print "Listening..."
     reactor.run()
