@@ -1,3 +1,7 @@
+2010-06-08: Release 0.1.0
+
+    * First official release
+
 2010-06-07: Stripped into TxOSC by Alexandre Quessy
 	
 	* A self-contained Pure Python library for OSC was needed
