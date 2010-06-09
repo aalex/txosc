@@ -1,4 +1,5 @@
-# -*- test-case-name: txosc.test.test_osc -*-
+#!/usr/bin/env python
+# -*- test-case-name: txosc.test.test_async -*-
 # Copyright (c) 2009 Alexandre Quessy, Arjan Scherpenisse
 # See LICENSE for details.
 

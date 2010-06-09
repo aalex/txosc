@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- test-case-name: txosc.test.test_osc -*-
 # Copyright (c) 2009 Alexandre Quessy, Arjan Scherpenisse
 # See LICENSE for details.
