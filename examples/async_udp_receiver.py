@@ -29,6 +29,7 @@ class UDPReceiverApplication(object):
         self.receiver.addCallback("/ping", self.ping_handler)
         self.receiver.addCallback("/quit", self.quit_handler)
         self.receiver.addCallback("/ham/egg", self.ham_egg_handler)
+        self.receiver.addCallback("/*/egg", self.any_egg_handler)
 
         # Now, let's demonstrate how to use address nodes:
         # /cheese:
@@ -55,6 +56,13 @@ class UDPReceiverApplication(object):
         Method handler for /cheese/cheddar
         """
         print("cheese_cheddar_handler")
+        print("  Got %s from %s" % (message, address))
+
+    def any_egg_handler(self, message, address):
+        """
+        Method handler for /*/egg
+        """
+        print("any_egg_handler")
         print("  Got %s from %s" % (message, address))
     
     def fallback(self, message, address):
