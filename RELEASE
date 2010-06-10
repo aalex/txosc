@@ -1,4 +1,5 @@
-2010-06-??: Release 0.1.1
+2010-06-09: Release 0.1.1
 
     * Improved examples
+    * Fixed #1 Second argument to handlers in TCP should provide easily an OSC address
 
