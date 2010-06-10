@@ -17,6 +17,9 @@ from txosc.osc import _elementFromBinary
 #
 
 class StreamBasedProtocol(protocol.Protocol):
+    """
+    OSC over TCP sending and receiving protocol.
+    """
 
     def connectionMade(self):
         self.factory.connectedProtocol = self
@@ -91,9 +94,12 @@ class StreamBasedFactory(object):
 
     def gotElement(self, element):
         if self.receiver:
-            self.receiver.dispatch(element, self.connectedProtocol.transport.client) #second argument used to be self
+            self.receiver.dispatch(element, self)
         else:
             raise OscError("Element received, but no Receiver in place: " + str(element))
+
+    def __str__(self):
+        return str(self.connectedProtocol.transport.client)
 
 
 class ClientFactory(protocol.ClientFactory, StreamBasedFactory):
