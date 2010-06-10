@@ -91,12 +91,15 @@ class StreamBasedFactory(object):
 
     def gotElement(self, element):
         if self.receiver:
-            self.receiver.dispatch(element, self)
+            self.receiver.dispatch(element, self.connectedProtocol.transport.client) #second argument used to be self
         else:
             raise OscError("Element received, but no Receiver in place: " + str(element))
 
 
 class ClientFactory(protocol.ClientFactory, StreamBasedFactory):
+    """
+    TCP client factory
+    """
     protocol = StreamBasedProtocol
 
     def __init__(self, receiver=None):
@@ -105,9 +108,10 @@ class ClientFactory(protocol.ClientFactory, StreamBasedFactory):
 
 
 class ServerFactory(protocol.ServerFactory, StreamBasedFactory):
+    """
+    TCP server factory
+    """
     protocol = StreamBasedProtocol
-    # TODO: implement __str__ and return an OSC address as a str
-
 
 
 #
@@ -116,7 +120,7 @@ class ServerFactory(protocol.ServerFactory, StreamBasedFactory):
 
 class DatagramServerProtocol(protocol.DatagramProtocol):
     """
-    The OSC server protocol.
+    The UDP OSC server protocol.
 
     @ivar receiver: The L{Receiver} instance to dispatch received
         elements to.
@@ -136,7 +140,7 @@ class DatagramServerProtocol(protocol.DatagramProtocol):
 
 class DatagramClientProtocol(protocol.DatagramProtocol):
     """
-    The OSC datagram-based client protocol.
+    The UDP OSC client protocol.
     """
 
     def send(self, element, (host, port)):
