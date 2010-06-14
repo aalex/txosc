@@ -9,6 +9,7 @@ Asynchronous implementation of OSC for Twisted
 import struct
 
 from twisted.internet import defer, protocol
+from twisted.application.internet import MulticastServer
 from txosc.osc import *
 from txosc.osc import _elementFromBinary
 
@@ -142,7 +143,26 @@ class DatagramServerProtocol(protocol.DatagramProtocol):
         element = _elementFromBinary(data)
         self.receiver.dispatch(element, (host, port))
 
-
+class MulticastDatagramServerProtocol(DatagramServerProtocol):
+    """
+    UDP OSC server protocol that can listen to multicast.
+    
+    Here is an example on how to use it:
+    
+      reactor.listenMulticast(8005, MulticastServerUDP(receiver, "224.0.0.1"), listenMultiple=True)
+    """
+    def __init__(self, receiver, multicast_addr="224.0.0.1"):
+        """
+        @param receiver: L{Receiver} instance.
+        @type multicast_addr: str
+        @param multicast_addr: IP address of the multicast group.
+        """
+        self.multicast_addr = multicast_addr
+        DatagramServerProtocol.__init__(self, receiver)
+        
+    def startProtocol(self):
+        # Join a specific multicast group, which is the IP we will respond to
+        self.transport.joinGroup(self.multicast_addr)
 
 class DatagramClientProtocol(protocol.DatagramProtocol):
     """
@@ -155,4 +175,5 @@ class DatagramClientProtocol(protocol.DatagramProtocol):
         """
         data = element.toBinary()
         self.transport.write(data, (host, port))
+
 
