@@ -2,6 +2,8 @@
 """
 Example of a multicast UDP TxOSC receiver with Twisted.
 
+You can run many of these on a single host.
+
 This example is in the public domain.
 """
 from twisted.internet import reactor
