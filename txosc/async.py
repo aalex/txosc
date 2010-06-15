@@ -64,6 +64,7 @@ class StreamBasedProtocol(protocol.Protocol):
     def send(self, element):
         """
         Send an OSC element over the TCP wire.
+        @param element: L{txosc.osc.Message} or L{txosc.osc.Bundle}
         """
         binary = element.toBinary()
         self.transport.write(struct.pack(">i", len(binary)) + binary)
@@ -150,18 +151,23 @@ class MulticastDatagramServerProtocol(DatagramServerProtocol):
     Here is an example on how to use it:
     
       reactor.listenMulticast(8005, MulticastServerUDP(receiver, "224.0.0.1"), listenMultiple=True)
+    
+    This way, many listeners can listen on the same port, same host, to the same multicast group. (in this case, the 224.0.0.1 multicast group)
     """
     def __init__(self, receiver, multicast_addr="224.0.0.1"):
         """
-        @param receiver: L{Receiver} instance.
-        @type multicast_addr: str
         @param multicast_addr: IP address of the multicast group.
+        @param receiver: L{txosc.dispatch.Receiver} instance.
+        @type multicast_addr: str
+        @type receiver: L{txosc.dispatch.Receiver}
         """
         self.multicast_addr = multicast_addr
         DatagramServerProtocol.__init__(self, receiver)
         
     def startProtocol(self):
-        # Join a specific multicast group, which is the IP we will respond to
+        """
+        Join a specific multicast group, which is the IP we will respond to
+        """
         self.transport.joinGroup(self.multicast_addr)
 
 class DatagramClientProtocol(protocol.DatagramProtocol):
@@ -171,7 +177,8 @@ class DatagramClientProtocol(protocol.DatagramProtocol):
 
     def send(self, element, (host, port)):
         """
-        Send a L{Message} or L{Bundle} to the address specified.
+        Send a L{txosc.osc.Message} or L{txosc.osc.Bundle} to the address specified.
+        @type element: L{txosc.osc.Message}
         """
         data = element.toBinary()
         self.transport.write(data, (host, port))

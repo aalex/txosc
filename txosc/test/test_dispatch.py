@@ -332,3 +332,31 @@ class TestReceiver(unittest.TestCase):
         recv.dispatch(osc.Bundle([hello, there]), addr)
         self.assertEquals(state, {'cb': True, 'cb2': True})
 
+
+    def testFunctionFallback(self):
+        hello = osc.Message("/hello")
+        addr = ("0.0.0.0", 17778)
+        
+        def cb(message, address):
+            self.assertEquals(message, hello)
+        
+        recv = dispatch.Receiver()
+        recv.fallback = cb
+        recv.dispatch(hello, addr)
+        
+    def testClassFallback(self):
+        hello = osc.Message("/hello")
+        addr = ("0.0.0.0", 17778)
+        
+        class Dummy(object):
+            def __init__(self, test_case):
+                self.x = 3
+                self.test_case = test_case
+            def cb(self, message, address):
+                self.test_case.assertEquals(message, hello)
+                self.test_case.assertEquals(self.x, 3)
+        
+        recv = dispatch.Receiver()
+        dummy = Dummy(self)
+        recv.fallback = dummy.cb
+        recv.dispatch(hello, addr)

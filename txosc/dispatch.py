@@ -18,11 +18,17 @@ class AddressNode(object):
     
     This node can be either a container branch or a leaf. An OSC address is a series of names separated by forward slash characters. ('/') We say that a node is a branch when it has one or more child nodes. 
 
+    This class is provided so that the programmer can separate the handling of an address sub-tree in the OSC addresses. For example, an AddressNode can be added to a receiver in order to handle all the messages starting with "/egg/spam/". AddressNode classes can be nested.
+
     @ivar _name: the name of this node. 
     @ivar _parent: the parent node.
     """
 
     def __init__(self, name=None, parent=None):
+        """
+        @type name: C{str}
+        @param parent: L{Receiver} or L{AddressNode}
+        """
         self._name = name
         self._parent = parent
         self._childNodes = {}
@@ -42,6 +48,7 @@ class AddressNode(object):
     def setName(self, newname):
         """
         Give this node a new name.
+        @type newname: C{str}
         """
         if self._parent:
             del self._parent._childNodes[self._name]
@@ -53,6 +60,7 @@ class AddressNode(object):
     def setParent(self, newparent):
         """
         Reparent this node to another parent.
+        @param newparent: L{Receiver} or L{AddressNode}
         """
         if self._parent:
             del self._parent._childNodes[self._name]
@@ -85,12 +93,17 @@ class AddressNode(object):
     def addNode(self, name, instance):
         """
         Add a child node.
+        @type name: C{str}
+        @type instance: L{AddressNode}
         """
         instance.setName(name)
         instance.setParent(self)
 
 
     def getName(self):
+        """
+        Returns the name of this address node.
+        """
         return self._name
 
 
@@ -130,7 +143,7 @@ class AddressNode(object):
 
     def addCallback(self, pattern, cb):
         """
-        Adds a callback for L{Message} instances received for a given OSC path, relative to this node's address as its root. 
+        Adds a callback for L{txosc.osc.Message} instances received for a given OSC path, relative to this node's address as its root. 
 
         In the OSC protocol, only leaf nodes can have callbacks, though this implementation allows also branch nodes to have callbacks.
 
@@ -160,7 +173,7 @@ class AddressNode(object):
 
         @param path: OSC address in the form C{/egg/spam/ham}, or list C{['egg', 'spam', 'ham']}.
         @type pattern: C{str} or C{list}.
-        @param cb: Callback that will receive L{Message} as an argument when received.
+        @param cb: Callback that will receive L{txosc.osc.Message} as an argument when received.
         @type cb: A callable object.
         """
         path = self._patternPath(pattern)
@@ -297,10 +310,8 @@ class Receiver(AddressNode):
         element as argument. The order in which the callbacks are
         called is undefined.
 
-        @param element: A L{Message} or L{Bundle}.  @param client:
-        Either a (host, port) tuple with the originator's address, or
-        an instance of L{StreamBasedFactory} whose C{send()} method
-        can be used to send a message back.
+        @param element: A L{Message} or L{Bundle}.  
+        @param client: Either a (host, port) tuple with the originator's address, or an instance of L{StreamBasedFactory} whose C{send()} method can be used to send a message back.
         """
         if isinstance(element, Bundle):
             messages = element.getMessages()
@@ -314,7 +325,7 @@ class Receiver(AddressNode):
             if not matched:
                 self.fallback(m, client)
 
-
+    #TODO: add a addFallback or setFallback method
     def fallback(self, message, client):
         """
         The default fallback handler.
