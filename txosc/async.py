@@ -1,4 +1,5 @@
-# -*- test-case-name: txosc.test.test_osc -*-
+#!/usr/bin/env python
+# -*- test-case-name: txosc.test.test_async -*-
 # Copyright (c) 2009 Alexandre Quessy, Arjan Scherpenisse
 # See LICENSE for details.
 
@@ -8,6 +9,7 @@ Asynchronous implementation of OSC for Twisted
 import struct
 
 from twisted.internet import defer, protocol
+from twisted.application.internet import MulticastServer
 from txosc.osc import *
 from txosc.osc import _elementFromBinary
 
@@ -16,6 +18,9 @@ from txosc.osc import _elementFromBinary
 #
 
 class StreamBasedProtocol(protocol.Protocol):
+    """
+    OSC over TCP sending and receiving protocol.
+    """
 
     def connectionMade(self):
         self.factory.connectedProtocol = self
@@ -94,8 +99,14 @@ class StreamBasedFactory(object):
         else:
             raise OscError("Element received, but no Receiver in place: " + str(element))
 
+    def __str__(self):
+        return str(self.connectedProtocol.transport.client)
+
 
 class ClientFactory(protocol.ClientFactory, StreamBasedFactory):
+    """
+    TCP client factory
+    """
     protocol = StreamBasedProtocol
 
     def __init__(self, receiver=None):
@@ -104,9 +115,10 @@ class ClientFactory(protocol.ClientFactory, StreamBasedFactory):
 
 
 class ServerFactory(protocol.ServerFactory, StreamBasedFactory):
+    """
+    TCP server factory
+    """
     protocol = StreamBasedProtocol
-    # TODO: implement __str__ and return an OSC address as a str
-
 
 
 #
@@ -115,7 +127,7 @@ class ServerFactory(protocol.ServerFactory, StreamBasedFactory):
 
 class DatagramServerProtocol(protocol.DatagramProtocol):
     """
-    The OSC server protocol.
+    The UDP OSC server protocol.
 
     @ivar receiver: The L{Receiver} instance to dispatch received
         elements to.
@@ -131,11 +143,30 @@ class DatagramServerProtocol(protocol.DatagramProtocol):
         element = _elementFromBinary(data)
         self.receiver.dispatch(element, (host, port))
 
-
+class MulticastDatagramServerProtocol(DatagramServerProtocol):
+    """
+    UDP OSC server protocol that can listen to multicast.
+    
+    Here is an example on how to use it:
+    
+      reactor.listenMulticast(8005, MulticastServerUDP(receiver, "224.0.0.1"), listenMultiple=True)
+    """
+    def __init__(self, receiver, multicast_addr="224.0.0.1"):
+        """
+        @param receiver: L{Receiver} instance.
+        @type multicast_addr: str
+        @param multicast_addr: IP address of the multicast group.
+        """
+        self.multicast_addr = multicast_addr
+        DatagramServerProtocol.__init__(self, receiver)
+        
+    def startProtocol(self):
+        # Join a specific multicast group, which is the IP we will respond to
+        self.transport.joinGroup(self.multicast_addr)
 
 class DatagramClientProtocol(protocol.DatagramProtocol):
     """
-    The OSC datagram-based client protocol.
+    The UDP OSC client protocol.
     """
 
     def send(self, element, (host, port)):
@@ -144,4 +175,5 @@ class DatagramClientProtocol(protocol.DatagramProtocol):
         """
         data = element.toBinary()
         self.transport.write(data, (host, port))
+
 

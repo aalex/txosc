@@ -13,7 +13,7 @@ class UDPSenderApplication(object):
     """
     Example that sends UDP messages.
     """
-    def __init__(self, port, host="127.0.0.1"):
+    def __init__(self, port, host="224.0.0.1"):
         self.port = port
         self.host = host
         self.client = async.DatagramClientProtocol()
@@ -26,21 +26,13 @@ class UDPSenderApplication(object):
         print("Sent %s to %s:%d" % (element, self.host, self.port))
         
     def send_messages(self):
-        self._send(osc.Message("/ping"))
-        self._send(osc.Message("/foo"))
-        self._send(osc.Message("/ham/egg"))#, 3.14159))
-        self._send(osc.Message("/spam", "hello", 1))
-        self._send(osc.Message("/bacon", osc.TimeTagArgument()))
-        self._send(osc.Message("/cheese"))
-        self._send(osc.Message("/cheese/cheddar"))
-        # of course, the /quit message has to be sent last!
-        self._send(osc.Message("/quit"))
+        self._send(osc.Message("/spam", "How are you?", 3.14159, True))
         print("Goodbye.")
         def _stop():
             reactor.stop()
         reactor.callLater(0.1, _stop)
 
 if __name__ == "__main__":
-    app = UDPSenderApplication(17779)
+    app = UDPSenderApplication(18888)
     reactor.run()
 
