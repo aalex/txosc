@@ -78,6 +78,44 @@ class TestUDPClientServer(unittest.TestCase, ClientServerTests):
     def _send(self, element):
         self.client.send(element, ("127.0.0.1", 17778))
 
+class TestMulticastClientServer(unittest.TestCase):
+    """
+    Test the L{osc.Sender} and two L{dispatch.Receiver} over Multicast UDP via 224.0.0.1.
+    """
+    timeout = 1
+
+    def setUp(self):
+        self.receiver = dispatch.Receiver()
+        self.serverPort = reactor.listenMulticast(17778, async.MulticastDatagramServerProtocol(self.receiver, "224.0.0.1"), listenMultiple=True)
+        self.receiver2 = dispatch.Receiver()
+        self.serverPort2 = reactor.listenMulticast(17778, async.MulticastDatagramServerProtocol(self.receiver2, "224.0.0.1"), listenMultiple=True)
+        self.client = async.DatagramClientProtocol()
+        self.clientPort = reactor.listenUDP(0, self.client)
+
+
+    def testSingleMessage(self):
+        pingMsg = osc.Message("/ping")
+        d = defer.Deferred()
+        d2 = defer.Deferred()
+
+        def ping(m, addr):
+            self.assertEquals(m, pingMsg)
+            d.callback(True)
+        def ping2(m, addr):
+            self.assertEquals(m, pingMsg)
+            d2.callback(True)
+
+        self.receiver.addCallback("/ping", ping)
+        self.receiver2.addCallback("/ping", ping2)
+        self._send(pingMsg)
+        return defer.DeferredList([d, d2])
+
+    def tearDown(self):
+        return defer.DeferredList([self.serverPort.stopListening(), self.serverPort2.stopListening(), self.clientPort.stopListening()])
+
+
+    def _send(self, element):
+        self.client.send(element, ("224.0.0.1", 17778))
 
 
 class TestTCPClientServer(unittest.TestCase, ClientServerTests):
