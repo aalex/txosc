@@ -336,3 +336,9 @@ class Receiver(AddressNode):
         from twisted.python import log
         log.msg("Unhandled message from %s): %s" % (repr(client), str(message)))
 
+    def setFallback(self, fallback):
+        """
+        Sets the fallback.
+        @param fallback: callable function or method.
+        """
+        self.fallback = fallback

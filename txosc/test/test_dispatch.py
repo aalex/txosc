@@ -70,6 +70,8 @@ class TestAddressNode(unittest.TestCase):
         self.assertRaises(ValueError, n.addCallback, "/foo bar/baz", lambda m: m)
         self.assertEquals(n.addCallback("/foo/*/baz", lambda m: m), None)
 
+    def testRemoveCallbacksByPattern(self):
+        raise NotImplementedError("The feature is not implemented yet.")
 
     def testRemoveNonExistingCallback(self):
         n = dispatch.AddressNode()
@@ -298,6 +300,7 @@ class TestAddressNode(unittest.TestCase):
         self.assertEquals(parent.getCallbacks("/foo/bar"), set([]))
         self.assertEquals(parent.getCallbacks("/baz/foo/bar"), set([cb]))
 
+    testRemoveCallbacksByPattern.skip = "This feature is not implemented."
 
 
 class TestReceiver(unittest.TestCase):
@@ -337,11 +340,11 @@ class TestReceiver(unittest.TestCase):
         hello = osc.Message("/hello")
         addr = ("0.0.0.0", 17778)
         
-        def cb(message, address):
+        def fb(message, address):
             self.assertEquals(message, hello)
         
         recv = dispatch.Receiver()
-        recv.fallback = cb
+        recv.setFallback(fb)
         recv.dispatch(hello, addr)
         
     def testClassFallback(self):
@@ -352,13 +355,13 @@ class TestReceiver(unittest.TestCase):
             def __init__(self, test_case):
                 self.x = 3
                 self.test_case = test_case
-            def cb(self, message, address):
+            def fb(self, message, address):
                 self.test_case.assertEquals(message, hello)
                 self.test_case.assertEquals(self.x, 3)
         
         recv = dispatch.Receiver()
         dummy = Dummy(self)
-        recv.fallback = dummy.cb
+        recv.fallback = dummy.fb
         recv.dispatch(hello, addr)
 
 class TestAddressNodeAndReceiver(unittest.TestCase):
