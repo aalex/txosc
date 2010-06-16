@@ -96,6 +96,9 @@ class AddressNode(object):
         @type name: C{str}
         @type instance: L{AddressNode}
         """
+        #FIXME: We should document the name. 
+        # Is it /foo or foo?
+        # Does it redirect all messages prefixed with "/foo" to the child?
         instance.setName(name)
         instance.setParent(self)
 

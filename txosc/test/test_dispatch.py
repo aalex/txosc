@@ -360,3 +360,52 @@ class TestReceiver(unittest.TestCase):
         dummy = Dummy(self)
         recv.fallback = dummy.cb
         recv.dispatch(hello, addr)
+
+class TestAddressNodeAndReceiver(unittest.TestCase):
+    """
+    Test both L{txosc.dispatch.Receiver} and L{txosc.dispatch.AddressNode}, 
+    the first nested in the latter.
+    """
+    def testFallback(self):
+        """
+        Tests how fallbacks are handled.
+        """
+        foo = osc.Message("/foo")
+        egg_spam = osc.Message("/egg/spam")
+        egg_ham = osc.Message("/egg/ham")
+        addr = ("0.0.0.0", 17778)
+        called = {
+            'foo': False, 
+            'egg_spam': False, 
+            'fallback': False
+            }
+
+        def foo_cb(message, a):
+            self.assertEquals(message, foo)
+            self.assertEquals(addr, a)
+            called['foo'] = True
+        def egg_spam_cb(message, a):
+            self.assertEquals(message, egg_spam)
+            self.assertEquals(addr, a)
+            called['egg_spam'] = True
+        def fallback(message, a):
+            self.assertEquals(message, egg_ham)
+            self.assertEquals(addr, a)
+            called['fallback'] = True
+
+        recv = dispatch.Receiver()
+        recv.addCallback("/foo", foo_cb)
+        child = dispatch.AddressNode()
+        child.addCallback("/spam", egg_spam_cb)
+        recv.addNode("egg", child)
+        recv.fallback = fallback
+
+        # now, dispatch messages
+        recv.dispatch(foo, addr)
+        recv.dispatch(egg_spam, addr)
+        recv.dispatch(egg_ham, addr)
+        
+        self.assertTrue(called['foo'])
+        self.assertTrue(called['egg_spam'])
+        self.assertTrue(called['fallback'])
+
