@@ -1,7 +1,5 @@
-TxOSC 0.1.0
-
-Open Sound Control (OSC) protocol for Twisted
-=============================================
+txosc : Open Sound Control (OSC) protocol for Twisted
+=====================================================
   
   Open Sound Control (OSC) is an open, transport-independent, 
   message-based protocol developed for communication among computers, 
@@ -33,6 +31,7 @@ Project Informations
 
   URL : http://bitbucket.org/arjan/txosc
   Mailing list: https://listes.koumbit.net/cgi-bin/mailman/listinfo/txosc-toonloop.com
+
 
 Authors
 =======
