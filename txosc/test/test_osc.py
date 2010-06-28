@@ -13,6 +13,22 @@ from txosc import osc
 from txosc import async
 from txosc import dispatch
 
+class TestGetAddressParts(unittest.TestCase):
+    """
+    Test the getAddressParts function.
+    """
+    def testGetAddressParts(self):
+        addresses = {
+            "/foo": ["foo"],
+            "/foo/bar": ["foo", "bar"],
+            "/foo/bar/ham": ["foo", "bar", "ham"],
+            "/egg/[1-2]": ["egg", "[1-2]"],
+            "/egg/*": ["egg", "*"],
+            "/egg/?": ["egg", "?"],
+            }
+        for k, v in addresses.iteritems():
+            self.failUnlessEqual(osc.getAddressParts(k), v)
+
 
 class TestArgumentCreation(unittest.TestCase):
     """

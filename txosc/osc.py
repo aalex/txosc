@@ -23,6 +23,17 @@ class OscError(Exception):
     pass
 
 
+def getAddressParts(address):
+    """
+    Returns the list of the parts of an address.
+    @rtype: C{list}
+    @return: List of strings.
+    @param address: An OSC address
+    @type address: C{str}
+    """
+    return address.strip("/").split("/")
+
+
 class Message(object):
     """
     An OSC Message element.
