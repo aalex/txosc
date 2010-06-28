@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Example of a TCP TxOSC receiver with Twisted.
+Example of a TCP txosc receiver with Twisted.
 
 This example is in the public domain.
 """

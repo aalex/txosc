@@ -10,9 +10,9 @@
 2010-06-08: Release 0.1.0
 
     * First official release
-    * This is the birth of the TxOSC library!
+    * This is the birth of the txosc library!
 
-2010-06-07: Stripped into TxOSC by Alexandre Quessy
+2010-06-07: Stripped into txosc by Alexandre Quessy
 	
 	* A self-contained Pure Python library for OSC was needed
 

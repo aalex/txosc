@@ -4,7 +4,11 @@
 # See LICENSE for details.
 
 """
-Open Sound Control 1.1 Protocol for Twisted.
+Open Sound Control 1.1 Protocol message generation and parsing.
+
+This file is not Twisted-specific. Thoses classes implement OSC message
+generation and parsing. Each message has an address and might have some 
+arguments. Messages can be grouped in bundles. 
 
 The protocol is specified in OSC 1.0 specification at
 U{http://opensoundcontrol.org/spec-1_0} and has been further extended

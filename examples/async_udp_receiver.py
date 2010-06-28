@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Example of a UDP TxOSC receiver with Twisted.
+Example of a UDP txosc receiver with Twisted.
 
 This example is in the public domain.
 """

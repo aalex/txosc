@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Example of a multicast UDP TxOSC receiver with Twisted.
+Example of a multicast UDP txosc receiver with Twisted.
 
 You can run many of these on a single host.
 

@@ -21,6 +21,6 @@ Building the documentation
   You can build the HTML documentation using a tool such as Epydoc::
 
    $ epydoc  --html --output html --url \
-        http://bitbucket.org/arjan/txosc/ --name TxOSC --verbose \
+        http://bitbucket.org/arjan/txosc/ --name txosc --verbose \
         --simple-term --css white txosc 
 

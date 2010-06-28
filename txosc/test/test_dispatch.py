@@ -2,7 +2,7 @@
 # See LICENSE for details.
 
 """
-OSC tests.
+Tests for txosc/dispatch.py
 
 Maintainer: Arjan Scherpenisse
 """

@@ -1,4 +1,4 @@
 #!/usr/bin/env python
 """
-Unit tests for TxOSC.
+Unit tests for the txosc library.
 """

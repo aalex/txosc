@@ -2,7 +2,7 @@
 # See LICENSE for details.
 
 """
-OSC tests.
+Tests for txosc/async.py
 
 Maintainer: Arjan Scherpenisse
 """
