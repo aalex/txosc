@@ -1,8 +1,3 @@
-2010-06-28: Release 0.1.3
+2010-06-??: Release 0.1.4
 
-    * Added the txosc.osc.Message.getValues method
-    * Added the txosc.osc.getAddressParts function
-    * Added  __float__ and __int__ cast operators to some subclasses of txosc.osc.Argument
-    * Added some classifiers to setup.py
-    * Renamed TxOSC for txosc, lowercase
-
+    * 
