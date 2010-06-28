@@ -21,7 +21,6 @@ setup(
 This library implements OSC version 1.1 over both UDP and TCP for the Twisted Python framework. 
   """,
     classifiers = [
-        "Development Status :: Development Status :: 4 - Beta",
         "Framework :: Twisted",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
