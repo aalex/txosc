@@ -106,6 +106,12 @@ class Message(object):
             s += " ,%s %s" % (self.getTypeTags(), args)
         return s
 
+    def getValues(self):
+        """
+        Returns a list of each argument's value.
+        @rtype: C{list}
+        """
+        return [arg.value for arg in self.arguments]
 
     def __eq__(self, other):
         if self.address != other.address:
@@ -357,7 +363,8 @@ class IntArgument(Argument):
             #FIXME: do not raise error and return leftover anyways ?
         return IntArgument(i), leftover
 
-
+    def __int__(self):
+        return int(self.value)
 
 class FloatArgument(Argument):
     """
@@ -379,6 +386,8 @@ class FloatArgument(Argument):
             #FIXME: do not raise error and return leftover anyways ?
         return FloatArgument(f), leftover
 
+    def __float__(self):
+        return float(self.value)
 
 class TimeTagArgument(Argument):
     """
@@ -442,7 +451,8 @@ class BooleanArgument(Argument):
     def toBinary(self):
         return "" # bool args do not have data, just a type tag
 
-
+    def __bool__(self):
+        return bool(self.value)
 
 class DatalessArgument(Argument):
     """

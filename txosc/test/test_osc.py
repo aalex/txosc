@@ -110,6 +110,15 @@ class TestFloatArgument(unittest.TestCase):
             self.fail("value is too big")
         self.assertRaises(osc.OscError, osc.FloatArgument.fromBinary, "\0\0\0") # invalid value
 
+    def testCasting(self):
+        # we should be able to cast the argument to float to get its float value
+        value = 3.14159
+        float_arg = osc.FloatArgument(value)
+        if float(float_arg) < 3.1415:
+            self.fail("value is too small")
+        if float(float_arg) > 3.1416:
+            self.fail("value is too big")
+
 class TestIntArgument(unittest.TestCase):
 
     def testToAndFromBinary(self):
@@ -232,6 +241,16 @@ class TestMessage(unittest.TestCase):
         test(osc.Message("/example", osc.BooleanArgument(True)))
         test(osc.Message("/example", osc.BooleanArgument(False), osc.NullArgument(), osc.StringArgument("hello")))
         test(osc.Message("/example", osc.ImpulseArgument()))
+
+    def testGetValues(self):
+        # tests calling txosc.osc.Message.getValues()
+        
+        message = osc.Message("/foo", 2, True, 3.14159)
+        values = message.getValues()
+        self.failUnlessEqual(values[0], 2)
+        self.failUnlessEqual(values[1], True)
+        self.failUnlessEqual(values[2], 3.14159)
+
 
 
 class TestBundle(unittest.TestCase):
