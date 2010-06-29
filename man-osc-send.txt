@@ -1,0 +1,29 @@
+[OSC MESSAGES]
+An OSC message consists of an OSC Address Pattern followed by an OSC Type Tag String followed by zero or more OSC Arguments.
+
+[OSC ADDRESSES]
+An OSC Address Pattern is a string beginning with the character '/' (forward slash).
+
+[OSC TYPE TAGS]
+types   :
+
+An OSC Type Tag String is a string (beginning with the character ',' (comma)) followed by a sequence of characters corresponding exactly to the sequence of OSC Arguments in the given message. Each character after the comma is called an OSC Type Tag and represents the type of the corresponding OSC Argument.
+
+Here is the list of supported type tags:
+
+    i - 32bit integer
+    h - 64bit integer
+    f - 32bit floating point number
+    d - 64bit (double) floating point number
+    s - string
+    S - symbol
+    c - char
+    m - 4 byte midi packet (8 digits hexadecimal)
+    T - TRUE 
+    F - FALSE 
+    N - NIL 
+    I - INFINITUM 
+
+[VALUES]
+Values are space separated. Quoting string might be handy.
+
