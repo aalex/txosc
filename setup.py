@@ -14,7 +14,7 @@ setup(
     url = "http://bitbucket.org/arjan/txosc",
     description = "Open Sound Control Protocol for Twisted",
     scripts = [
-        "scripts/osc-recv", 
+        "scripts/osc-receive", 
         "scripts/osc-send"
         ],
     license="MIT/X",

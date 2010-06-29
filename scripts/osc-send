@@ -32,7 +32,7 @@ def send_udp(message, port, host):
         verb("Sending %s to %s:%d" % (message, host, port))
         client.send(message, (host, port))
         print("Sent %s to %s:%d" % (message, host, port))
-        reactor.callLater(0.1, _stop)
+        reactor.callLater(0.01, _stop)
 
     reactor.callLater(0, actually_send_it)
 
