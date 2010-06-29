@@ -1,0 +1,106 @@
+#!/usr/bin/env python
+# Copyright (c) 2009 Alexandre Quessy, Arjan Scherpenisse
+# See LICENSE for details.
+"""
+Sends OSC messages using txosc
+"""
+import sys
+import optparse
+from twisted.internet import reactor
+import txosc # for __version__
+from txosc import osc
+from txosc import dispatch
+from txosc import async
+
+VERBOSE = False
+
+def send_udp(message, port, host):
+    """
+    Sends a message using UDP and stops the Reactor
+    @param message: OSC message
+    @type message: L{txosc.osc.Message}
+    @type port: C{int}
+    @type host: C{str}
+    """
+    client = async.DatagramClientProtocol()
+    _client_port = reactor.listenUDP(0, client)
+
+    def _stop():
+        reactor.stop()
+    
+    def actually_send_it():
+        client.send(message, (host, port))
+        print("Sent %s to %s:%d" % (message, host, port))
+        reactor.callLater(0.1, _stop)
+
+    reactor.callLater(0, actually_send_it)
+
+def send_auto(protocol, port, host, path, *args):
+    message = osc.Message(path)
+    for arg in args:
+        try:
+            value = int(arg)
+        except ValueError:
+            try:
+                value = float(arg)
+            except ValueError:
+                value = str(arg)
+        message.add(value)
+    if protocol == "UDP":
+        send_udp(message, port, host)
+    else:
+        raise NotImplementedError('TCP is to do.')
+
+def send_manual(protocol, port, host, path, types, *args):
+    if len(types) != len(args):
+        print("The length of the type string must match the number of arguments.")
+        sys.exit(1)
+
+    message = osc.Message(path)
+    try:
+        for value, typetag in zip(args, types):
+            message.add(osc.createArgument(value, typetag))
+    except osc.OscError, e:
+        print(str(e))
+        sys.exit(1)
+
+    if protocol == 'UDP':
+        send_udp(message, port, host)
+    else:
+        raise NotImplementedError('TCP is to do.')
+
+def verb(txt):
+    global VERBOSE
+    if VERBOSE:
+        print(txt)
+
+if __name__ == "__main__":
+    parser = optparse.OptionParser(usage="%prog", version=txosc.__version__.strip(), description=__doc__)
+    parser.add_option("-p", "--port", type="int", default=31337, help="Port to send to")
+    parser.add_option("-H", "--host", type="string", default="127.0.0.1", help="IP address to send to")
+    parser.add_option("-t", "--type-tags", type="string", help="Type tags as many letters concatenated")
+    parser.add_option("-v", "--verbose", action="store_true", help="Makes the output verbose")
+    parser.add_option("-T", "--tcp", action="store_true", help="Uses TCP instead of UDP")
+    (options, args) = parser.parse_args()
+
+    def _exit(txt):
+        print(txt)
+        sys.exit(1)
+
+    if len(args) == 0:
+        _exit("You must specify an OSC path to send to")
+
+    protocol = 'UDP'
+    if options.tcp:
+        _exit("TCP is not yet implemented.")
+    if options.verbose:
+        VERBOSE = True
+    path = args[0]
+    verb("Sending to osc.udp://%s:%d" % (options.host, options.port))
+    if options.type_tags:
+        send_manual(protocol, options.port, options.host, path, options.type_tags, *args[1:])
+    else:
+        send_auto(protocol, options.port, options.host, path, *args[1:])
+    verb("Starting the Twisted reactor")
+    reactor.run()
+
