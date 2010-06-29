@@ -361,6 +361,8 @@ class IntArgument(Argument):
     typeTag = "i"
 
     def toBinary(self):
+        if type(self.value) is not int:
+            raise TypeError("Value %s must be an integer, not a %s." % (self.value, type(self.value).__name__))
         if self.value >= 1<<31:
             raise OverflowError("Integer too large: %d" % self.value)
         if self.value < -1<<31:
