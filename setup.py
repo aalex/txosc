@@ -13,7 +13,10 @@ setup(
     author_email = "txosc@toonloop.com",
     url = "http://bitbucket.org/arjan/txosc",
     description = "Open Sound Control Protocol for Twisted",
-    scripts = [],
+    scripts = [
+        "scripts/osc-recv", 
+        "scripts/osc-send"
+        ],
     license="MIT/X",
     packages = ["txosc", "txosc/test"],
     long_description = """Open Sound Control (OSC) is an open, transport-independent, message-based protocol developed for communication among computers, sound synthesizers, and other multimedia devices. 
