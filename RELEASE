@@ -1,3 +1,4 @@
 2010-06-??: Release 0.1.4
 
-    * 
+    * Added the osc-send and osc-recv scripts
+    * Removed the "beta" classifier in setup.py
