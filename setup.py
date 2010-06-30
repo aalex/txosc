@@ -2,9 +2,10 @@
 """
 txosc installation script
 """
+from setuptools import setup
+import os
 import sys
 import subprocess
-from setuptools import setup
 import txosc
 
 setup(
@@ -40,8 +41,9 @@ if sys.argv[1] == "build":
         'help2man --no-info --include=man-osc-send.txt --name="sends an OSC message" ./scripts/osc-send --output=osc-send.1',
         'help2man --no-info --include=man-osc-receive.txt --name="receives OSC messages" ./scripts/osc-receive --output=osc-receive.1',
         ]
-    for c in commands:
-        print("$ %s" % (c))
-        retcode = subprocess.call(c, shell=True)
-        print("The help2man command returned %s" % (retcode))
+    if os.path.exists("man-osc-send.txt"):
+        for c in commands:
+            print("$ %s" % (c))
+            retcode = subprocess.call(c, shell=True)
+            print("The help2man command returned %s" % (retcode))
 
