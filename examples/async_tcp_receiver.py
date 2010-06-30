@@ -25,6 +25,7 @@ class TCPReceiverApplication(object):
         self.receiver.addCallback("/foo", foo_handler)
         self.receiver.addCallback("/ping", self.ping_handler)
         self.receiver.addCallback("/quit", self.quit_handler)
+        self.receiver.setFallback(self.fallback)
         self._server_port = reactor.listenTCP(self.port, async.ServerFactory(self.receiver))
         print("Listening on osc.tcp://127.0.0.1:%s" % (self.port))
 
@@ -41,6 +42,9 @@ class TCPReceiverApplication(object):
         print("Got %s from %s" % (message, address))
         reactor.stop()
         print("Goodbye.")
+
+    def fallback(self, message, address):
+        print("Got %s from %s" % (message, address))
 
 if __name__ == "__main__":
     app = TCPReceiverApplication(17779)

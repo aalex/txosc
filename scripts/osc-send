@@ -25,14 +25,12 @@ def send_udp(message, port, host):
     client = async.DatagramClientProtocol()
     _client_port = reactor.listenUDP(0, client)
 
-    def _stop():
-        reactor.stop()
     
     def actually_send_it():
         verb("Sending %s to %s:%d" % (message, host, port))
         client.send(message, (host, port))
         print("Sent %s to %s:%d" % (message, host, port))
-        reactor.callLater(0.01, _stop)
+        reactor.callLater(0.01, reactor.stop)
 
     reactor.callLater(0, actually_send_it)
 
@@ -40,8 +38,22 @@ def send_tcp(message, port, host):
     """
     Not yet implemented.
     """
-    # TODO
-    raise NotImplementedError('TCP is to do.')
+    client = async.ClientFactory()
+    _client_port = None
+    
+    def _callback(result):
+        print("Connected.")
+        client.send(message)
+        print("Sent %s to %s:%d" % (message, host, port))
+        reactor.callLater(0.01, reactor.stop)
+
+    def _errback(reason):
+        print("An error occurred: %s" % (reason.getErrorMessage()))
+
+    _client_port = reactor.connectTCP(host, port, client)
+    client.deferred.addCallback(_callback)
+    client.deferred.addErrback(_errback)
+
 
 def send_auto(protocol, port, host, path, *args):
     """
@@ -134,8 +146,7 @@ if __name__ == "__main__":
 
     protocol = "UDP"
     if options.tcp:
-        _exit("TCP is not yet implemented.")
-        #TODO: protocol = "TCP"
+        protocol = "TCP"
     if options.verbose:
         VERBOSE = True
     path = args[0]
