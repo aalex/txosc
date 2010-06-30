@@ -1,6 +1,133 @@
-changeset:   180:7a713c9e8511
+changeset:   201:b9657a7d85cc
 branch:      0.1
 tag:         tip
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Jun 30 14:29:24 2010 -0400
+summary:     fixed typo
+
+changeset:   200:760ccfae89e0
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Jun 30 14:13:14 2010 -0400
+summary:     Improved the synopsis in the man pages.
+
+changeset:   199:d9e0c6324600
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Jun 30 14:06:17 2010 -0400
+summary:     Implemented osc URL and comma-prefixed type tag support in osc-send.
+
+changeset:   198:668e1ea56d5a
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Jun 30 13:46:30 2010 -0400
+summary:     Implemented TCP in osc-send + added a fallback to examples/async_tcp_receiver.py
+
+changeset:   197:d1446066dba9
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Jun 30 13:39:19 2010 -0400
+summary:     Now checking for help2man prior to call it.
+
+changeset:   196:d32d3b60f547
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Jun 30 13:35:46 2010 -0400
+summary:     making sure the man page text file exist prior to call help2man
+
+changeset:   195:71e0b2120059
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Jun 30 13:34:20 2010 -0400
+summary:     Now creating the man pages
+
+changeset:   194:0812fcbdaaaf
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 29 09:15:40 2010 -0400
+summary:     adding the OSC site URL.
+
+changeset:   193:9099a9b8f5e0
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 29 09:14:30 2010 -0400
+summary:     adding man-osc-send.txt for a nice man page
+
+changeset:   192:09ea090302a2
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 29 08:30:23 2010 -0400
+summary:     Renamed osc-recv to osc-receive. Made osc-send faster.
+
+changeset:   191:81f1fb9285cb
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 29 03:53:09 2010 -0400
+summary:     updated RELEASE notes
+
+changeset:   190:bdd88d2b5ea2
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 29 03:51:38 2010 -0400
+summary:     added the scripts to the setup.py install script
+
+changeset:   189:72c4984a9e50
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 29 03:49:50 2010 -0400
+summary:     added osc-recv
+
+changeset:   188:ce78693e492b
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 29 03:39:28 2010 -0400
+summary:     Fixed type checking in the IntArgument.toBinary method
+
+changeset:   187:2337b87939ea
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 29 03:38:21 2010 -0400
+summary:     Fixed the manual mode when using int or float types in osc-send
+
+changeset:   186:46ec448f364d
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jun 29 03:14:53 2010 -0400
+summary:     added the osc-send script
+
+changeset:   185:4e5cd902f419
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jun 28 14:06:57 2010 -0400
+summary:     removed the Beta classifier
+
+changeset:   184:3b5ad5ddaf6d
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jun 28 13:01:37 2010 -0400
+summary:     updated version number to 0.1.4 - not yet released
+
+changeset:   183:0c8bf1c7c264
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jun 28 13:00:08 2010 -0400
+summary:     Added tag 0.1.3 for changeset 34713e095128
+
+changeset:   182:34713e095128
+branch:      0.1
+tag:         0.1.3
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jun 28 12:50:42 2010 -0400
+summary:     updated RELEASE and NEWS
+
+changeset:   181:e2c68904e875
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jun 28 12:48:55 2010 -0400
+summary:     updated ChangeLog
+
+changeset:   180:7a713c9e8511
+branch:      0.1
 user:        Alexandre Quessy <alexandre@quessy.net>
 date:        Mon Jun 28 12:46:53 2010 -0400
 summary:     updated RELEASE

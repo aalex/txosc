@@ -2,3 +2,5 @@
 
     * Added the osc-send and osc-receive scripts
     * Removed the "beta" classifier in setup.py
+    * Created man pages for osc-send and osc-receive
+    

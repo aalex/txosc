@@ -28,17 +28,27 @@ def fallback(message, address):
     """
     print("%s from %s" % (message, address))
 
+def _exit(txt):
+    print(txt)
+    sys.exit(1)
+
 class OscDumper(object): 
     """
     Prints OSC messages it receives.
     """
-    def __init__(self, protocol, port):
+    def __init__(self, protocol, port, multicast_group=None):
         self.receiver = dispatch.Receiver()
         if protocol == "UDP":
-            self._server_port = reactor.listenUDP(port, async.DatagramServerProtocol(self.receiver))
+            if multicast_group is not None:
+                self._server_port = reactor.listenMulticast(port, async.MulticastDatagramServerProtocol(self.receiver, multicast_group), listenMultiple=True)
+            else:
+                self._server_port = reactor.listenUDP(port, async.DatagramServerProtocol(self.receiver))
         else:
-            raise NotImplementedError("TCP is to do.")
-        print("Listening on osc.%s://localhost:%s" % (protocol.lower(), port))
+            self._server_port = reactor.listenTCP(port, async.ServerFactory(self.receiver))
+        host = "localhost"
+        if multicast_group is not None:
+            host = multicast_group
+        print("Listening on osc.%s://%s:%s" % (protocol.lower(), host, port))
         
         # fallback:
         self.receiver.setFallback(fallback)
@@ -46,14 +56,22 @@ class OscDumper(object):
 if __name__ == "__main__":
     parser = optparse.OptionParser(usage="%prog", version=txosc.__version__.strip(), description=__doc__)
     parser.add_option("-p", "--port", type="int", default=31337, help="Port to listen on")
-    #TODO: parser.add_option("-H", "--host", type="string", default="226.0.0.1", help="Multicast group to listen on")
+    parser.add_option("-g", "--multicast-group", type="string", help="Multicast group to listen on")
     parser.add_option("-v", "--verbose", action="store_true", help="Makes the output verbose")
-    #parser.add_option("-T", "--tcp", action="store_true", help="Uses TCP instead of UDP")
+    parser.add_option("-T", "--tcp", action="store_true", help="Uses TCP instead of UDP")
     (options, args) = parser.parse_args()
     app = None
     protocol = "UDP"
+    multicast_group = None
+    if options.tcp:
+        protocol = "TCP"
+    if options.multicast_group:
+        if protocol != "UDP":
+            _exit("Multicast groups are only supported with UDP.")
+        else:
+            multicast_group = options.multicast_group
     def _later():
-        app = OscDumper(protocol, options.port)
+        app = OscDumper(protocol, options.port, multicast_group)
     reactor.callLater(0.01, _later)
     reactor.run()
 
