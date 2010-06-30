@@ -1,6 +1,18 @@
-changeset:   201:b9657a7d85cc
+changeset:   203:451186d4cac7
 branch:      0.1
 tag:         tip
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Jun 30 14:47:30 2010 -0400
+summary:     added the _check_type method, which does type checking when instanciating the arguments.
+
+changeset:   202:91dbaa35f007
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Jun 30 14:42:04 2010 -0400
+summary:     Implemented TCP and multicast UDP in osc-receive
+
+changeset:   201:b9657a7d85cc
+branch:      0.1
 user:        Alexandre Quessy <alexandre@quessy.net>
 date:        Wed Jun 30 14:29:24 2010 -0400
 summary:     fixed typo
