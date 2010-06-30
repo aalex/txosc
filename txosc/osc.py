@@ -253,6 +253,13 @@ class Argument(object):
 
     def __init__(self, value):
         self.value = value
+        self._check_type()
+    
+    def _check_type(self):
+        """
+        Does the type checking for the value.
+        """
+        pass
 
 
     def toBinary(self):
@@ -359,10 +366,12 @@ class IntArgument(Argument):
     An L{Argument} representing a 32-bit signed integer.
     """
     typeTag = "i"
-
-    def toBinary(self):
+    
+    def _check_type(self):
         if type(self.value) not in [int, long]:
             raise TypeError("Value %s must be an integer or a long, not a %s." % (self.value, type(self.value).__name__))
+
+    def toBinary(self):
         if self.value >= 1<<31:
             raise OverflowError("Integer too large: %d" % self.value)
         if self.value < -1<<31:
@@ -389,6 +398,10 @@ class FloatArgument(Argument):
     """
 
     typeTag = "f"
+    
+    def _check_type(self):
+        if type(self.value) not in [float, int, long]:
+            raise TypeError("Value %s must be a float, an int or a long, not a %s." % (self.value, type(self.value).__name__))
 
     def toBinary(self):
         return struct.pack(">f", float(self.value))

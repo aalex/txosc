@@ -1,6 +1,8 @@
 2010-06-??: Release 0.1.4
 
-    * Added the osc-send and osc-receive scripts
+    * Added the osc-send script, which support UDP and TCP
+    * Added the osc-receive script, which support UDP, TCP and multicast UDP
     * Removed the "beta" classifier in setup.py
     * Created man pages for osc-send and osc-receive
+    * Implemented OSC URL parsing in osc-send
     
