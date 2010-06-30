@@ -8,4 +8,4 @@ html
 txosc.egg-info
 build
 dist
-
+*.1
