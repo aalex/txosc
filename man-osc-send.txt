@@ -26,7 +26,7 @@ Here is the list of supported type tags:
     I - INFINITUM 
 
 [VALUES]
-Values are space separated. Quoting string might be handy.
+Values are space separated. Quoting strings might be handy.
 
 The full Open Sound Control specification can be found at http://opensoundcontrol.org/specification
 
