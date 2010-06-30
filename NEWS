@@ -1,3 +1,12 @@
+2010-06-30: Release 0.1.4
+
+    * Added the osc-send script, which support UDP and TCP
+    * Added the osc-receive script, which support UDP, TCP and multicast UDP
+    * Removed the "beta" classifier in setup.py
+    * Created man pages for osc-send and osc-receive
+    * Implemented OSC URL parsing in osc-send
+    * Added txosc.osc.Argument._check_type, which does the type checking at instanciation time
+
 2010-06-28: Release 0.1.3
 
     * Added the txosc.osc.Message.getValues method

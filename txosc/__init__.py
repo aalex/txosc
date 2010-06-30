@@ -3,4 +3,4 @@
 txosc: Open Sound Control for Twisted
 """
 __all__ = ["async", "dispatch", "osc"]
-__version__ = "0.1.4"
+__version__ = "0.1.5"
