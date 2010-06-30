@@ -2,6 +2,7 @@ Requirements
 ============
 
   * Twisted 8.1.0 or later
+  * help2man for building the man pages of osc-send and osc-receive
 
 Installation
 ============

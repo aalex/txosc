@@ -7,6 +7,7 @@ import os
 import sys
 import subprocess
 import txosc
+from twisted.python import procutils
 
 setup(
     name = "txosc",
@@ -42,8 +43,13 @@ if sys.argv[1] == "build":
         'help2man --no-info --include=man-osc-receive.txt --name="receives OSC messages" ./scripts/osc-receive --output=osc-receive.1',
         ]
     if os.path.exists("man-osc-send.txt"):
-        for c in commands:
-            print("$ %s" % (c))
-            retcode = subprocess.call(c, shell=True)
-            print("The help2man command returned %s" % (retcode))
+        try:
+            help2man = procutils.which("help2man")[0]
+        except IndexError:
+            print("Cannot build the man pages. help2man was not found.")
+        else:
+            for c in commands:
+                print("$ %s" % (c))
+                retcode = subprocess.call(c, shell=True)
+                print("The help2man command returned %s" % (retcode))
 
