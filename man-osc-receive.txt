@@ -1,2 +1,5 @@
+[SYNOPSIS]
+osc-receive [options] --port=port
+
 [HISTORY]
 Written by Arjan Scherpenisse and Alexandre Quessy in 2010.

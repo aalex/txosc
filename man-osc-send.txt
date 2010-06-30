@@ -1,3 +1,6 @@
+[SYNOPSIS]
+osc-send [options] [,typetags] osc-address [osc arguments]
+
 [OSC MESSAGES]
 An OSC message consists of an OSC Address Pattern followed by an OSC Type Tag String followed by zero or more OSC Arguments.
 
