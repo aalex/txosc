@@ -4,6 +4,7 @@
 """
 Sends OSC messages using txosc
 """
+import exceptions
 import sys
 import optparse
 from twisted.internet import reactor
@@ -81,7 +82,8 @@ def send_manual(protocol, port, host, path, types, *args):
     """
     if len(types) != len(args):
         print("The length of the type string must match the number of arguments.")
-        sys.exit(1)
+        reactor.stop()
+        return
 
     message = osc.Message(path)
     try:
@@ -144,19 +146,61 @@ if __name__ == "__main__":
     if len(args) == 0:
         _exit("You must specify an OSC path to send to")
 
+    host = options.host
+    port = options.port
     protocol = "UDP"
+    type_tags = options.type_tags
+    type_tag_arg_index = 1
+    args_index = 1
+    
     if options.tcp:
         protocol = "TCP"
     if options.verbose:
         VERBOSE = True
-    path = args[0]
-    def _later():
-        verb("Sending to osc.udp://%s:%d" % (options.host, options.port))
-        if options.type_tags:
-            send_manual(protocol, options.port, options.host, path, options.type_tags, *args[1:])
+    if args[0].startswith("/"):
+        path = args[0]
+    elif args[0].startswith("osc."):
+        type_tag_arg_index += 1
+        args_index += 1
+        if len(args) == 1:
+            _exit("You must specify an OSC path to send to")
         else:
-            send_auto(protocol, options.port, options.host, path, *args[1:])
+            path = args[1]
+            url = args[0]
+            if url.startswith("osc.udp"):
+                protocol = "UDP"
+            else:
+                protocol = "TCP"
+            try:
+                host = url.split("/")[2].split(":")[0]
+                port = int(url.split(":")[2])
+            except IndexError, e:
+                _exit(str(e))
+            except ValueError, e:
+                _exit(str(e))
+    
+    if len(args) > type_tag_arg_index:
+        if args[type_tag_arg_index].startswith(","):
+            type_tags = args[type_tag_arg_index][1:]
+            args_index += 1
+    
+    verb("host: %s" % (host))
+    verb("port: %s" % (port))
+    verb("protocol: %s" % (protocol))
+    verb("type_tags: %s" % (type_tags))
+    verb("type_tag_arg_index: %s" % (type_tag_arg_index))
+    verb("args_index: %s" % (args_index))
+        
+    def _later():
+        verb("Sending to osc.%s://%s:%d" % (protocol.lower(), host, port))
+        if type_tags:
+            send_manual(protocol, port, host, path, type_tags, *args[args_index:])
+        else:
+            send_auto(protocol, port, host, path, *args[args_index:])
     reactor.callLater(0.01, _later)
     verb("Starting the Twisted reactor")
-    reactor.run()
+    try:
+        reactor.run()
+    except exceptions.SystemExit:
+        pass
 

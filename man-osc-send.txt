@@ -27,5 +27,15 @@ Values are space separated. Quoting string might be handy.
 
 The full Open Sound Control specification can be found at http://opensoundcontrol.org/specification
 
+[EXAMPLES]
+
+The following examples are equivalent:
+
+ osc-send osc.tcp://127.0.0.1:17779 /ham/spam ,sif egg 2 3.14159
+
+ osc-send --tcp --host=127.0.0.1 --port=17779 --type-tags=sif /ham/spam egg 2 3.14159
+
+ osc-send -T -P 17779 /ham/spam egg 2 3.14159 
+
 [HISTORY]
 Written by Arjan Scherpenisse and Alexandre Quessy in 2010.
