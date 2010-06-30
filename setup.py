@@ -39,8 +39,8 @@ This library implements OSC version 1.1 over both UDP and TCP for the Twisted Py
 
 if sys.argv[1] == "build":
     commands = [
-        'help2man --no-info --include=man-osc-send.txt --name="sends an OSC message" ./scripts/osc-send --output=osc-send.1',
-        'help2man --no-info --include=man-osc-receive.txt --name="receives OSC messages" ./scripts/osc-receive --output=osc-receive.1',
+        'help2man --no-info --include=man-osc-send.txt --no-discard-stderr --name="sends an OSC message" ./scripts/osc-send --output=osc-send.1',
+        'help2man --no-info --include=man-osc-receive.txt --no-discard-stderr --name="receives OSC messages" ./scripts/osc-receive --output=osc-receive.1',
         ]
     if os.path.exists("man-osc-send.txt"):
         try:
