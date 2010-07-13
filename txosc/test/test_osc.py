@@ -153,6 +153,18 @@ class TestIntArgument(unittest.TestCase):
         self.assertRaises(OverflowError, osc.IntArgument((-1<<31) - 1).toBinary)
 
 
+class TestColorArgument(unittest.TestCase):
+
+    def testToAndFromBinary(self):
+        def _test(value):
+            color_arg = osc.ColorArgument.fromBinary(osc.ColorArgument(value).toBinary())[0]
+            self.assertEquals(color_arg.value, value)
+        _test((255, 255, 255, 255))
+        _test((0, 0, 0, 0))
+        self.assertRaises(osc.OscError, osc.ColorArgument.fromBinary, "\0\0\0") # invalid value
+        self.assertRaises(TypeError, osc.ColorArgument.toBinary, (-244, 0, 0, 0)) # invalid value
+        self.assertRaises(TypeError, osc.ColorArgument.toBinary, ()) # invalid value
+
 
 
 class TestTimeTagArgument(unittest.TestCase):

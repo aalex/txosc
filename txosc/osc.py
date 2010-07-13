@@ -525,6 +525,59 @@ class ImpulseArgument(DatalessArgument):
 # Should we implement all types that are listed "optional" in
 # http://opensoundcontrol.org/spec-1_0 ?
 
+
+
+
+class ColorArgument(Argument):
+    """
+    An L{Argument} representing a 32-bit RGBA color.
+    """
+    typeTag = "r"
+
+    def __init__(self, value=(0, 0, 0, 0)):
+        """
+        @param value: A tuple of four integers in the range [0,255] for RGBA.
+        @type value: C{tuple}
+        """
+        Argument.__init__(self, value)
+
+    def _check_type(self):
+        if type(self.value) not in [list, tuple]:
+            raise TypeError("Value %s must be a list of integers, not a %s." % (self.value, type(self.value).__name__))
+        if len(self.value) != 4:
+            raise TypeError("Value %s must contain 4 elements, for each of the RGBA channels." % (self.value))
+        for channel in self.value:
+            if type(channel) not in [int, long]:
+                raise TypeError("Color channel value %s must be an int, not a %s." % (channel, type(channel).__name__))
+            if channel > 255 or channel < 0:
+                raise TypeError("Color channel value %s must be between 0 and 255, but is %d." % (channel, channel))
+
+
+    def toBinary(self):
+        """
+        See L{Argument.toBinary}.
+        """
+        # self.value must be a list of 4 int in range [0, 255]
+        return struct.pack(">4B", *self.value)
+
+
+    @staticmethod
+    def fromBinary(data):
+        """
+        See L{Argument.fromBinary}.
+        """
+        binary = data[0:4]
+        if len(binary) != 4:
+            raise OscError("Too few bytes left to get a color from %s." % (data))
+        leftover = data[4:]
+        try:
+            values = struct.unpack(">4B", binary)
+        except struct.error:
+            raise OscError("Error trying to find four bytes of data for an RGBA color in %s." % (binary))
+        return ColorArgument(values), leftover
+
+
+
 #class SymbolArgument(StringArgument):
 #    typeTag = "S"
 
