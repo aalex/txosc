@@ -1,3 +1,10 @@
+2010-07-19: Release 0.1.5
+
+    * Implemented the MidiArgument class
+    * Implemented the ColorArgument class
+    * osc-send: validating arguments and returning 1 in case of error
+    * osc-send: now requires a path
+
 2010-06-30: Release 0.1.4
 
     * Added the osc-send script, which support UDP and TCP
