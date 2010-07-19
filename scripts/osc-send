@@ -14,6 +14,7 @@ from txosc import dispatch
 from txosc import async
 
 VERBOSE = False
+RETURN_VALUE = 0
 
 def send_udp(message, port, host):
     """
@@ -55,7 +56,6 @@ def send_tcp(message, port, host):
     client.deferred.addCallback(_callback)
     client.deferred.addErrback(_errback)
 
-
 def send_auto(protocol, port, host, path, *args):
     """
     Trying to guess the type tags.
@@ -80,9 +80,14 @@ def send_manual(protocol, port, host, path, types, *args):
     """
     The used specified the type tags.
     """
-    if len(types) != len(args):
-        print("The length of the type string must match the number of arguments.")
+    def _exit_with_error(message):
+        global RETURN_VALUE
         reactor.stop()
+        print(message)
+        RETURN_VALUE = 1 # error
+        
+    if len(types) != len(args):
+        _exit_with_error("The length of the type string must match the number of arguments.")
         return
 
     message = osc.Message(path)
@@ -107,15 +112,19 @@ def send_manual(protocol, port, host, path, types, *args):
                 cast = None
 
             if cast is not None:
-                casted = cast(value)
+                try:
+                    casted = cast(value)
+                except ValueError, e:
+                    _exit_with_error("Error converting an argument to type tag" + str(e))
+                    return
             else:
                 casted = value
             arg = osc.createArgument(casted, typetag)
             verb("Adding argument %s." % (arg))
             message.add(arg)
     except osc.OscError, e:
-        print(str(e))
-        sys.exit(1)
+        _exit_with_error(str(e))
+        return
 
     if protocol == 'UDP':
         send_udp(message, port, host)
@@ -140,6 +149,9 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
 
     def _exit(txt):
+        """
+        Exits right aways - The Twisted reactor must not be running
+        """
         print(txt)
         sys.exit(1)
 
@@ -210,4 +222,5 @@ if __name__ == "__main__":
         reactor.run()
     except exceptions.SystemExit:
         pass
+    sys.exit(RETURN_VALUE)
 
