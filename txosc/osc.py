@@ -589,6 +589,8 @@ class ColorArgument(_FourByteArgument):
 class MidiArgument(_FourByteArgument):
     """
     An L{Argument} representing a 32-bit MIDI message.
+    
+    MIDI messages contain 4 bytes and is represented as a four-int tuple. Bytes from most significant (left) to least significant (right) are: port id, status byte, data1, data2.
     """
     typeTag = "m"
 
