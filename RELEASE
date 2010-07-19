@@ -1,4 +1,7 @@
-2010-07-??: Release 0.1.5
+2010-07-19: Release 0.1.5
 
-    * 
+    * Implemented the MidiArgument class
+    * Implemented the ColorArgument class
+    * osc-send: validating arguments and returning 1 in case of error
+    * osc-send: now requires a path
 

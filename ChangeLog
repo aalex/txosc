@@ -1,6 +1,55 @@
-changeset:   203:451186d4cac7
+changeset:   211:b22c9ddea712
 branch:      0.1
 tag:         tip
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jul 19 11:18:48 2010 -0400
+summary:     implemented the MidiArgument class
+
+changeset:   210:126f37b9927a
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jul 19 10:46:23 2010 -0400
+summary:     validating arguments and returning 1 in case of error
+
+changeset:   209:d5119e294c65
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jul 19 10:22:53 2010 -0400
+summary:     osc-send now requires a path
+
+changeset:   208:3905e58dc375
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Jul 13 12:43:57 2010 -0400
+summary:     Implemented the ColorArgument class
+
+changeset:   207:5a8f9af77628
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Jun 30 15:54:27 2010 -0400
+summary:     updated to 0.1.5 - not yet released
+
+changeset:   206:45eeb4bf8ed4
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Jun 30 15:53:06 2010 -0400
+summary:     Added tag 0.1.4 for changeset 039fe3995600
+
+changeset:   205:039fe3995600
+branch:      0.1
+tag:         0.1.4
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Jun 30 15:46:56 2010 -0400
+summary:     added  --no-discard-stderr to the help2man command call
+
+changeset:   204:9592eed30e4c
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Wed Jun 30 14:49:13 2010 -0400
+summary:     updated date in ChangeLog
+
+changeset:   203:451186d4cac7
+branch:      0.1
 user:        Alexandre Quessy <alexandre@quessy.net>
 date:        Wed Jun 30 14:47:30 2010 -0400
 summary:     added the _check_type method, which does type checking when instanciating the arguments.
