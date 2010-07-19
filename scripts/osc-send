@@ -131,7 +131,7 @@ def verb(txt):
         print(txt)
 
 if __name__ == "__main__":
-    parser = optparse.OptionParser(usage="%prog", version=txosc.__version__.strip(), description=__doc__)
+    parser = optparse.OptionParser(usage="%prog [url] /<osc path> [type tags] [arguments values]", version=txosc.__version__.strip(), description=__doc__)
     parser.add_option("-p", "--port", type="int", default=31337, help="Port to send to")
     parser.add_option("-H", "--host", type="string", default="127.0.0.1", help="IP address to send to")
     parser.add_option("-t", "--type-tags", type="string", help="Type tags as many letters concatenated")
@@ -146,6 +146,7 @@ if __name__ == "__main__":
     if len(args) == 0:
         _exit("You must specify an OSC path to send to")
 
+    path = None
     host = options.host
     port = options.port
     protocol = "UDP"
@@ -165,12 +166,15 @@ if __name__ == "__main__":
         if len(args) == 1:
             _exit("You must specify an OSC path to send to")
         else:
-            path = args[1]
+            if args[1].startswith("/"):
+                path = args[1]
             url = args[0]
-            if url.startswith("osc.udp"):
+            if url.startswith("osc.udp://"):
                 protocol = "UDP"
-            else:
+            elif url.startswith("osc.tcp://"):
                 protocol = "TCP"
+            else:
+                _exit("The URL must start with either osc.udp or osc.tcp")
             try:
                 host = url.split("/")[2].split(":")[0]
                 port = int(url.split(":")[2])
@@ -183,10 +187,13 @@ if __name__ == "__main__":
         if args[type_tag_arg_index].startswith(","):
             type_tags = args[type_tag_arg_index][1:]
             args_index += 1
+    if path is None:
+        _exit("You must specify an OSC path")
     
+    verb("protocol: %s" % (protocol))
     verb("host: %s" % (host))
     verb("port: %s" % (port))
-    verb("protocol: %s" % (protocol))
+    verb("path: %s" % (path))
     verb("type_tags: %s" % (type_tags))
     verb("type_tag_arg_index: %s" % (type_tag_arg_index))
     verb("args_index: %s" % (args_index))
