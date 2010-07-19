@@ -484,7 +484,7 @@ class BooleanArgument(Argument):
     def __bool__(self):
         return bool(self.value)
 
-class DatalessArgument(Argument):
+class _DatalessArgument(Argument):
     """
     Abstract L{Argument} class for defining arguments whose value is
     defined just by its type tag.
@@ -502,7 +502,7 @@ class DatalessArgument(Argument):
 
 
 
-class NullArgument(DatalessArgument):
+class NullArgument(_DatalessArgument):
     """
     An L{Argument} representing C{None}.
     """
@@ -511,7 +511,7 @@ class NullArgument(DatalessArgument):
 
 
 
-class ImpulseArgument(DatalessArgument):
+class ImpulseArgument(_DatalessArgument):
     """
     An L{Argument} representing the C{"bang"} impulse.
     """
@@ -525,18 +525,13 @@ class ImpulseArgument(DatalessArgument):
 # Should we implement all types that are listed "optional" in
 # http://opensoundcontrol.org/spec-1_0 ?
 
-
-
-
-class ColorArgument(Argument):
+class _FourByteArgument(Argument):
     """
-    An L{Argument} representing a 32-bit RGBA color.
+    An abstract 32-bit L{Argument} whose data is a tuple of four integers in the range [0,255].
     """
-    typeTag = "r"
-
     def __init__(self, value=(0, 0, 0, 0)):
         """
-        @param value: A tuple of four integers in the range [0,255] for RGBA.
+        @param value: A tuple of four integers in the range [0,255].
         @type value: C{tuple}
         """
         Argument.__init__(self, value)
@@ -545,12 +540,12 @@ class ColorArgument(Argument):
         if type(self.value) not in [list, tuple]:
             raise TypeError("Value %s must be a list of integers, not a %s." % (self.value, type(self.value).__name__))
         if len(self.value) != 4:
-            raise TypeError("Value %s must contain 4 elements, for each of the RGBA channels." % (self.value))
-        for channel in self.value:
-            if type(channel) not in [int, long]:
-                raise TypeError("Color channel value %s must be an int, not a %s." % (channel, type(channel).__name__))
-            if channel > 255 or channel < 0:
-                raise TypeError("Color channel value %s must be between 0 and 255, but is %d." % (channel, channel))
+            raise TypeError("Value %s must contain 4 elements." % (self.value))
+        for element in self.value:
+            if type(element) not in [int, long]:
+                raise TypeError("Element value %s must be an int, not a %s." % (element, type(element).__name__))
+            if element > 255 or element < 0:
+                raise TypeError("Element value %s must be between 0 and 255." % (element))
 
 
     def toBinary(self):
@@ -568,15 +563,39 @@ class ColorArgument(Argument):
         """
         binary = data[0:4]
         if len(binary) != 4:
-            raise OscError("Too few bytes left to get a color from %s." % (data))
+            raise OscError("Too few bytes left to get four from %s." % (data))
         leftover = data[4:]
         try:
             values = struct.unpack(">4B", binary)
         except struct.error:
-            raise OscError("Error trying to find four bytes of data for an RGBA color in %s." % (binary))
-        return ColorArgument(values), leftover
+            raise OscError("Error trying to find four bytes of data in %s." % (binary))
+        return _FourByteArgument(values), leftover
 
 
+
+
+class ColorArgument(_FourByteArgument):
+    """
+    An L{Argument} representing a 32-bit RGBA color.
+    """
+    typeTag = "r"
+
+    @staticmethod
+    def fromBinary(data):
+        tmp, leftover = _FourByteArgument.fromBinary(data)
+        return ColorArgument(tmp.value), leftover
+
+
+class MidiArgument(_FourByteArgument):
+    """
+    An L{Argument} representing a 32-bit MIDI message.
+    """
+    typeTag = "m"
+
+    @staticmethod
+    def fromBinary(data):
+        tmp, leftover = _FourByteArgument.fromBinary(data)
+        return MidiArgument(tmp.value), leftover
 
 #class SymbolArgument(StringArgument):
 #    typeTag = "S"

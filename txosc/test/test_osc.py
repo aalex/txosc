@@ -166,6 +166,18 @@ class TestColorArgument(unittest.TestCase):
         self.assertRaises(TypeError, osc.ColorArgument.toBinary, ()) # invalid value
 
 
+class TestMidiArgument(unittest.TestCase):
+
+    def testToAndFromBinary(self):
+        def _test(value):
+            midi_arg = osc.MidiArgument.fromBinary(osc.MidiArgument(value).toBinary())[0]
+            self.assertEquals(midi_arg.value, value)
+        _test((255, 255, 255, 255))
+        _test((0, 0, 0, 0))
+        self.assertRaises(osc.OscError, osc.MidiArgument.fromBinary, "\0\0\0") # invalid value
+        self.assertRaises(TypeError, osc.MidiArgument.toBinary, (-244, 0, 0, 0)) # invalid value
+        self.assertRaises(TypeError, osc.MidiArgument.toBinary, ()) # invalid value
+
 
 class TestTimeTagArgument(unittest.TestCase):
     def testToBinary(self):
