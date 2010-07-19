@@ -577,6 +577,8 @@ class _FourByteArgument(Argument):
 class ColorArgument(_FourByteArgument):
     """
     An L{Argument} representing a 32-bit RGBA color.
+    
+    Color arguments are represented as a four-int tuple in the range [0,255]. Each of the color channels are in this order: red, green, blue, alpha.
     """
     typeTag = "r"
 
@@ -590,7 +592,7 @@ class MidiArgument(_FourByteArgument):
     """
     An L{Argument} representing a 32-bit MIDI message.
     
-    MIDI messages contain 4 bytes and is represented as a four-int tuple. Bytes from most significant (left) to least significant (right) are: port id, status byte, data1, data2.
+    MIDI "message" arguments contain 4 bytes and is represented as a four-int tuple. Bytes from most significant (left) to least significant (right) are: port id, status byte, data1, data2.
     """
     typeTag = "m"
 
