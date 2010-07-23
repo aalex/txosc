@@ -36,8 +36,8 @@ Project Informations
 Examples
 ========
 
-The examples starting with the "async_" prefix use Twisted.
-The examples starting with the "sync_" prefix don't use it.
+  The examples starting with the "async_" prefix use Twisted.
+  The examples starting with the "sync_" prefix don't use it.
 
 
 Authors
