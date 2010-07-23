@@ -1,4 +1,6 @@
-2010-0*-**: Release 0.1.6
+2010-07-23: Release 0.1.6
 
-    * 
+    * Non-Twisted sender: added txosc/sync.py and the sync_tcp_sender example.
+    * Improved doc for ColorArgument
+    * Improved doc for MidiArgument
 
