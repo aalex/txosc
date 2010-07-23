@@ -33,6 +33,13 @@ Project Informations
   Mailing list: https://listes.koumbit.net/cgi-bin/mailman/listinfo/txosc-toonloop.com
 
 
+Examples
+========
+
+The examples starting with the "async_" prefix use Twisted.
+The examples starting with the "sync_" prefix don't use it.
+
+
 Authors
 =======
 
