@@ -47,10 +47,10 @@ class StreamBasedProtocol(protocol.Protocol):
         if self._pkgLen is None:
             self._pkgLen = struct.unpack(">i", self._buffer[:4])[0]
         if len(self._buffer) < self._pkgLen + 4:
-            print "waiting for %d more bytes" % (self._pkgLen+4 - len(self._buffer))
+            print "waiting for %d more bytes" % (self._pkgLen + 4 - len(self._buffer))
             return
-        payload = self._buffer[4:4+self._pkgLen]
-        self._buffer = self._buffer[4+self._pkgLen:]
+        payload = self._buffer[4:4 + self._pkgLen]
+        self._buffer = self._buffer[4 + self._pkgLen:]
         self._pkgLen = None
 
         if payload:
