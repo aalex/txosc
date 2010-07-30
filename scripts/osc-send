@@ -14,6 +14,7 @@ from txosc import dispatch
 from txosc import async
 
 VERBOSE = False
+QUIET = False
 RETURN_VALUE = 0
 
 def send_udp(message, port, host):
@@ -29,9 +30,9 @@ def send_udp(message, port, host):
 
     
     def actually_send_it():
-        verb("Sending %s to %s:%d" % (message, host, port))
+        # verb("Sending %s to %s:%d" % (message, host, port))
         client.send(message, (host, port))
-        print("Sent %s to %s:%d" % (message, host, port))
+        verb("Sent %s to %s:%d" % (message, host, port))
         reactor.callLater(0.01, reactor.stop)
 
     reactor.callLater(0, actually_send_it)
@@ -44,9 +45,9 @@ def send_tcp(message, port, host):
     _client_port = None
     
     def _callback(result):
-        print("Connected.")
+        verb("Connected.")
         client.send(message)
-        print("Sent %s to %s:%d" % (message, host, port))
+        verb("Sent %s to %s:%d" % (message, host, port))
         reactor.callLater(0.01, reactor.stop)
 
     def _errback(reason):
@@ -202,22 +203,22 @@ if __name__ == "__main__":
     if path is None:
         _exit("You must specify an OSC path")
     
-    verb("protocol: %s" % (protocol))
-    verb("host: %s" % (host))
-    verb("port: %s" % (port))
-    verb("path: %s" % (path))
-    verb("type_tags: %s" % (type_tags))
-    verb("type_tag_arg_index: %s" % (type_tag_arg_index))
-    verb("args_index: %s" % (args_index))
+    # verb("protocol: %s" % (protocol))
+    # verb("host: %s" % (host))
+    # verb("port: %s" % (port))
+    # verb("path: %s" % (path))
+    # verb("type_tags: %s" % (type_tags))
+    # verb("type_tag_arg_index: %s" % (type_tag_arg_index))
+    # verb("args_index: %s" % (args_index))
         
     def _later():
-        verb("Sending to osc.%s://%s:%d" % (protocol.lower(), host, port))
+        # verb("Sending to osc.%s://%s:%d" % (protocol.lower(), host, port))
         if type_tags:
             send_manual(protocol, port, host, path, type_tags, *args[args_index:])
         else:
             send_auto(protocol, port, host, path, *args[args_index:])
     reactor.callLater(0.01, _later)
-    verb("Starting the Twisted reactor")
+    # verb("Starting the Twisted reactor")
     try:
         reactor.run()
     except exceptions.SystemExit:
