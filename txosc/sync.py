@@ -10,22 +10,29 @@ Twisted is not used in this file.
 import socket
 import struct
 
+#TODO: receiver
+#TODO: bidirectional sender-receiver
+# self._socket.recv(self.buffer_size)
+# self.buffer_size = 1024
+
 class _Sender(object):
     def __init__(self):
         self._socket = None
 
     def send(self, element):
         binary = element.toBinary()
-        self._actually_send(struct.pack(">i", len(binary)) + binary)
+        self._actually_send(binary)
 
-    def _actually_send(self):
+    def _actually_send(self, binary_data):
+        """
+        @param binary_data: Binary blob of an element to send.
+        """
         raise NotImplementedError("This method must be overriden in child classes.")
+    
     def close(self):
         raise NotImplementedError("This method must be overriden in child classes.")
+    
 
-#TODO: receiver and bidirectional sender-receiver
-# self._socket.recv(self.buffer_size)
-# self.buffer_size = 1024
 
 class TcpSender(_Sender):
     """
@@ -39,7 +46,9 @@ class TcpSender(_Sender):
         self._socket.connect((self.address, self.port))
 
     def _actually_send(self, binary_data):
-        self._socket.send(binary_data)
+        #For TCP, we need to pack the data with its size first
+        data = struct.pack(">i", len(binary_data)) + binary_data
+        self._socket.send(data)
 
     def close(self):
         self._socket.close()
@@ -84,6 +93,8 @@ class UdpSender(_Sender):
                 raise RuntimeError("Not using the multicast mode.")
 
     def _actually_send(self, binary_data):
+        # For UDP, we just send the data. 
+        # No need to pack it with its size. 
         if self.mode == UDP_MODE_BROADCAST:
             self._socket.sendto(binary_data, ('<broadcast>', self.port))
         elif self.mode == UDP_MODE_MULTICAST:
