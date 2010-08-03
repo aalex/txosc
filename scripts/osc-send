@@ -17,7 +17,7 @@ VERBOSE = False
 QUIET = False
 RETURN_VALUE = 0
 
-def send_udp(message, port, host):
+def send_async_udp(message, port, host):
     """
     Sends a message using UDP and stops the Reactor
     @param message: OSC message
@@ -33,11 +33,11 @@ def send_udp(message, port, host):
         # verb("Sending %s to %s:%d" % (message, host, port))
         client.send(message, (host, port))
         verb("Sent %s to %s:%d" % (message, host, port))
-        reactor.callLater(0.01, reactor.stop)
+        reactor.callLater(0.001, reactor.stop)
 
     reactor.callLater(0, actually_send_it)
 
-def send_tcp(message, port, host):
+def send_async_tcp(message, port, host):
     """
     Not yet implemented.
     """
@@ -48,7 +48,7 @@ def send_tcp(message, port, host):
         verb("Connected.")
         client.send(message)
         verb("Sent %s to %s:%d" % (message, host, port))
-        reactor.callLater(0.01, reactor.stop)
+        reactor.callLater(0.001, reactor.stop)
 
     def _errback(reason):
         print("An error occurred: %s" % (reason.getErrorMessage()))
@@ -72,9 +72,9 @@ def send_auto(protocol, port, host, path, *args):
                 value = str(arg)
         message.add(value)
     if protocol == "UDP":
-        send_udp(message, port, host)
+        send_async_udp(message, port, host)
     else:
-        send_tcp(message, port, host)
+        send_async_tcp(message, port, host)
         
 
 def send_manual(protocol, port, host, path, types, *args):
@@ -128,9 +128,9 @@ def send_manual(protocol, port, host, path, types, *args):
         return
 
     if protocol == 'UDP':
-        send_udp(message, port, host)
+        send_async_udp(message, port, host)
     else:
-        send_tcp(message, port, host)
+        send_async_tcp(message, port, host)
 
 def verb(txt):
     """
@@ -217,7 +217,7 @@ if __name__ == "__main__":
             send_manual(protocol, port, host, path, type_tags, *args[args_index:])
         else:
             send_auto(protocol, port, host, path, *args[args_index:])
-    reactor.callLater(0.01, _later)
+    reactor.callLater(0.001, _later)
     # verb("Starting the Twisted reactor")
     try:
         reactor.run()
