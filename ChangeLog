@@ -1,6 +1,139 @@
-changeset:   211:b22c9ddea712
+changeset:   233:8fb65b3cb75c
 branch:      0.1
 tag:         tip
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Aug 17 17:20:13 2010 -0400
+summary:     updated RELEASE notes
+
+changeset:   232:2d63e034bdcc
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Aug 17 12:34:14 2010 -0400
+summary:     updated RELEASE notes
+
+changeset:   231:f3edd2f29859
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Aug 17 12:17:08 2010 -0400
+summary:     osc-send now support not using twisted.
+
+changeset:   230:7d75bf57b806
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Aug 17 11:13:04 2010 -0400
+summary:     osc-send: separated the message generation from actually sending it
+
+changeset:   229:70acc42a37e7
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Aug 17 11:03:43 2010 -0400
+summary:     Moved the options into a small struct/class
+
+changeset:   228:d47a44475f5d
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Tue Aug 03 15:04:55 2010 -0400
+summary:     renamed some stuff in osc-send, since I plan to implement it without twisted as well...
+
+changeset:   227:84910ba41eb6
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Fri Jul 30 13:13:46 2010 -0400
+summary:     Fixed the synchronous sender binary format.
+
+changeset:   226:25b10f2335d6
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Fri Jul 30 13:02:29 2010 -0400
+summary:     some spacing
+
+changeset:   225:8b525fb69985
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Fri Jul 30 12:53:13 2010 -0400
+summary:     made osc-send less verbose
+
+changeset:   224:38a0aba5b76a
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Fri Jul 23 12:14:05 2010 -0400
+summary:     Addin a non-wroking blocking UDP sender. (it doesn't work!!)
+
+changeset:   223:0f304c253ee7
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Fri Jul 23 10:06:58 2010 -0400
+summary:     indented some lines in README
+
+changeset:   222:f3cec2e8d443
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Fri Jul 23 09:30:07 2010 -0400
+summary:     updated RELEASE notes
+
+changeset:   221:a7bd63d7a6e5
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Fri Jul 23 08:17:25 2010 -0400
+summary:     updated README for the sync_ examples.
+
+changeset:   220:aa45338ccb42
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Fri Jul 23 08:15:22 2010 -0400
+summary:     made an example executable
+
+changeset:   219:55511bea6957
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Fri Jul 23 08:14:26 2010 -0400
+summary:     catching socket errors in sync_tcp_sender
+
+changeset:   218:99f827dc7b3a
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Fri Jul 23 08:08:46 2010 -0400
+summary:     added txosc/sync.py and the sync_tcp_sender example.
+
+changeset:   217:2ebf9d710e9a
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jul 19 11:43:01 2010 -0400
+summary:     improved doc for ColorArgument
+
+changeset:   216:99a0eef582e2
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jul 19 11:41:33 2010 -0400
+summary:     improved doc for MidiArgument
+
+changeset:   215:da5a5f86e3fe
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jul 19 11:38:01 2010 -0400
+summary:     updated version to 0.1.6 - not yet released
+
+changeset:   214:edaf6316f624
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jul 19 11:36:47 2010 -0400
+summary:     Added tag 0.1.5 for changeset dca38c8dbe9c
+
+changeset:   213:dca38c8dbe9c
+branch:      0.1
+tag:         0.1.5
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jul 19 11:28:20 2010 -0400
+summary:     update man page for osc-send
+
+changeset:   212:4f585f63ac7e
+branch:      0.1
+user:        Alexandre Quessy <alexandre@quessy.net>
+date:        Mon Jul 19 11:22:58 2010 -0400
+summary:     updated RELEASE notes
+
+changeset:   211:b22c9ddea712
+branch:      0.1
 user:        Alexandre Quessy <alexandre@quessy.net>
 date:        Mon Jul 19 11:18:48 2010 -0400
 summary:     implemented the MidiArgument class
