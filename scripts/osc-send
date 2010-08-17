@@ -57,7 +57,7 @@ def send_async_tcp(message, port, host):
     client.deferred.addCallback(_callback)
     client.deferred.addErrback(_errback)
 
-def send_auto(protocol, port, host, path, *args):
+def create_message_auto(path, *args):
     """
     Trying to guess the type tags.
     """
@@ -71,19 +71,17 @@ def send_auto(protocol, port, host, path, *args):
             except ValueError:
                 value = str(arg)
         message.add(value)
-    if protocol == "UDP":
-        send_async_udp(message, port, host)
-    else:
-        send_async_tcp(message, port, host)
+    return message
         
 
-def send_manual(protocol, port, host, path, types, *args):
+def create_message_manually(path, types, *args):
     """
     The used specified the type tags.
     """
     def _exit_with_error(message):
         global RETURN_VALUE
-        reactor.stop()
+        if reactor.running:
+            reactor.stop()
         print(message)
         RETURN_VALUE = 1 # error
         
@@ -125,12 +123,8 @@ def send_manual(protocol, port, host, path, types, *args):
             message.add(arg)
     except osc.OscError, e:
         _exit_with_error(str(e))
-        return
-
-    if protocol == 'UDP':
-        send_async_udp(message, port, host)
-    else:
-        send_async_tcp(message, port, host)
+        return None
+    return message
 
 def verb(txt):
     """
@@ -225,9 +219,15 @@ if __name__ == "__main__":
     def _later():
         # verb("Sending to osc.%s://%s:%d" % (protocol.lower(), host, port))
         if config.type_tags:
-            send_manual(config.protocol, config.port, config.host, config.path, config.type_tags, *args[args_index:])
+            message = create_message_manually(config.path, config.type_tags, *args[args_index:])
         else:
-            send_auto(config.protocol, config.port, config.host, config.path, *args[args_index:])
+            message = create_message_auto(config.path, *args[args_index:])
+        
+        if config.protocol == 'UDP':
+            send_async_udp(message, config.port, config.host)
+        else:
+            send_async_tcp(message, config.port, config.host)
+        
     reactor.callLater(0.001, _later)
     # verb("Starting the Twisted reactor")
     try:
