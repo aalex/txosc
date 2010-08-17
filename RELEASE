@@ -1,6 +1,10 @@
-2010-07-23: Release 0.1.6
+2010-0?-??: Release 0.1.6
 
-    * Non-Twisted sender: added txosc/sync.py and the sync_tcp_sender example.
-    * Improved doc for ColorArgument
-    * Improved doc for MidiArgument
+    * sync: added txosc/sync.py and the sync_tcp_sender example.
+    * sync: Fixed the synchronous sender binary format. 
+    * sync: Catching socket errors in sync_tcp_sender 
+    * osc-send: Implemented sending using blocking socket.
+    * osc-send: Now uses the blocking implementation by default.
+    * osc: Improved doc for ColorArgument
+    * osc: Improved doc for MidiArgument
 
