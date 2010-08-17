@@ -12,6 +12,7 @@ import txosc # for __version__
 from txosc import osc
 from txosc import dispatch
 from txosc import async
+from txosc import sync
 
 VERBOSE = False
 QUIET = False
@@ -27,7 +28,6 @@ def send_async_udp(message, port, host):
     """
     client = async.DatagramClientProtocol()
     _client_port = reactor.listenUDP(0, client)
-
     
     def actually_send_it():
         # verb("Sending %s to %s:%d" % (message, host, port))
@@ -36,6 +36,26 @@ def send_async_udp(message, port, host):
         reactor.callLater(0.001, reactor.stop)
 
     reactor.callLater(0, actually_send_it)
+
+def send_sync_tcp(message, port, host):
+    try:
+        tcp_sender = sync.TcpSender(host, port)
+    except socket.error, e:
+        print(str(e))
+    else:
+        tcp_sender.send(message)
+        tcp_sender.close()
+        verb("Sent %s to %s:%d" % (message, host, port))
+
+def send_sync_udp(message, port, host):
+    try:
+        udp_sender = sync.UdpSender(host, port)
+    except socket.error, e:
+        print(str(e))
+    else:
+        udp_sender.send(message)
+        udp_sender.close()
+        verb("Sent %s to %s:%d" % (message, host, port))
 
 def send_async_tcp(message, port, host):
     """
@@ -72,7 +92,6 @@ def create_message_auto(path, *args):
                 value = str(arg)
         message.add(value)
     return message
-        
 
 def create_message_manually(path, types, *args):
     """
@@ -141,6 +160,7 @@ class Config(object):
         self.port = 31337
         self.protocol = "UDP"
         self.type_tags = ""
+        self.using_twisted = False
 
 if __name__ == "__main__":
     parser = optparse.OptionParser(usage="%prog [url] /<osc path> [type tags] [arguments values]", version=txosc.__version__.strip(), description=__doc__)
@@ -149,6 +169,7 @@ if __name__ == "__main__":
     parser.add_option("-t", "--type-tags", type="string", help="Type tags as many letters concatenated")
     parser.add_option("-v", "--verbose", action="store_true", help="Makes the output verbose")
     parser.add_option("-T", "--tcp", action="store_true", help="Uses TCP instead of UDP")
+    parser.add_option("-x", "--enable-twisted", action="store_true", help="Uses Twisted instead of blocking sockets")
     (options, args) = parser.parse_args()
 
     def _exit(txt):
@@ -172,10 +193,15 @@ if __name__ == "__main__":
     args_index = 1
     url = None
     
-    if options.tcp:
-        config.protocol = "TCP"
     if options.verbose:
         VERBOSE = True
+    if options.enable_twisted:
+        config.using_twisted = True
+        verb("Using Twisted")
+    else:
+        verb("Using blocking socket networking")
+    if options.tcp:
+        config.protocol = "TCP"
     if args[0].startswith("/"):
         config.path = args[0]
     elif args[0].startswith("osc."):
@@ -223,16 +249,25 @@ if __name__ == "__main__":
         else:
             message = create_message_auto(config.path, *args[args_index:])
         
-        if config.protocol == 'UDP':
-            send_async_udp(message, config.port, config.host)
+        if config.using_twisted:
+            if config.protocol == 'UDP':
+                send_async_udp(message, config.port, config.host)
+            else:
+                send_async_tcp(message, config.port, config.host)
         else:
-            send_async_tcp(message, config.port, config.host)
+            if config.protocol == 'UDP':
+                send_sync_udp(message, config.port, config.host)
+            else:
+                send_sync_tcp(message, config.port, config.host)
         
-    reactor.callLater(0.001, _later)
-    # verb("Starting the Twisted reactor")
-    try:
-        reactor.run()
-    except exceptions.SystemExit:
-        pass
+    if config.using_twisted:
+        reactor.callLater(0.001, _later)
+        # verb("Starting the Twisted reactor")
+        try:
+            reactor.run()
+        except exceptions.SystemExit:
+            pass
+    else:
+        _later()
     sys.exit(RETURN_VALUE)
 

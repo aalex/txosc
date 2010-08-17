@@ -12,12 +12,12 @@ from txosc import sync
 
 if __name__ == "__main__":
     try:
-        tcp_sender = sync.UdpSender("localhost", 31337)
+        udp_sender = sync.UdpSender("localhost", 31337)
     except socket.error, e:
         print(str(e))
     else:
-        tcp_sender.send(osc.Message("/hello", 2, "bar", 3.14159))
-        tcp_sender.send(osc.Message("/ham/spam", "egg"))
-        tcp_sender.close()
+        udp_sender.send(osc.Message("/hello", 2, "bar", 3.14159))
+        udp_sender.send(osc.Message("/ham/spam", "egg"))
+        udp_sender.close()
         print("Successfully sent the messages.")
 
