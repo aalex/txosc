@@ -140,6 +140,14 @@ def verb(txt):
     if VERBOSE:
         print(txt)
 
+class Config(object):
+    def __init__(self):
+        self.path = "/"
+        self.host = "127.0.0.1"
+        self.port = 31337
+        self.protocol = "UDP"
+        self.type_tags = ""
+
 if __name__ == "__main__":
     parser = optparse.OptionParser(usage="%prog [url] /<osc path> [type tags] [arguments values]", version=txosc.__version__.strip(), description=__doc__)
     parser.add_option("-p", "--port", type="int", default=31337, help="Port to send to")
@@ -159,20 +167,23 @@ if __name__ == "__main__":
     if len(args) == 0:
         _exit("You must specify an OSC path to send to")
 
-    path = None
-    host = options.host
-    port = options.port
-    protocol = "UDP"
-    type_tags = options.type_tags
+    config = Config()
+
+    config.path = None
+    config.host = options.host
+    config.port = options.port
+    config.protocol = "UDP"
+    config.type_tags = options.type_tags
     type_tag_arg_index = 1
     args_index = 1
+    url = None
     
     if options.tcp:
-        protocol = "TCP"
+        config.protocol = "TCP"
     if options.verbose:
         VERBOSE = True
     if args[0].startswith("/"):
-        path = args[0]
+        config.path = args[0]
     elif args[0].startswith("osc."):
         type_tag_arg_index += 1
         args_index += 1
@@ -180,17 +191,17 @@ if __name__ == "__main__":
             _exit("You must specify an OSC path to send to")
         else:
             if args[1].startswith("/"):
-                path = args[1]
+                config.path = args[1]
             url = args[0]
             if url.startswith("osc.udp://"):
-                protocol = "UDP"
+                config.protocol = "UDP"
             elif url.startswith("osc.tcp://"):
-                protocol = "TCP"
+                config.protocol = "TCP"
             else:
                 _exit("The URL must start with either osc.udp or osc.tcp")
             try:
-                host = url.split("/")[2].split(":")[0]
-                port = int(url.split(":")[2])
+                config.host = url.split("/")[2].split(":")[0]
+                config.port = int(url.split(":")[2])
             except IndexError, e:
                 _exit(str(e))
             except ValueError, e:
@@ -198,9 +209,9 @@ if __name__ == "__main__":
     
     if len(args) > type_tag_arg_index:
         if args[type_tag_arg_index].startswith(","):
-            type_tags = args[type_tag_arg_index][1:]
+            config.type_tags = args[type_tag_arg_index][1:]
             args_index += 1
-    if path is None:
+    if config.path is None:
         _exit("You must specify an OSC path")
     
     # verb("protocol: %s" % (protocol))
@@ -213,10 +224,10 @@ if __name__ == "__main__":
         
     def _later():
         # verb("Sending to osc.%s://%s:%d" % (protocol.lower(), host, port))
-        if type_tags:
-            send_manual(protocol, port, host, path, type_tags, *args[args_index:])
+        if config.type_tags:
+            send_manual(config.protocol, config.port, config.host, config.path, config.type_tags, *args[args_index:])
         else:
-            send_auto(protocol, port, host, path, *args[args_index:])
+            send_auto(config.protocol, config.port, config.host, config.path, *args[args_index:])
     reactor.callLater(0.001, _later)
     # verb("Starting the Twisted reactor")
     try:
