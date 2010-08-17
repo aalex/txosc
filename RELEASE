@@ -1,13 +1,4 @@
-2010-08-17: Release 0.1.6
+2010-0?-??: Release 0.1.7
 
-    This release provides an synchronous implementation that allows developers to use txosc in applications that do not use Twisted, just blocking socket network programming in Python. It also provides two new types of arguments: ColorArgument and MidiArgument.
-    
-    * sync: Added support for non-Twisted sending in txosc/sync.py
-    * sync: Added the sync_tcp_sender example.
-    * sync: Fixed the synchronous sender binary format. 
-    * sync: Catching socket errors in sync_tcp_sender 
-    * osc-send: Implemented sending using blocking socket.
-    * osc-send: Now uses the blocking implementation by default.
-    * osc: Improved doc for ColorArgument
-    * osc: Improved doc for MidiArgument
+    * 
 
