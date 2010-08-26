@@ -268,7 +268,7 @@ class AddressNode(object):
         """
         Remove all callbacks from this node.
         """
-        self._childNodes = []
+        self._childNodes = {}
         self._wildcardNodes = set()
         self._callbacks = set()
         self._checkRemove()
