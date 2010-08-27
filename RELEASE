@@ -2,5 +2,6 @@
 
     This release of txosc in in the 0.1 development branch. We aim to provide a complete set of functionalities for the 0.2 stable branch that is coming.
 
-    * 
+    * Fixed #12 We should translate host name into IP addresses
+    * Fixed #27: removeAllCallbacks() removeAllCallbacks() sets _childNodes as empty list, not dict
 
