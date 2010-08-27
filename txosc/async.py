@@ -7,6 +7,7 @@
 Asynchronous implementation of OSC for Twisted
 """
 import struct
+import socket
 
 from twisted.internet import defer, protocol
 from twisted.application.internet import MulticastServer
@@ -181,6 +182,6 @@ class DatagramClientProtocol(protocol.DatagramProtocol):
         @type element: L{txosc.osc.Message}
         """
         data = element.toBinary()
-        self.transport.write(data, (host, port))
+        self.transport.write(data, (socket.gethostbyname(host), port))
 
 

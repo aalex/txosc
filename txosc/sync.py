@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 # Copyright (c) 2009 Alexandre Quessy, Arjan Scherpenisse
 # See LICENSE for details.
@@ -72,7 +73,7 @@ class UdpSender(_Sender):
         """
         _Sender.__init__(self)
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.address = address
+        self.address = socket.gethostbyname(address)
         self.port = port
         self._socket.bind(('', 0))
         self.mode = mode
@@ -100,7 +101,7 @@ class UdpSender(_Sender):
         elif self.mode == UDP_MODE_MULTICAST:
             self._socket.sendto(binary_data, (self.multicast_group, self.port))
         else:
-            self._socket.sendto(binary_data, ('', self.port))
+            self._socket.sendto(binary_data, (self.address, self.port))
 
     def close(self):
         self._socket.close()
