@@ -4,7 +4,7 @@
 # See LICENSE for details.
 
 """
-OSC message dispatching
+OSC message address dispatching to callbacks
 """
 import string
 import math

@@ -4,7 +4,7 @@
 # See LICENSE for details.
 
 """
-Asynchronous implementation of OSC for Twisted
+Asynchronous OSC sender and receiver using Twisted
 """
 import struct
 import socket

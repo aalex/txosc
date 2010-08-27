@@ -4,9 +4,11 @@
 # See LICENSE for details.
 # TODO: # -*- test-case-name: txosc.test.test_sync -*-
 """
-Synchronous implementation of OSC using blocking network Python programming.
+Synchronous blocking OSC sender without Twisted.
 
-Twisted is not used in this file.
+Twisted is not used in this file. You don't even need to repy on Twisted to use 
+it and the txosc.osc module. That is enough to send OSC messages in a simple
+script. 
 """
 import socket
 import struct

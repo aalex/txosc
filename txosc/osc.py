@@ -4,7 +4,7 @@
 # See LICENSE for details.
 
 """
-Open Sound Control 1.1 Protocol message generation and parsing.
+Open Sound Control 1.1 protocol message generation and parsing
 
 This file is not Twisted-specific. Thoses classes implement OSC message
 generation and parsing. Each message has an address and might have some 
