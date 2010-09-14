@@ -1,0 +1,4 @@
+include osc-receive.1
+include osc-send.1
+include man-osc-receive.txt
+include man-osc-send.txt
