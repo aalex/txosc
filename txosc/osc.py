@@ -444,23 +444,23 @@ class TimeTagArgument(Argument):
 
     def toBinary(self):
         if self.value is True:
-            return struct.pack('>ll', 0, 1)
+            return struct.pack('>qq', 0, 1)
         fr, sec = math.modf(self.value)
-        return struct.pack('>ll', long(sec), long(fr * 1e9))
+        return struct.pack('>qq', long(sec), long(fr * 1e9))
 
 
     @staticmethod
     def fromBinary(data):
-        binary = data[0:8]
-        if len(binary) != 8:
+        binary = data[0:16]
+        if len(binary) != 16:
             raise OscError("Too few bytes left to get a timetag from %s." % (data))
-        leftover = data[8:]
+        leftover = data[16:]
 
         if binary == '\0\0\0\0\0\0\0\1':
             # immediately
             time = True
         else:
-            high, low = struct.unpack(">ll", data[0:8])
+            high, low = struct.unpack(">qq", data[0:16])
             time = float(int(high) + low / float(1e9))
         return TimeTagArgument(time), leftover
 
