@@ -209,6 +209,9 @@ class TestTimeTagArgument(unittest.TestCase):
 
 class TestMessage(unittest.TestCase):
 
+    def testComparisons(self):
+        osc.Message('/foo') == None
+
     def testMessageStringRepresentation(self):
 
         self.assertEquals("/hello", str(osc.Message("/hello")))
@@ -298,6 +301,7 @@ class TestBundle(unittest.TestCase):
     def testEquality(self):
 
         self.assertEquals(osc.Bundle(), osc.Bundle())
+        self.assertNotEqual(osc.Bundle(), None)
         self.assertNotEqual(osc.Bundle([osc.Message("/hello")]),
                             osc.Bundle())
         self.assertEquals(osc.Bundle([osc.Message("/hello")]),
