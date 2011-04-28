@@ -129,6 +129,8 @@ class Message(object):
         return [arg.value for arg in self.arguments]
 
     def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
         if self.address != other.address:
             return False
         if len(self.arguments) != len(other.arguments):
@@ -188,6 +190,8 @@ class Bundle(object):
 
 
     def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
         if len(self.elements) != len(other.elements):
             return False
         for i in range(len(self.elements)):

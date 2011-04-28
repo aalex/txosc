@@ -1,4 +1,13 @@
+2011-0?-??: txosc Release 0.2.1
+-------------------------------
+
+    This release of txosc is in the 0.2 stable series. Its features and API will not change throughout the 0.2 series.
+
+    Bugs fixed:
+    * (none)
+
 2010-09-15: txosc Release 0.2.0
+-------------------------------
 
     This release of txosc is the first in the 0.2 stable branch. Its features and API will not change throughout the 0.2 series.
 
@@ -8,6 +17,7 @@
     * #25: The blocking senders now packs messages with empty bytes.
 
 2010-08-17: Release 0.1.6
+-------------------------
 
     This release provides an synchronous implementation that allows developers to use txosc in applications that do not use Twisted, just blocking socket network programming in Python. It also provides two new types of arguments: ColorArgument and MidiArgument.
     
@@ -21,6 +31,7 @@
     * osc: Improved doc for MidiArgument
 
 2010-07-19: Release 0.1.5
+-------------------------
 
     * Implemented the MidiArgument class
     * Implemented the ColorArgument class
@@ -28,6 +39,7 @@
     * osc-send: now requires a path
 
 2010-06-30: Release 0.1.4
+-------------------------
 
     * Added the osc-send script, which support UDP and TCP
     * Added the osc-receive script, which support UDP, TCP and multicast UDP
@@ -37,6 +49,7 @@
     * Added txosc.osc.Argument._check_type, which does the type checking at instanciation time
 
 2010-06-28: Release 0.1.3
+-------------------------
 
     * Added the txosc.osc.Message.getValues method
     * Added the txosc.osc.getAddressParts function
@@ -45,24 +58,29 @@
     * Renamed TxOSC for txosc, lowercase
 
 2010-06-16: Release 0.1.2
+-------------------------
 
     * Fixed #5 Create a multicast group listener 
 
 2010-06-09: Release 0.1.1
+-------------------------
 
     * Improved examples
     * Fixed #1 Second argument to handlers in TCP should provide easily an OSC address
 
 2010-06-08: Release 0.1.0
+-------------------------
 
     * First official release
     * This is the birth of the txosc library!
 
 2010-06-07: Stripped into txosc by Alexandre Quessy
+---------------------------------------------------
 	
 	* A self-contained Pure Python library for OSC was needed
 
 2009-12-29: Started to be written by Arjan Scherpenisse and Alexandre Quessy
+----------------------------------------------------------------------------
 
 	* It was first aimed to be part of Twisted
 

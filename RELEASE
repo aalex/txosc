@@ -1,8 +1,0 @@
-2010-09-15: txosc Release 0.2.0
-
-    This release of txosc is the first in the 0.2 stable branch. Its features and API will not change throughout the 0.2 series.
-
-    Bugs fixed:
-    * #12: Translate host names into IP addresses.
-    * #27: removeAllCallbacks() set _childNodes as empty list, not dict.
-    * #25: The blocking senders now packs messages with empty bytes.
